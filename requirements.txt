@@ -1,0 +1,7 @@
+requests
+python-dotenv
+hubspot-api-client
+anthropic
+pandas
+playwright
+beautifulsoup4

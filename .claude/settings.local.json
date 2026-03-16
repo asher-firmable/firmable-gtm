@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://exhibitors.gitexasia.com/themes/frontend/js/exhibitorlist.js?123\")",
+      "Bash(curl -s \"https://exhibitors.gitexasia.com/gitex-asia-2026/Exhibitor\")",
+      "Bash(curl -s \"https://exhibitors.gitexasia.com/gitex-asia-2026/Exhibitor/fetchExhibitors\" -X POST -d \"limit=10&start=0\" -H \"Content-Type: application/x-www-form-urlencoded\" -I)",
+      "Bash(curl -s -X POST \"https://exhibitors.gitexasia.com/gitex-asia-2026/Exhibitor/fetchExhibitors\" -d \"limit=10&start=0\")",
+      "Bash(PYTHONPATH=. python3 workflows/event_outbound/1_find_contacts.py --input data/output/b2b_marketing_leaders_sydney.csv --output data/output/contacts_b2b_marketing_leaders_sydney.csv)",
+      "Bash(PYTHONPATH=. python3 -c \":*)",
+      "Bash(PYTHONPATH=. python3 workflows/event_outbound/1_find_contacts.py --input data/input/five_companies.csv --output data/output/contacts_b2b_marketing_leaders_sydney.csv)",
+      "Bash(PYTHONPATH=. python3 workflows/event_outbound/2_sync_to_hubspot.py --input data/output/contacts_b2b_marketing_leaders_sydney.csv)",
+      "Bash(echo \"B2B Marketing Leaders Sydney 2026:*)",
+      "Bash(PYTHONPATH=. python3 workflows/event_outbound/2_sync_to_hubspot.py --input data/output/contacts_b2b_marketing_leaders_sydney.csv --list-name \"Event - B2B Marketing Leaders_Sydney\")",
+      "Bash(PYTHONPATH=. python3 - <<'EOF':*)"
+    ]
+  }
+}
