@@ -69,6 +69,14 @@ def _normalise_phone(phone: str) -> str:
     return re.sub(r"[\s\-\(\)]", "", phone)
 
 
+def _normalise_domain(domain: str) -> str:
+    """Strip protocol and www. prefix so HubSpot domain search matches reliably."""
+    domain = domain.strip().lower()
+    domain = re.sub(r"^https?://", "", domain)
+    domain = re.sub(r"^www\.", "", domain)
+    return domain.split("/")[0]
+
+
 # ── File parsing (CSV + XLSX) ───────────────────────────────────────────────
 
 def _extract_firmable_id(val: str) -> str:
@@ -294,10 +302,15 @@ def _company_props(row: dict) -> dict:
 
 
 def hs_preview(hs: HubSpotClient, contacts: list) -> dict:
-    company_existing, company_new = {}, []
+    # Build domain → company_name map from contacts
+    domain_to_name = {row.get("domain", ""): row.get("company_name", "") for row in contacts}
+
+    company_existing = {}   # domain -> hs_object_id
+    company_new = []        # list of (company_name, domain)
     seen_domains = set()
     for row in contacts:
-        domain = row.get("domain", "")
+        raw_domain = row.get("domain", "")
+        domain = _normalise_domain(raw_domain)
         if not domain or domain in seen_domains:
             continue
         seen_domains.add(domain)
@@ -306,24 +319,27 @@ def hs_preview(hs: HubSpotClient, contacts: list) -> dict:
             if matches:
                 company_existing[domain] = matches[0]["id"]
             else:
-                company_new.append(domain)
+                company_new.append((row.get("company_name", domain), domain))
         except Exception:
             pass
 
-    contact_existing, contact_new, contact_skipped = {}, [], []
+    contact_existing = {}   # person_id -> hs_object_id
+    contact_new = []        # list of full_name
+    contact_skipped = []    # list of full_name
     for row in contacts:
         person_id = row.get("person_id", "")
         email = row.get("work_email", "")
         phone = row.get("phone", "")
+        full_name = row.get("full_name") or f"{row.get('first_name', '')} {row.get('last_name', '')}".strip()
         if not email and not phone:
-            contact_skipped.append(person_id)
+            contact_skipped.append(full_name)
             continue
         try:
             matches = hs.search_contacts("email", email) if email else hs.search_contacts("phone", _normalise_phone(phone))
             if matches:
                 contact_existing[person_id] = matches[0]["id"]
             else:
-                contact_new.append(person_id)
+                contact_new.append(full_name)
         except Exception:
             pass
 
@@ -339,7 +355,8 @@ def hs_preview(hs: HubSpotClient, contacts: list) -> dict:
 def hs_execute(hs: HubSpotClient, contacts: list, list_name: str) -> dict:
     seen_domains = {}
     for row in contacts:
-        domain = row.get("domain", "")
+        raw_domain = row.get("domain", "")
+        domain = _normalise_domain(raw_domain)
         if not domain or domain in seen_domains:
             continue
         try:
@@ -350,8 +367,10 @@ def hs_execute(hs: HubSpotClient, contacts: list, list_name: str) -> dict:
                 hs.update_company(company_id, props)
             else:
                 company_id = hs.create_company(props)["id"]
+            seen_domains[raw_domain] = company_id
             seen_domains[domain] = company_id
         except Exception:
+            seen_domains[raw_domain] = None
             seen_domains[domain] = None
 
     contact_ids = []
@@ -467,6 +486,10 @@ def _preview_blocks(list_name: str, preview: dict, user_id: str) -> list:
     n_xn = len(preview["contact_new"])
     n_xs = len(preview["contact_skipped"])
 
+    # Build detail lines for new companies and new contacts
+    new_company_lines = "\n".join(f"    • {name} ({domain})" for name, domain in preview["company_new"]) or "    (none)"
+    new_contact_lines = "\n".join(f"    • {name}" for name in preview["contact_new"]) or "    (none)"
+
     return [
         {
             "type": "section",
@@ -478,10 +501,12 @@ def _preview_blocks(list_name: str, preview: dict, user_id: str) -> list:
                     f"List name : {list_name}\n\n"
                     f"Companies\n"
                     f"  existing : {n_ce}  (will be updated)\n"
-                    f"  new      : {n_cn}  (will be created)\n\n"
+                    f"  new      : {n_cn}  (will be created)\n"
+                    f"{new_company_lines}\n\n"
                     f"Contacts\n"
                     f"  existing : {n_xe}  (will be updated)\n"
                     f"  new      : {n_xn}  (will be created)\n"
+                    f"{new_contact_lines}\n"
                     f"  skipped  : {n_xs}  (no email or phone)\n"
                     f"```"
                 ),
