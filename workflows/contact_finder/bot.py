@@ -3,12 +3,13 @@ Slack bot: /find-contacts
 
 Flow:
   1. User runs /find-contacts in a Slack channel
-  2. Bot asks them to upload a companies CSV (columns: company_name, domain, firmable_company_id)
-  3. Bot finds contacts via Firmable (VP/Director Sales top 5, C-Suite top 2)
-  4. Bot posts a summary with a "Name this list" button
-  5. User fills in a modal with the HubSpot list name
-  6. Bot shows a HubSpot preview (existing vs new) with Confirm / Cancel buttons
-  7. On Confirm: upserts companies + contacts, creates HubSpot list, posts the URL
+  2. Bot asks them to upload a companies XLSX (columns: company_name, domain, firmable_company_id)
+  3. Bot asks which country to search contacts for
+  4. Bot finds contacts via Firmable (VP/Director Sales top 5, C-Suite top 2)
+  5. Bot posts a summary with a "Name this list" button
+  6. User fills in a modal with the HubSpot list name
+  7. Bot shows a HubSpot preview (existing vs new) with Confirm / Cancel buttons
+  8. On Confirm: upserts companies + contacts, creates HubSpot list, posts the URL
 
 Usage:
     PYTHONPATH=. python3 workflows/contact_finder/bot.py
@@ -26,6 +27,7 @@ import os
 import re
 import threading
 
+import openpyxl
 import requests as req
 from dotenv import load_dotenv
 from slack_bolt import App
@@ -42,17 +44,53 @@ app = App(token=os.getenv("SLACK_BOT_TOKEN"))
 # sessions[user_id] = {
 #     "channel": str,
 #     "companies": list[dict],
+#     "country": str,          # e.g. "AU"
 #     "contacts": list[dict],
 #     "list_name": str,
 #     "preview": dict,
 # }
 sessions: dict = {}
 
+COUNTRIES = [
+    ("Australia",    "AU"),
+    ("Singapore",    "SG"),
+    ("New Zealand",  "NZ"),
+    ("Malaysia",     "MY"),
+    ("Indonesia",    "ID"),
+    ("Philippines",  "PH"),
+    ("Hong Kong",    "HK"),
+    ("Japan",        "JP"),
+]
+
 
 # ── Phone normalisation ─────────────────────────────────────────────────────
 
 def _normalise_phone(phone: str) -> str:
     return re.sub(r"[\s\-\(\)]", "", phone)
+
+
+# ── File parsing (CSV + XLSX) ───────────────────────────────────────────────
+
+def parse_companies_file(content: bytes, filename: str) -> list:
+    """Parse a CSV or XLSX file and return rows with firmable_company_id."""
+    if filename.lower().endswith(".xlsx"):
+        wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+        ws = wb.active
+        rows = list(ws.iter_rows(values_only=True))
+        if not rows:
+            return []
+        headers = [str(h).strip() if h is not None else "" for h in rows[0]]
+        result = []
+        for row in rows[1:]:
+            d = {headers[i]: (str(v).strip() if v is not None else "") for i, v in enumerate(row)}
+            if d.get("firmable_company_id"):
+                result.append(d)
+        return result
+    else:
+        # CSV fallback
+        text = content.decode("utf-8", errors="replace")
+        reader = csv.DictReader(io.StringIO(text))
+        return [r for r in reader if r.get("firmable_company_id")]
 
 
 # ── Firmable helpers ────────────────────────────────────────────────────────
@@ -139,7 +177,7 @@ def _enrich_and_filter(client: FirmableClient, summaries: list,
     return rows
 
 
-def find_contacts_for_companies(companies: list) -> list:
+def find_contacts_for_companies(companies: list, country: str) -> list:
     client = FirmableClient()
     all_rows = []
     for company in companies:
@@ -155,7 +193,7 @@ def find_contacts_for_companies(companies: list) -> list:
                     company_id=company_id,
                     seniority=p["seniority"],
                     department=2,
-                    country="AU",
+                    country=country,
                     size=_SEARCH_SIZE,
                 )
                 summaries = [r for r in (results or []) if r.get("person_id") not in seen_ids]
@@ -171,11 +209,11 @@ def find_contacts_for_companies(companies: list) -> list:
 
 def _contact_props(row: dict) -> dict:
     props = {}
-    if row.get("first_name"):  props["firstname"] = row["first_name"]
-    if row.get("last_name"):   props["lastname"] = row["last_name"]
-    if row.get("position"):    props["jobtitle"] = row["position"]
-    if row.get("work_email"):  props["email"] = row["work_email"]
-    if row.get("phone"):       props["phone"] = row["phone"]
+    if row.get("first_name"):   props["firstname"] = row["first_name"]
+    if row.get("last_name"):    props["lastname"] = row["last_name"]
+    if row.get("position"):     props["jobtitle"] = row["position"]
+    if row.get("work_email"):   props["email"] = row["work_email"]
+    if row.get("phone"):        props["phone"] = row["phone"]
     if row.get("linkedin_url"): props["linkedin_profile"] = row["linkedin_url"]
     return props
 
@@ -293,16 +331,35 @@ def hs_execute(hs: HubSpotClient, contacts: list, list_name: str) -> dict:
     return {"synced": len(contact_ids), "total": len(contacts), "url": url}
 
 
-# ── CSV parsing ─────────────────────────────────────────────────────────────
-
-def parse_companies_csv(text: str) -> list:
-    reader = csv.DictReader(io.StringIO(text))
-    return [r for r in reader if r.get("firmable_company_id")]
-
-
 # ── Slack blocks ────────────────────────────────────────────────────────────
 
-def _summary_blocks(contacts: list, user_id: str) -> list:
+def _country_select_blocks(n_companies: int) -> list:
+    return [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"Got it — found *{n_companies} companies*. Which country should I search contacts for?",
+            },
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "static_select",
+                    "action_id": "select_country",
+                    "placeholder": {"type": "plain_text", "text": "Select a country"},
+                    "options": [
+                        {"text": {"type": "plain_text", "text": label}, "value": code}
+                        for label, code in COUNTRIES
+                    ],
+                }
+            ],
+        },
+    ]
+
+
+def _summary_blocks(contacts: list, user_id: str, country_label: str) -> list:
     total = len(contacts)
     with_both = sum(1 for r in contacts if r["work_email"] and r["phone"])
     phone_only = sum(1 for r in contacts if r["phone"] and not r["work_email"])
@@ -314,7 +371,8 @@ def _summary_blocks(contacts: list, user_id: str) -> list:
             "text": {
                 "type": "mrkdwn",
                 "text": (
-                    f"*Found {total} contacts* across {len(set(r['company_name'] for r in contacts))} companies\n"
+                    f"*Found {total} contacts* across {len(set(r['company_name'] for r in contacts))} companies "
+                    f"({country_label})\n"
                     f"Phone + email: {with_both}  |  Phone only: {phone_only}  |  Email only: {email_only}"
                 ),
             },
@@ -396,8 +454,8 @@ def handle_find_contacts(ack, body, client):
     client.chat_postMessage(
         channel=channel_id,
         text=(
-            f"<@{user_id}> Upload your companies CSV in this channel and I'll find the contacts.\n"
-            "The CSV must have these columns: `company_name`, `domain`, `firmable_company_id`\n"
+            f"<@{user_id}> Upload your companies XLSX in this channel and I'll find the contacts.\n"
+            "The file must have these columns: `company_name`, `domain`, `firmable_company_id`\n"
             "_(You can download this directly from Firmable)_"
         ),
     )
@@ -416,42 +474,64 @@ def handle_file_shared(event, client, say):
 
     sessions[user_id]["channel"] = channel_id
 
-    # Download the file
     try:
         file_info = client.files_info(file=file_id)["file"]
+        filename = file_info.get("name", "upload.xlsx")
         url = file_info.get("url_private_download") or file_info.get("url_private")
         resp = req.get(url, headers={"Authorization": f"Bearer {os.getenv('SLACK_BOT_TOKEN')}"})
         resp.raise_for_status()
-        csv_text = resp.text
+        content = resp.content
     except Exception as e:
         say(channel=channel_id, text=f"Could not read the file: {e}")
         return
 
-    companies = parse_companies_csv(csv_text)
+    companies = parse_companies_file(content, filename)
     if not companies:
-        say(channel=channel_id, text="The CSV doesn't look right — make sure it has `company_name`, `domain`, and `firmable_company_id` columns with at least one row.")
+        say(channel=channel_id, text="The file doesn't look right — make sure it has `company_name`, `domain`, and `firmable_company_id` columns with at least one row.")
         return
 
     sessions[user_id]["companies"] = companies
 
-    # Post processing message
+    client.chat_postMessage(
+        channel=channel_id,
+        text=f"Got it — found {len(companies)} companies. Which country?",
+        blocks=_country_select_blocks(len(companies)),
+    )
+
+
+# ── Country selection ───────────────────────────────────────────────────────
+
+@app.action("select_country")
+def handle_select_country(ack, body, client):
+    ack()
+    user_id = body["user"]["id"]
+    channel_id = body["channel"]["id"]
+    country_code = body["actions"][0]["selected_option"]["value"]
+    country_label = body["actions"][0]["selected_option"]["text"]["text"]
+
+    if user_id not in sessions:
+        client.chat_postMessage(channel=channel_id, text="Session expired. Please run `/find-contacts` again.")
+        return
+
+    sessions[user_id]["country"] = country_code
+    companies = sessions[user_id].get("companies", [])
+
     msg = client.chat_postMessage(
         channel=channel_id,
-        text=f"Got it — found *{len(companies)} companies*. Finding contacts via Firmable... :hourglass_flowing_sand:",
+        text=f"Searching for contacts in *{country_label}*... :hourglass_flowing_sand:",
     )
     msg_ts = msg["ts"]
 
-    # Run in background thread so Slack doesn't time out
     def run_firmable():
         try:
-            contacts = find_contacts_for_companies(companies)
+            contacts = find_contacts_for_companies(companies, country_code)
             sessions[user_id]["contacts"] = contacts
 
             if not contacts:
                 client.chat_update(
                     channel=channel_id,
                     ts=msg_ts,
-                    text="No contacts found for these companies.",
+                    text=f"No contacts found for these companies in {country_label}.",
                 )
                 return
 
@@ -459,7 +539,7 @@ def handle_file_shared(event, client, say):
                 channel=channel_id,
                 ts=msg_ts,
                 text=f"Found {len(contacts)} contacts.",
-                blocks=_summary_blocks(contacts, user_id),
+                blocks=_summary_blocks(contacts, user_id, country_label),
             )
         except Exception as e:
             client.chat_update(
@@ -521,7 +601,7 @@ def handle_list_name_submit(ack, body, client):
 
     msg = client.chat_postMessage(
         channel=channel,
-        text=f"Checking HubSpot for existing records...",
+        text="Checking HubSpot for existing records...",
     )
     msg_ts = msg["ts"]
 

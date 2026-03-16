@@ -6,3 +6,4 @@ pandas
 playwright
 beautifulsoup4
 slack_bolt
+openpyxl
