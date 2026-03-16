@@ -75,14 +75,15 @@ def _extract_firmable_id(val: str) -> str:
     """Extract Firmable company ID from a URL or return the value as-is if it's already an ID."""
     if not val:
         return ""
+    val = val.strip()
     # Already an ID: f000000117238
-    if re.match(r"^f\d+$", val.strip()):
-        return val.strip()
-    # URL: https://app.firmable.com/dashboard/company/f000000117238
-    m = re.search(r"/company/(f\d+)", val)
+    if re.match(r"^f\d+$", val):
+        return val
+    # Extract the last path segment from any URL ending in /f000000117238
+    m = re.search(r"/(f\d+)/?$", val)
     if m:
         return m.group(1)
-    return val.strip()
+    return val
 
 
 def _normalise_headers(raw_headers: list) -> dict:
@@ -94,8 +95,8 @@ def _normalise_headers(raw_headers: list) -> dict:
         "company_name": ["company name", "company_name", "name"],
         "domain":       ["domain name", "domain", "website", "fqdn"],
         "firmable_company_id": [
-            "firmable company id", "firmable_company_id", "company id",
-            "firmable id", "firmable url", "profile url", "url",
+            "firmable company link", "firmable company id", "firmable_company_id",
+            "company id", "firmable id", "firmable url", "profile url", "url",
         ],
     }
     index_map = {}
