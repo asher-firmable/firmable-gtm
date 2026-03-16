@@ -325,13 +325,14 @@ def hs_preview(hs: HubSpotClient, contacts: list) -> dict:
             pass
 
     contact_existing = {}   # person_id -> hs_object_id
-    contact_new = []        # list of full_name
+    contact_new = []        # list of (full_name, position)
     contact_skipped = []    # list of full_name
     for row in contacts:
         person_id = row.get("person_id", "")
         email = row.get("work_email", "")
         phone = row.get("phone", "")
         full_name = row.get("full_name") or f"{row.get('first_name', '')} {row.get('last_name', '')}".strip()
+        position = row.get("position", "")
         if not email and not phone:
             contact_skipped.append(full_name)
             continue
@@ -340,7 +341,7 @@ def hs_preview(hs: HubSpotClient, contacts: list) -> dict:
             if matches:
                 contact_existing[person_id] = matches[0]["id"]
             else:
-                contact_new.append(full_name)
+                contact_new.append((full_name, position))
         except Exception:
             pass
 
@@ -490,7 +491,9 @@ def _preview_blocks(list_name: str, preview: dict, user_id: str) -> list:
 
     # Build detail lines for new companies and new contacts
     new_company_lines = "\n".join(f"    • {name} ({domain})" for name, domain in preview["company_new"]) or "    (none)"
-    new_contact_lines = "\n".join(f"    • {name}" for name in preview["contact_new"]) or "    (none)"
+    new_contact_lines = "\n".join(
+        f"    • {name}{', ' + pos if pos else ''}" for name, pos in preview["contact_new"]
+    ) or "    (none)"
 
     return [
         {
