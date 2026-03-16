@@ -77,10 +77,23 @@ class HubSpotClient:
     # ── Companies ──────────────────────────────────────────────────────────
 
     def search_companies(self, domain: str) -> list:
-        """Search for companies by domain. Uses CONTAINS_TOKEN to match any value in HubSpot's
-        multi-domain field (e.g. 'tallygroup.com.au, tally.co, tally-group.com')."""
+        """Search for companies by domain (EQ then CONTAINS_TOKEN fallback)."""
+        for operator in ("EQ", "CONTAINS_TOKEN"):
+            payload = {
+                "filterGroups": [{"filters": [{"propertyName": "domain", "operator": operator, "value": domain}]}],
+                "properties": ["hs_object_id", "name", "domain"],
+                "limit": 5,
+            }
+            result = self._post("/crm/v3/objects/companies/search", payload)
+            matches = result.get("results", [])
+            if matches:
+                return matches
+        return []
+
+    def search_companies_by_name(self, name: str) -> list:
+        """Search for companies by name (exact match). Used as fallback when domain search fails."""
         payload = {
-            "filterGroups": [{"filters": [{"propertyName": "domain", "operator": "CONTAINS_TOKEN", "value": domain}]}],
+            "filterGroups": [{"filters": [{"propertyName": "name", "operator": "EQ", "value": name}]}],
             "properties": ["hs_object_id", "name", "domain"],
             "limit": 5,
         }

@@ -315,11 +315,12 @@ def hs_preview(hs: HubSpotClient, contacts: list) -> dict:
             continue
         seen_domains.add(domain)
         try:
-            matches = hs.search_companies(domain)
+            company_name = row.get("company_name", "")
+            matches = hs.search_companies(domain) or (hs.search_companies_by_name(company_name) if company_name else [])
             if matches:
                 company_existing[domain] = matches[0]["id"]
             else:
-                company_new.append((row.get("company_name", domain), domain))
+                company_new.append((company_name or domain, domain))
         except Exception:
             pass
 
@@ -360,7 +361,8 @@ def hs_execute(hs: HubSpotClient, contacts: list, list_name: str) -> dict:
         if not domain or domain in seen_domains:
             continue
         try:
-            matches = hs.search_companies(domain)
+            company_name = row.get("company_name", "")
+            matches = hs.search_companies(domain) or (hs.search_companies_by_name(company_name) if company_name else [])
             props = _company_props(row)
             if matches:
                 company_id = matches[0]["id"]
@@ -542,7 +544,7 @@ def handle_find_contacts(ack, body, client):
     user_id = body["user_id"]
     channel_id = body["channel_id"]
 
-    sessions[user_id] = {"channel": channel_id}
+    sessions[user_id] = {"channel": channel_id}  # always reset, clears any previous state
 
     client.chat_postMessage(
         channel=channel_id,
@@ -787,7 +789,10 @@ def handle_cancel(ack, body, client):
     user_id = body["actions"][0]["value"]
     channel = body["channel"]["id"]
     sessions.pop(user_id, None)
-    client.chat_postMessage(channel=channel, text="Cancelled. Nothing was written to HubSpot.")
+    client.chat_postMessage(
+        channel=channel,
+        text="Cancelled. Nothing was written to HubSpot.\nRun `/find-contacts` to start a new search.",
+    )
 
 
 # ── Entry point ─────────────────────────────────────────────────────────────
