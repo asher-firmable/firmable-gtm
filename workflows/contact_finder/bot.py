@@ -71,6 +71,42 @@ def _normalise_phone(phone: str) -> str:
 
 # ── File parsing (CSV + XLSX) ───────────────────────────────────────────────
 
+def _extract_firmable_id(val: str) -> str:
+    """Extract Firmable company ID from a URL or return the value as-is if it's already an ID."""
+    if not val:
+        return ""
+    # Already an ID: f000000117238
+    if re.match(r"^f\d+$", val.strip()):
+        return val.strip()
+    # URL: https://app.firmable.com/dashboard/company/f000000117238
+    m = re.search(r"/company/(f\d+)", val)
+    if m:
+        return m.group(1)
+    return val.strip()
+
+
+def _normalise_headers(raw_headers: list) -> dict:
+    """
+    Map raw column headers (any casing/spacing) to the canonical names the bot uses.
+    Returns a dict of {canonical_name: index}.
+    """
+    ALIASES = {
+        "company_name": ["company name", "company_name", "name"],
+        "domain":       ["domain name", "domain", "website", "fqdn"],
+        "firmable_company_id": [
+            "firmable company id", "firmable_company_id", "company id",
+            "firmable id", "firmable url", "profile url", "url",
+        ],
+    }
+    index_map = {}
+    for i, h in enumerate(raw_headers):
+        normalised = h.strip().lower().replace("_", " ")
+        for canonical, aliases in ALIASES.items():
+            if normalised in aliases and canonical not in index_map:
+                index_map[canonical] = i
+    return index_map
+
+
 def parse_companies_file(content: bytes, filename: str) -> list:
     """Parse a CSV or XLSX file and return rows with firmable_company_id."""
     if filename.lower().endswith(".xlsx"):
@@ -79,18 +115,45 @@ def parse_companies_file(content: bytes, filename: str) -> list:
         rows = list(ws.iter_rows(values_only=True))
         if not rows:
             return []
-        headers = [str(h).strip() if h is not None else "" for h in rows[0]]
+        raw_headers = [str(h).strip() if h is not None else "" for h in rows[0]]
+        index_map = _normalise_headers(raw_headers)
+
         result = []
         for row in rows[1:]:
-            d = {headers[i]: (str(v).strip() if v is not None else "") for i, v in enumerate(row)}
-            if d.get("firmable_company_id"):
-                result.append(d)
+            def cell(col):
+                idx = index_map.get(col)
+                return str(row[idx]).strip() if idx is not None and idx < len(row) and row[idx] is not None else ""
+
+            firmable_id = _extract_firmable_id(cell("firmable_company_id"))
+            if not firmable_id:
+                continue
+            result.append({
+                "company_name": cell("company_name"),
+                "domain":       cell("domain"),
+                "firmable_company_id": firmable_id,
+            })
         return result
     else:
-        # CSV fallback
+        # CSV fallback — also normalise headers
         text = content.decode("utf-8", errors="replace")
         reader = csv.DictReader(io.StringIO(text))
-        return [r for r in reader if r.get("firmable_company_id")]
+        result = []
+        for r in reader:
+            # Normalise keys
+            normalised = {k.strip().lower().replace("_", " "): v for k, v in r.items()}
+            firmable_id = _extract_firmable_id(
+                normalised.get("firmable company id") or
+                normalised.get("firmable_company_id") or
+                normalised.get("firmable url") or ""
+            )
+            if not firmable_id:
+                continue
+            result.append({
+                "company_name": normalised.get("company name") or normalised.get("company_name") or "",
+                "domain":       normalised.get("domain name") or normalised.get("domain") or "",
+                "firmable_company_id": firmable_id,
+            })
+        return result
 
 
 # ── Firmable helpers ────────────────────────────────────────────────────────
