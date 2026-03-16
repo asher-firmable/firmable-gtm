@@ -107,22 +107,26 @@ def _normalise_headers(raw_headers: list) -> dict:
     return index_map
 
 
-def parse_companies_file(content: bytes, filename: str) -> list:
-    """Parse a CSV or XLSX file and return rows with firmable_company_id."""
+def parse_companies_file(content: bytes, filename: str):
+    """
+    Parse a CSV or XLSX file and return (rows, raw_headers).
+    rows is a list of dicts with keys: company_name, domain, firmable_company_id.
+    raw_headers is the list of original column names (for debug messages).
+    """
     if filename.lower().endswith(".xlsx"):
         wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True)
         ws = wb.active
         rows = list(ws.iter_rows(values_only=True))
         if not rows:
-            return []
+            return [], []
         raw_headers = [str(h).strip() if h is not None else "" for h in rows[0]]
         index_map = _normalise_headers(raw_headers)
 
         result = []
         for row in rows[1:]:
-            def cell(col):
+            def cell(col, _row=row):
                 idx = index_map.get(col)
-                return str(row[idx]).strip() if idx is not None and idx < len(row) and row[idx] is not None else ""
+                return str(_row[idx]).strip() if idx is not None and idx < len(_row) and _row[idx] is not None else ""
 
             firmable_id = _extract_firmable_id(cell("firmable_company_id"))
             if not firmable_id:
@@ -132,14 +136,14 @@ def parse_companies_file(content: bytes, filename: str) -> list:
                 "domain":       cell("domain"),
                 "firmable_company_id": firmable_id,
             })
-        return result
+        return result, raw_headers
     else:
         # CSV fallback — also normalise headers
         text = content.decode("utf-8", errors="replace")
         reader = csv.DictReader(io.StringIO(text))
+        raw_headers = reader.fieldnames or []
         result = []
         for r in reader:
-            # Normalise keys
             normalised = {k.strip().lower().replace("_", " "): v for k, v in r.items()}
             firmable_id = _extract_firmable_id(
                 normalised.get("firmable company id") or
@@ -153,7 +157,7 @@ def parse_companies_file(content: bytes, filename: str) -> list:
                 "domain":       normalised.get("domain name") or normalised.get("domain") or "",
                 "firmable_company_id": firmable_id,
             })
-        return result
+        return result, list(raw_headers)
 
 
 # ── Firmable helpers ────────────────────────────────────────────────────────
@@ -548,9 +552,13 @@ def handle_file_shared(event, client, say):
         say(channel=channel_id, text=f"Could not read the file: {e}")
         return
 
-    companies = parse_companies_file(content, filename)
+    companies, raw_headers = parse_companies_file(content, filename)
     if not companies:
-        say(channel=channel_id, text="The file doesn't look right — make sure it has `company_name`, `domain`, and `firmable_company_id` columns with at least one row.")
+        say(channel=channel_id, text=(
+            f"The file doesn't look right. Here are the column headers I found:\n"
+            f"`{raw_headers}`\n\n"
+            "I need columns for: company name, domain, and a Firmable company URL or ID."
+        ))
         return
 
     sessions[user_id]["companies"] = companies
