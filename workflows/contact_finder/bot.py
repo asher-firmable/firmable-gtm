@@ -687,9 +687,18 @@ def handle_name_list(ack, body, client):
 def handle_list_name_submit(ack, body, client):
     ack()
     user_id = body["view"]["private_metadata"]
+    channel = body["user"]["id"]  # fallback: DM the user if channel unknown
+
     list_name = body["view"]["state"]["values"]["list_name_block"]["list_name_input"]["value"].strip()
 
-    if not list_name or user_id not in sessions:
+    if not list_name:
+        return
+
+    if user_id not in sessions:
+        client.chat_postMessage(
+            channel=channel,
+            text="Session expired — the bot was restarted. Please run `/find-contacts` and upload your file again.",
+        )
         return
 
     sessions[user_id]["list_name"] = list_name
@@ -715,10 +724,11 @@ def handle_list_name_submit(ack, body, client):
                 blocks=_preview_blocks(list_name, preview, user_id),
             )
         except Exception as e:
+            import traceback
             client.chat_update(
                 channel=channel,
                 ts=msg_ts,
-                text=f"Error checking HubSpot: {e}",
+                text=f"Error checking HubSpot: {e}\n```{traceback.format_exc()}```",
             )
 
     threading.Thread(target=run_preview, daemon=True).start()
