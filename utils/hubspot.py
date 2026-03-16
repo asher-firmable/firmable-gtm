@@ -77,9 +77,10 @@ class HubSpotClient:
     # ── Companies ──────────────────────────────────────────────────────────
 
     def search_companies(self, domain: str) -> list:
-        """Search for companies by domain. Returns list of matching company objects."""
+        """Search for companies by domain. Uses CONTAINS_TOKEN to match any value in HubSpot's
+        multi-domain field (e.g. 'tallygroup.com.au, tally.co, tally-group.com')."""
         payload = {
-            "filterGroups": [{"filters": [{"propertyName": "domain", "operator": "EQ", "value": domain}]}],
+            "filterGroups": [{"filters": [{"propertyName": "domain", "operator": "CONTAINS_TOKEN", "value": domain}]}],
             "properties": ["hs_object_id", "name", "domain"],
             "limit": 5,
         }
