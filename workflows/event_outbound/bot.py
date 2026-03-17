@@ -194,17 +194,26 @@ def handle_slash(ack, body, client):
 @app.view("event_url_modal")
 def handle_url_modal(ack, body, client):
     ack()
+    user_id = body["user"]["id"]
+    url = ""
     try:
-        user_id = body["user"]["id"]
         url = body["view"]["state"]["values"]["url_block"]["url_input"]["value"].strip()
-        # Post back to the channel where /event-contacts was called
-        # Requires chat:write.public scope so the bot can post without being a channel member
         channel = body["view"]["private_metadata"]
 
-        sessions[user_id] = {"channel": channel}
-        msg_ts = _post(client, channel,
-                       f":mag: Scraping sponsors from {url}…\n_This may take 1–2 minutes._")
-        sessions[user_id]["msg_ts"] = msg_ts
+        # Try posting to the original channel first; fall back to DM if bot lacks access
+        try:
+            msg_ts = _post(client, channel,
+                           f":mag: Scraping sponsors from {url}…\n_This may take 1–2 minutes._")
+        except Exception as post_err:
+            print(f"[handle_url_modal] channel post failed ({post_err}), falling back to DM")
+            dm = client.conversations_open(users=user_id)["channel"]["id"]
+            channel = dm
+            msg_ts = _post(client, channel,
+                           f":mag: Scraping sponsors from {url}…\n_This may take 1–2 minutes._\n"
+                           f"_(Note: posting here because the bot couldn't post to the channel. "
+                           f"Add `chat:write.public` scope in your Slack app settings.)_")
+
+        sessions[user_id] = {"channel": channel, "msg_ts": msg_ts}
 
         threading.Thread(
             target=_scrape_thread,
@@ -214,6 +223,12 @@ def handle_url_modal(ack, body, client):
     except Exception:
         tb = traceback.format_exc()
         print(f"[handle_url_modal error]\n{tb}")
+        try:
+            dm = client.conversations_open(users=user_id)["channel"]["id"]
+            client.chat_postMessage(channel=dm,
+                                    text=f":x: Something went wrong starting the scrape.\n```{tb[-600:]}```")
+        except Exception:
+            pass
 
 
 def _scrape_thread(user_id: str, url: str, client, channel: str, msg_ts: str):
