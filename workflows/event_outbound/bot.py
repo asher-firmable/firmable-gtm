@@ -600,6 +600,15 @@ def handle_cancel(ack, body, client):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    # Ensure Playwright Chromium browser binary is present (required on Railway)
+    import subprocess
+    print("Ensuring Playwright Chromium is installed…")
+    subprocess.run(
+        ["playwright", "install", "chromium", "--with-deps"],
+        check=False,
+    )
+    print("Playwright ready.")
+
     handler = SocketModeHandler(app, os.environ["EVENT_BOT_SLACK_APP_TOKEN"])
     print("Event Outbound Bot is running (Socket Mode)…")
     handler.start()
