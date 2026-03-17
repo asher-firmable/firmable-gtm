@@ -194,20 +194,27 @@ def handle_slash(ack, body, client):
 @app.view("event_url_modal")
 def handle_url_modal(ack, body, client):
     ack()
-    user_id = body["user"]["id"]
-    url = body["view"]["state"]["values"]["url_block"]["url_input"]["value"].strip()
-    channel = body["view"]["private_metadata"]
+    try:
+        user_id = body["user"]["id"]
+        url = body["view"]["state"]["values"]["url_block"]["url_input"]["value"].strip()
 
-    sessions[user_id] = {"channel": channel}
-    msg_ts = _post(client, channel,
-                   f":mag: Scraping sponsors from {url}…\n_This may take 1–2 minutes._")
-    sessions[user_id]["msg_ts"] = msg_ts
+        # Always respond in a DM so the bot doesn't need to be a channel member
+        dm_resp = client.conversations_open(users=user_id)
+        channel = dm_resp["channel"]["id"]
 
-    threading.Thread(
-        target=_scrape_thread,
-        args=(user_id, url, client, channel, msg_ts),
-        daemon=True,
-    ).start()
+        sessions[user_id] = {"channel": channel}
+        msg_ts = _post(client, channel,
+                       f":mag: Scraping sponsors from {url}…\n_This may take 1–2 minutes._")
+        sessions[user_id]["msg_ts"] = msg_ts
+
+        threading.Thread(
+            target=_scrape_thread,
+            args=(user_id, url, client, channel, msg_ts),
+            daemon=True,
+        ).start()
+    except Exception:
+        tb = traceback.format_exc()
+        print(f"[handle_url_modal error]\n{tb}")
 
 
 def _scrape_thread(user_id: str, url: str, client, channel: str, msg_ts: str):
