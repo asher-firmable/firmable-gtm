@@ -8,8 +8,8 @@ Flow:
   find contacts → post CSV
 
 Environment variables required:
-    SLACK_BOT_TOKEN
-    SLACK_APP_TOKEN
+    EVENT_BOT_SLACK_BOT_TOKEN
+    EVENT_BOT_SLACK_APP_TOKEN
     FIRMABLE_API_KEY
     FIRMABLE_OS_API_KEY
     FIRECRAWL_API_KEY  (optional — skips LinkedIn resolution if missing)
@@ -74,7 +74,7 @@ find_contacts_for_company = _ctcts.find_contacts_for_company
 # Slack app + session store
 # ---------------------------------------------------------------------------
 
-app = App(token=os.environ["SLACK_BOT_TOKEN"])
+app = App(token=os.environ["EVENT_BOT_SLACK_BOT_TOKEN"])
 
 # In-memory sessions keyed by user_id
 sessions: dict = {}
@@ -577,6 +577,6 @@ def handle_cancel(ack, body, client):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    handler = SocketModeHandler(app, os.environ["SLACK_APP_TOKEN"])
+    handler = SocketModeHandler(app, os.environ["EVENT_BOT_SLACK_APP_TOKEN"])
     print("Event Outbound Bot is running (Socket Mode)…")
     handler.start()

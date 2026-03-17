@@ -15,8 +15,8 @@ Usage:
     PYTHONPATH=. python3 workflows/contact_finder/bot.py
 
 Required .env keys:
-    SLACK_BOT_TOKEN   xoxb-...
-    SLACK_APP_TOKEN   xapp-...
+    CONTACT_FINDER_SLACK_BOT_TOKEN   xoxb-...
+    CONTACT_FINDER_SLACK_APP_TOKEN   xapp-...
     FIRMABLE_API_KEY
     HUBSPOT_ACCESS_TOKEN
 """
@@ -38,7 +38,7 @@ from utils.hubspot import HubSpotClient
 
 load_dotenv()
 
-app = App(token=os.getenv("SLACK_BOT_TOKEN"))
+app = App(token=os.getenv("CONTACT_FINDER_SLACK_BOT_TOKEN"))
 
 # ── In-memory session store ─────────────────────────────────────────────────
 # sessions[user_id] = {
@@ -576,7 +576,7 @@ def handle_file_shared(event, client, say):
         file_info = client.files_info(file=file_id)["file"]
         filename = file_info.get("name", "upload.xlsx")
         url = file_info.get("url_private_download") or file_info.get("url_private")
-        resp = req.get(url, headers={"Authorization": f"Bearer {os.getenv('SLACK_BOT_TOKEN')}"})
+        resp = req.get(url, headers={"Authorization": f"Bearer {os.getenv('CONTACT_FINDER_SLACK_BOT_TOKEN')}"})
         resp.raise_for_status()
         content = resp.content
     except Exception as e:
@@ -801,6 +801,6 @@ def handle_cancel(ack, body, client):
 # ── Entry point ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    handler = SocketModeHandler(app, os.getenv("SLACK_APP_TOKEN"))
+    handler = SocketModeHandler(app, os.getenv("CONTACT_FINDER_SLACK_APP_TOKEN"))
     print("Contact Finder bot is running. Press Ctrl+C to stop.")
     handler.start()
