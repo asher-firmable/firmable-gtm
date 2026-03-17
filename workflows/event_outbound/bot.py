@@ -197,10 +197,9 @@ def handle_url_modal(ack, body, client):
     try:
         user_id = body["user"]["id"]
         url = body["view"]["state"]["values"]["url_block"]["url_input"]["value"].strip()
-
-        # Always respond in a DM so the bot doesn't need to be a channel member
-        dm_resp = client.conversations_open(users=user_id)
-        channel = dm_resp["channel"]["id"]
+        # Post back to the channel where /event-contacts was called
+        # Requires chat:write.public scope so the bot can post without being a channel member
+        channel = body["view"]["private_metadata"]
 
         sessions[user_id] = {"channel": channel}
         msg_ts = _post(client, channel,
