@@ -212,6 +212,8 @@ def handle_url_modal(ack, body, client):
 
 def _scrape_thread(user_id: str, url: str, client, channel: str, msg_ts: str):
     try:
+        _update(client, channel, msg_ts,
+                f":mag: *Step 1/4* — Launching browser and loading {url}…")
         with sync_playwright() as p:
             browser = p.chromium.launch(
                 headless=True,
@@ -222,10 +224,17 @@ def _scrape_thread(user_id: str, url: str, client, channel: str, msg_ts: str):
                 "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             ))
             page = ctx.new_page()
+            _update(client, channel, msg_ts,
+                    f":mag: *Step 2/4* — Finding sponsor listing page…")
             listing_url = find_exhibitor_url(page, url)
+            _update(client, channel, msg_ts,
+                    f":mag: *Step 3/4* — Scraping sponsor cards…")
             exhibitors = scrape_listing_page(page, listing_url)
             browser.close()
 
+        _update(client, channel, msg_ts,
+                f":mag: *Step 4/4* — Resolving LinkedIn URLs and Firmable IDs "
+                f"for {len(exhibitors)} companies…")
         exhibitors = resolve_missing_linkedin(exhibitors)
         exhibitors = enrich_with_firmable(exhibitors)
 
@@ -297,7 +306,10 @@ def _sizes_thread(user_id: str, client, channel: str, msg_ts: str):
         _empty = {"au_sales_team_size": None, "nz_sales_team_size": None,
                   "sea_sales_team_size": None, "total_sales_team_size": None}
 
-        for ex in exhibitors:
+        n = len(exhibitors)
+        for i, ex in enumerate(exhibitors, 1):
+            _update(client, channel, msg_ts,
+                    f":bar_chart: Fetching sales team sizes… *{i}/{n}* — {ex['company_name']}")
             cid = ex.get("firmable_company_id", "")
             if not cid:
                 sizes[cid] = dict(_empty)
@@ -499,7 +511,11 @@ def _contacts_thread(user_id: str, client, channel: str, msg_ts: str):
         _empty_sizes = {"au_sales_team_size": None, "nz_sales_team_size": None,
                         "sea_sales_team_size": None, "total_sales_team_size": None}
 
-        for ex in qualifying:
+        n = len(qualifying)
+        for i, ex in enumerate(qualifying, 1):
+            _update(client, channel, msg_ts,
+                    f":busts_in_silhouette: Finding contacts… *{i}/{n}* — {ex['company_name']} "
+                    f"({len(all_contacts)} found so far)")
             try:
                 rows = find_contacts_for_company(firmable, ex)
                 cid = ex.get("firmable_company_id", "")
