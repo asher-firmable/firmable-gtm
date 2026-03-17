@@ -120,7 +120,10 @@ def _enrich_and_filter(client: FirmableClient, summaries: list[dict],
     return rows
 
 
-def find_contacts_for_company(client: FirmableClient, company: dict) -> list[dict]:
+def find_contacts_for_company(client: FirmableClient, company: dict,
+                               countries: list = None) -> list[dict]:
+    if not countries:
+        countries = ["AU"]
     company_id = company["firmable_company_id"]
     company_name = company["company_name"]
     domain = company["domain"]
@@ -128,22 +131,25 @@ def find_contacts_for_company(client: FirmableClient, company: dict) -> list[dic
     all_rows = []
     seen_ids = set()
 
-    for p in SEARCH_PASSES:
-        try:
-            results = client.find_contacts(
-                company_id=company_id,
-                seniority=p["seniority"],
-                department=2,
-                country="AU",
-                size=_SEARCH_SIZE,
-            )
-            summaries = [r for r in (results or []) if r.get("person_id") not in seen_ids]
-            seen_ids.update(r["person_id"] for r in summaries if r.get("person_id"))
-            print(f"  [{p['label']}] {len(summaries)} candidates → capping at {p['cap']}")
-            rows = _enrich_and_filter(client, summaries, company_name, domain, company_id, cap=p["cap"])
-            all_rows.extend(rows)
-        except Exception as e:
-            print(f"  [{p['label']}] search error: {e}")
+    for country in countries:
+        for p in SEARCH_PASSES:
+            try:
+                results = client.find_contacts(
+                    company_id=company_id,
+                    seniority=p["seniority"],
+                    department=2,
+                    country=country,
+                    size=_SEARCH_SIZE,
+                )
+                summaries = [r for r in (results or []) if r.get("person_id") not in seen_ids]
+                seen_ids.update(r["person_id"] for r in summaries if r.get("person_id"))
+                print(f"  [{country}][{p['label']}] {len(summaries)} candidates → capping at {p['cap']}")
+                rows = _enrich_and_filter(client, summaries, company_name, domain, company_id, cap=p["cap"])
+                for row in rows:
+                    if row["person_id"] not in {r["person_id"] for r in all_rows}:
+                        all_rows.append(row)
+            except Exception as e:
+                print(f"  [{country}][{p['label']}] search error: {e}")
 
     return all_rows
 

@@ -486,20 +486,48 @@ def handle_threshold_modal(ack, body, client):
         {"type": "section", "text": {"type": "mrkdwn", "text": text}},
         {"type": "divider"},
         {"type": "section", "text": {"type": "mrkdwn",
-         "text": f"Find contacts for these *{len(qualifying)} companies*?"}},
-    ] + _action_buttons(
-        "proceed_to_contacts", "cancel_session", user_id,
-        yes_label=":busts_in_silhouette: Yes, find contacts",
-    )
+         "text": f"Select countries and find contacts for these *{len(qualifying)} companies*?"}},
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": ":earth_asia: Select countries & find contacts"},
+                    "style": "primary",
+                    "action_id": "open_country_modal",
+                    "value": user_id,
+                },
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Cancel"},
+                    "style": "danger",
+                    "action_id": "cancel_session",
+                    "value": user_id,
+                },
+            ],
+        },
+    ]
     _post(client, channel, text, blocks=blocks)
 
 
 # ---------------------------------------------------------------------------
-# Phase 6: Find contacts in background → post CSV
+# Phase 6: Open country selection modal
 # ---------------------------------------------------------------------------
 
-@app.action("proceed_to_contacts")
-def handle_proceed_to_contacts(ack, body, client):
+_COUNTRIES = [
+    ("AU", "Australia"),
+    ("NZ", "New Zealand"),
+    ("SG", "Singapore"),
+    ("MY", "Malaysia"),
+    ("PH", "Philippines"),
+    ("ID", "Indonesia"),
+    ("HK", "Hong Kong"),
+    ("JP", "Japan"),
+]
+
+
+@app.action("open_country_modal")
+def handle_open_country_modal(ack, body, client):
     ack()
     user_id = body["actions"][0]["value"]
     if user_id not in sessions:
@@ -509,9 +537,63 @@ def handle_proceed_to_contacts(ack, body, client):
         )
         return
 
+    client.views_open(
+        trigger_id=body["trigger_id"],
+        view={
+            "type": "modal",
+            "callback_id": "country_modal",
+            "private_metadata": user_id,
+            "title": {"type": "plain_text", "text": "Select Countries"},
+            "submit": {"type": "plain_text", "text": "Find Contacts"},
+            "close":  {"type": "plain_text", "text": "Cancel"},
+            "blocks": [{
+                "type": "input",
+                "block_id": "country_block",
+                "label": {"type": "plain_text", "text": "Countries to search for sales contacts"},
+                "hint": {"type": "plain_text", "text": "Select one or more countries"},
+                "element": {
+                    "type": "checkboxes",
+                    "action_id": "country_input",
+                    "options": [
+                        {
+                            "text": {"type": "plain_text", "text": f"{name} ({code})"},
+                            "value": code,
+                        }
+                        for code, name in _COUNTRIES
+                    ],
+                },
+            }],
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 7: Country modal submit → find contacts in background
+# ---------------------------------------------------------------------------
+
+@app.view("country_modal")
+def handle_country_modal(ack, body, client):
+    selected = body["view"]["state"]["values"]["country_block"]["country_input"].get("selected_options", [])
+    if not selected:
+        ack(response_action="errors",
+            errors={"country_block": "Please select at least one country."})
+        return
+
+    ack()
+    user_id = body["view"]["private_metadata"]
+    countries = [opt["value"] for opt in selected]
+
+    if user_id not in sessions:
+        return
+
+    sessions[user_id]["countries"] = countries
     channel = sessions[user_id]["channel"]
+    country_labels = ", ".join(
+        name for code, name in _COUNTRIES if code in countries
+    )
     msg_ts = _post(client, channel,
-                   ":busts_in_silhouette: Finding contacts… this may take a few minutes.")
+                   f":busts_in_silhouette: Finding contacts in *{country_labels}*… "
+                   "this may take a few minutes.")
 
     threading.Thread(
         target=_contacts_thread,
@@ -520,12 +602,23 @@ def handle_proceed_to_contacts(ack, body, client):
     ).start()
 
 
+# ---------------------------------------------------------------------------
+# Phase 8: Find contacts in background → post CSV
+# ---------------------------------------------------------------------------
+
+@app.action("proceed_to_contacts")
+def handle_proceed_to_contacts(ack, body, client):
+    # Legacy handler kept to avoid unhandled action warnings; flow now goes via country_modal
+    ack()
+
+
 def _contacts_thread(user_id: str, client, channel: str, msg_ts: str):
     try:
         if user_id not in sessions:
             return
         qualifying = sessions[user_id]["qualifying"]
         sizes      = sessions[user_id]["sizes"]
+        countries  = sessions[user_id].get("countries", ["AU"])
         firmable   = FirmableClient()
 
         all_contacts: list = []
@@ -538,7 +631,7 @@ def _contacts_thread(user_id: str, client, channel: str, msg_ts: str):
                     f":busts_in_silhouette: Finding contacts… *{i}/{n}* — {ex['company_name']} "
                     f"({len(all_contacts)} found so far)")
             try:
-                rows = find_contacts_for_company(firmable, ex)
+                rows = find_contacts_for_company(firmable, ex, countries=countries)
                 cid = ex.get("firmable_company_id", "")
                 size_data = sizes.get(cid, dict(_empty_sizes))
                 for row in rows:
