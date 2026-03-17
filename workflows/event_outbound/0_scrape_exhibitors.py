@@ -50,6 +50,12 @@ EXHIBITOR_KEYWORDS = [
     "partner", "partners", "booth", "expo", "pavilion", "showcase",
 ]
 
+# Path segments that indicate a non-listing page (download, registration, etc.)
+_LISTING_EXCLUDE = {
+    "download", "prospectus", "register", "registration", "schedule",
+    "agenda", "speaker", "speakers", "exhibitor-hub", "pdf",
+}
+
 # Social domains to exclude when looking for a company's website link
 SOCIAL_DOMAINS = {
     "linkedin.com", "twitter.com", "x.com", "facebook.com",
@@ -98,6 +104,10 @@ def find_exhibitor_url(page, start_url: str) -> str:
         combined = (href + " " + text).lower()
         score = sum(1 for kw in EXHIBITOR_KEYWORDS if kw in combined)
         if score > 0:
+            # Skip links that are clearly not a listing page (download, registration, etc.)
+            path = urlparse(full_href).path.lower()
+            if any(kw in path for kw in _LISTING_EXCLUDE):
+                continue
             candidates.append((score, full_href))
 
     if not candidates:
@@ -352,6 +362,7 @@ def identify_exhibitor_cards(page) -> list:
     CARD_SELECTORS = [
         ".exhibitor-card", ".exhibitor-item", ".exhibitor",
         ".sponsor-card", ".sponsor-item", ".sponsor",
+        ".sponsors-section", "[class*='sponsors-section']",
         ".partner-card", ".partner-item", ".partner",
         ".company-card", ".company-item",
         ".card", ".list-group-item", ".grid-item",
@@ -584,7 +595,7 @@ def lookup_firmable_company_id(client: FirmableClient, company: dict) -> str:
     if linkedin:
         try:
             result = client.search_by_linkedin(linkedin)
-            fid = result.get("id", "")
+            fid = result.get("firmable_company_id") or result.get("id", "")
             if fid:
                 return str(fid)
         except Exception as e:
@@ -593,7 +604,7 @@ def lookup_firmable_company_id(client: FirmableClient, company: dict) -> str:
     if domain:
         try:
             result = client.lookup_company(domain=domain)
-            fid = result.get("id", "")
+            fid = result.get("firmable_company_id") or result.get("id", "")
             if fid:
                 return str(fid)
         except Exception as e:
