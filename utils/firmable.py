@@ -72,3 +72,87 @@ class FirmableClient:
         if isinstance(result, dict):
             return result.get("records", [])
         return result or []
+
+    def get_sales_team_size(self, company_id: str) -> dict:
+        """Return sales team headcount by region for a Firmable company ID.
+
+        Uses the OS Search API (separate base URL and key from the main API).
+        Requires FIRMABLE_OS_API_KEY in .env.
+        Returns dict with keys: au_sales_team_size, nz_sales_team_size,
+        sea_sales_team_size, total_sales_team_size. Values are int or None.
+        """
+        os_api_key = os.getenv("FIRMABLE_OS_API_KEY")
+        if not os_api_key:
+            raise ValueError("FIRMABLE_OS_API_KEY is not set in .env")
+        payload = {
+            "query": {
+                "bool": {
+                    "filter": [{"ids": {"values": [company_id]}}],
+                    "must": [], "should": [], "must_not": [],
+                }
+            },
+            "aggs": {
+                "to_people": {
+                    "children": {"type": "person"},
+                    "aggs": {
+                        "by_country": {
+                            "terms": {
+                                "script": {
+                                    "source": "for (String country : ['au','nz','id','sg','my','jp','hk','ph']) { if (doc[country + '.location.country'].size() > 0) { return country.toUpperCase(); } } return 'Unknown';",
+                                    "lang": "painless",
+                                },
+                                "size": 20,
+                            },
+                            "aggs": {
+                                "dept_counts": {
+                                    "filters": {
+                                        "filters": {
+                                            "sales":           {"term": {"department": 2}},
+                                            "marketing":       {"term": {"department": 11}},
+                                            "sales_marketing": {"terms": {"department": [2, 11]}},
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    },
+                }
+            },
+            "_source": ["*"],
+            "size": 0,
+            "sort": [{"search_rank": "desc"}],
+        }
+        resp = requests.post(
+            "https://staging-search.firmable.com/apikey/os_search",
+            headers={"x-api-key": os_api_key, "Content-Type": "application/json"},
+            json=payload,
+            timeout=15,
+        )
+        resp.raise_for_status()
+        buckets = (
+            resp.json()
+            .get("aggregations", {})
+            .get("to_people", {})
+            .get("by_country", {})
+            .get("buckets", [])
+        )
+
+        def _sales(code):
+            b = next((b for b in buckets if b["key"] == code), None)
+            if not b:
+                return None
+            return b.get("dept_counts", {}).get("buckets", {}).get("sales", {}).get("doc_count")
+
+        sea_vals = [v for v in (_sales(c) for c in ["PH", "MY", "SG", "ID", "HK", "JP"]) if v is not None]
+        total_vals = [
+            b.get("dept_counts", {}).get("buckets", {}).get("sales", {}).get("doc_count")
+            for b in buckets
+        ]
+        total_vals = [v for v in total_vals if v is not None]
+
+        return {
+            "au_sales_team_size":    _sales("AU"),
+            "nz_sales_team_size":    _sales("NZ"),
+            "sea_sales_team_size":   sum(sea_vals) if sea_vals else None,
+            "total_sales_team_size": sum(total_vals) if total_vals else None,
+        }

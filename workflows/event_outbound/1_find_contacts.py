@@ -168,18 +168,81 @@ def main():
     print(f"Loaded {len(companies)} companies from {input_path}")
 
     client = FirmableClient()
+
+    # ── Pre-flight: fetch sales team sizes ───────────────────────────────────
+    print("\nFetching sales team sizes from Firmable OS API...")
+    company_sizes = {}  # firmable_company_id -> {au, nz, sea, total}
+    for company in companies:
+        cid = company["firmable_company_id"]
+        try:
+            sizes = client.get_sales_team_size(cid)
+            company_sizes[cid] = sizes
+            print(f"  {company['company_name']}: total={sizes['total_sales_team_size']}")
+        except Exception as e:
+            print(f"  [size-error] {company['company_name']}: {e}")
+            company_sizes[cid] = {
+                "au_sales_team_size": None,
+                "nz_sales_team_size": None,
+                "sea_sales_team_size": None,
+                "total_sales_team_size": None,
+            }
+
+    # Print summary table
+    print(f"\n{'Company':<42} {'AU':>4} {'NZ':>4} {'SEA':>5} {'Total':>6}")
+    print("─" * 62)
+    for company in companies:
+        s = company_sizes[company["firmable_company_id"]]
+        au    = "-" if s["au_sales_team_size"]    is None else str(s["au_sales_team_size"])
+        nz    = "-" if s["nz_sales_team_size"]    is None else str(s["nz_sales_team_size"])
+        sea   = "-" if s["sea_sales_team_size"]   is None else str(s["sea_sales_team_size"])
+        total = "-" if s["total_sales_team_size"] is None else str(s["total_sales_team_size"])
+        print(f"  {company['company_name']:<40} {au:>4} {nz:>4} {sea:>5} {total:>6}")
+
+    # Prompt for threshold
+    threshold_str = input("\nMinimum total_sales_team_size to include (0 = include all): ").strip()
+    threshold = int(threshold_str) if threshold_str.isdigit() else 0
+
+    if threshold > 0:
+        included = [c for c in companies if (company_sizes[c["firmable_company_id"]]["total_sales_team_size"] or 0) >= threshold]
+        excluded = [c for c in companies if (company_sizes[c["firmable_company_id"]]["total_sales_team_size"] or 0) < threshold]
+        if excluded:
+            print(f"\nSkipping {len(excluded)} companies (total_sales < {threshold}):")
+            for c in excluded:
+                t = company_sizes[c["firmable_company_id"]]["total_sales_team_size"]
+                print(f"  {c['company_name']} (total={t})")
+        companies = included
+
+    if not companies:
+        print("\nNo companies left after filtering. Aborting.")
+        return
+
+    confirm = input(f"\nFind contacts for {len(companies)} companies? (yes/no): ").strip().lower()
+    if confirm not in ("yes", "y"):
+        print("Aborted.")
+        return
+
+    # ── Contact finding ──────────────────────────────────────────────────────
     all_rows = []
 
     for company in companies:
         print(f"\n{company['company_name']} ({company['firmable_company_id']})")
         rows = find_contacts_for_company(client, company)
+        # Carry sales team size columns onto each contact row
+        sizes = company_sizes[company["firmable_company_id"]]
+        for row in rows:
+            row.update(sizes)
         all_rows.extend(rows)
 
     if not all_rows:
         print("\nNo contacts found.")
         return
 
-    fieldnames = ["first_name", "last_name", "full_name", "person_id", "position", "work_email", "phone", "linkedin_url", "company_name", "domain", "firmable_company_id"]
+    fieldnames = [
+        "first_name", "last_name", "full_name", "person_id", "position",
+        "work_email", "phone", "linkedin_url", "company_name", "domain",
+        "firmable_company_id",
+        "au_sales_team_size", "nz_sales_team_size", "sea_sales_team_size", "total_sales_team_size",
+    ]
     with open(output_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
