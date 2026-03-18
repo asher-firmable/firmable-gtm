@@ -603,15 +603,23 @@ def handle_file_shared(event, client, say):
         file_info = client.files_info(file=file_id)["file"]
         filename = file_info.get("name", "upload.xlsx")
         url = file_info.get("url_private_download") or file_info.get("url_private")
-        resp = req.get(url, headers={"Authorization": f"Bearer {os.getenv('CONTACT_FINDER_SLACK_BOT_TOKEN')}"})
+        token = os.getenv("CONTACT_FINDER_SLACK_BOT_TOKEN")
+        headers = {"Authorization": f"Bearer {token}"}
+        # Don't auto-follow redirects: requests strips Authorization on cross-domain redirects,
+        # causing Slack's CDN to return an HTML login page instead of the file bytes.
+        resp = req.get(url, headers=headers, allow_redirects=False)
+        if resp.status_code in (301, 302, 303, 307, 308):
+            redirect_url = resp.headers.get("Location", url)
+            print(f"[file_shared] redirect {resp.status_code} → {redirect_url}")
+            resp = req.get(redirect_url, headers=headers, allow_redirects=False)
         resp.raise_for_status()
         content = resp.content
         content_type = resp.headers.get("content-type", "")
         print(f"[file_shared] downloaded {len(content)} bytes, content-type={content_type}")
-        if "html" in content_type or "json" in content_type:
+        if "html" in content_type:
             client.chat_postMessage(
                 channel=channel_id,
-                text=f"File download returned `{content_type}` instead of the file. Response: `{resp.text[:300]}`",
+                text=f"File download still returned HTML (status {resp.status_code}). Check the bot token has `files:read` scope.",
             )
             return
         companies, raw_headers = parse_companies_file(content, filename)
