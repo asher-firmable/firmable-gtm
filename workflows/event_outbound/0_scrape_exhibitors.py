@@ -77,8 +77,12 @@ def find_exhibitor_url(page, start_url: str) -> str:
     Otherwise scan anchor tags for exhibitor/sponsor keywords and follow.
     """
     print(f"Loading: {start_url}")
-    page.goto(start_url, timeout=PAGE_TIMEOUT, wait_until="domcontentloaded")
-    page.wait_for_timeout(1500)
+    try:
+        page.goto(start_url, timeout=PAGE_TIMEOUT, wait_until="networkidle")
+    except Exception:
+        # networkidle can time out on heavy pages — fall back to domcontentloaded
+        page.goto(start_url, timeout=PAGE_TIMEOUT, wait_until="domcontentloaded")
+    page.wait_for_timeout(3000)
 
     current = page.url
     path_lower = urlparse(current).path.lower()
@@ -127,7 +131,18 @@ def find_exhibitor_url(page, start_url: str) -> str:
 # ---------------------------------------------------------------------------
 
 def scroll_to_load_all(page):
-    """Scroll to bottom repeatedly until no new content appears."""
+    """Scroll to bottom repeatedly until no new content appears.
+    Also triggers lazy-loaded images by scrolling in segments."""
+    # Segment scroll first to trigger intersection-observer lazy loads
+    try:
+        total_height = page.evaluate("document.body.scrollHeight")
+        step = max(600, total_height // 10)
+        for pos in range(0, total_height, step):
+            page.evaluate(f"window.scrollTo(0, {pos})")
+            page.wait_for_timeout(200)
+    except Exception:
+        pass
+
     prev_height = 0
     rounds = 0
     while True:
@@ -354,6 +369,53 @@ def scrape_profile_page(page, profile_url: str) -> tuple[str, str, str]:
     return name, website, linkedin
 
 
+def extract_from_page_images(html: str, base_url: str) -> list[dict]:
+    """
+    Scan all <img> tags on the page and pull company names from alt text.
+    Each <img> must be wrapped in or near an <a> to get a website URL.
+    Returns unique companies with non-trivial alt text.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    results = []
+    seen_names = set()
+
+    for img in soup.find_all("img", alt=True):
+        alt = img.get("alt", "").strip()
+        if not alt or len(alt) < 2:
+            continue
+        name = _clean_alt_text(alt)
+        if not name or _looks_like_tier_label(name) or len(name) < 2:
+            continue
+        name_key = name.lower()
+        if name_key in seen_names:
+            continue
+
+        # Look for an enclosing <a> tag (up to 3 levels) for the website
+        website = ""
+        node = img
+        for _ in range(3):
+            node = node.parent
+            if node is None:
+                break
+            if node.name == "a" and node.get("href"):
+                href = node["href"].strip()
+                if href.startswith("http"):
+                    parsed = urlparse(href)
+                    netloc = parsed.netloc.lstrip("www.")
+                    if not any(s in netloc for s in SOCIAL_DOMAINS):
+                        website = href
+                break
+
+        seen_names.add(name_key)
+        results.append({
+            "company_name": name,
+            "website_url": website,
+            "linkedin_url": "",
+        })
+
+    return results
+
+
 def identify_exhibitor_cards(page) -> list:
     """
     Try to identify repeating card elements that represent exhibitors.
@@ -368,6 +430,18 @@ def identify_exhibitor_cards(page) -> list:
         ".card", ".list-group-item", ".grid-item",
         "article", "[class*='exhibitor']", "[class*='sponsor']",
         "[class*='company']", "[class*='booth']",
+        # Elementor / WordPress / ACF / Dynamic Content for Elementor (DCE)
+        ".dce-acf-repeater-grid .dce-post-item",
+        ".dce-post-item",
+        "[class*='dce-post-item']",
+        ".elementor-repeater-item",
+        # WordPress blocks
+        ".wp-block-columns .wp-block-column",
+        # Generic sponsor logo walls
+        "[class*='logo-grid'] img",
+        "[class*='logos-grid'] img",
+        "[class*='sponsor-logo']",
+        "[class*='partner-logo']",
     ]
     for sel in CARD_SELECTORS:
         try:
@@ -379,12 +453,91 @@ def identify_exhibitor_cards(page) -> list:
     return []
 
 
+def claude_extract_from_html(html: str) -> list[dict]:
+    """
+    Layer 2 fallback: send page HTML to Claude and ask it to extract
+    sponsor/exhibitor company names and URLs directly.
+    """
+    import json
+    from utils.ai import ask_claude
+
+    # Trim to avoid exceeding token limits
+    trimmed = html[:30000]
+    prompt = (
+        "You are parsing a conference sponsor/exhibitor page. "
+        "From the HTML below, extract all company names and any website URLs you can find. "
+        "Return ONLY a JSON array like: "
+        '[{"company_name": "Acme Corp", "website_url": "https://acme.com"}, ...]. '
+        "If you cannot find any companies, return an empty array []. "
+        "Do not include any explanation outside the JSON.\n\nHTML:\n" + trimmed
+    )
+    try:
+        response = ask_claude(prompt, model="claude-sonnet-4-6")
+        match = re.search(r'\[.*\]', response, re.DOTALL)
+        if match:
+            data = json.loads(match.group(0))
+            results = []
+            for d in data:
+                name = (d.get("company_name") or "").strip()
+                if name:
+                    results.append({
+                        "company_name": name,
+                        "website_url": (d.get("website_url") or "").strip(),
+                        "linkedin_url": "",
+                    })
+            return results
+    except Exception as e:
+        print(f"  [claude html fallback error] {e}")
+    return []
+
+
+def claude_extract_from_screenshot(page) -> list[dict]:
+    """
+    Layer 3 fallback: take a full-page screenshot and ask Claude Vision
+    to identify company names from logos and text.
+    """
+    import json
+    from utils.ai import ask_claude_with_vision
+
+    print("  Taking full-page screenshot for Claude Vision analysis...")
+    try:
+        image_bytes = page.screenshot(full_page=True, type="png")
+        prompt = (
+            "This is a screenshot of a conference sponsor/exhibitor page. "
+            "List all company names you can read from logos or text on the page. "
+            "Return ONLY a JSON array like: "
+            '[{"company_name": "Acme Corp"}, ...]. '
+            "If no companies are visible, return []. "
+            "Do not include any explanation outside the JSON."
+        )
+        response = ask_claude_with_vision(image_bytes, prompt)
+        match = re.search(r'\[.*\]', response, re.DOTALL)
+        if match:
+            data = json.loads(match.group(0))
+            results = []
+            for d in data:
+                name = (d.get("company_name") or "").strip()
+                if name:
+                    results.append({
+                        "company_name": name,
+                        "website_url": "",
+                        "linkedin_url": "",
+                    })
+            return results
+    except Exception as e:
+        print(f"  [claude vision fallback error] {e}")
+    return []
+
+
 def scrape_listing_page(page, listing_url: str) -> list[dict]:
     """
     Main scraping logic. Handles infinite scroll, load-more pagination,
     and click-through profile pages. Returns list of company dicts.
     """
     print("\nPhase 2: Scraping exhibitor listing...")
+
+    # Extra wait for JS-heavy pages (Elementor/ACF/DCE content needs time to render)
+    page.wait_for_timeout(3000)
 
     # Strategy A: Infinite scroll
     print("  Scrolling to load all content...")
@@ -399,6 +552,12 @@ def scrape_listing_page(page, listing_url: str) -> list[dict]:
             break
     if clicked:
         print(f"  Clicked 'load more' {clicked} time(s).")
+
+    # Final wait: let any AJAX/lazy-load triggered by scrolling settle
+    try:
+        page.wait_for_load_state("networkidle", timeout=8000)
+    except Exception:
+        page.wait_for_timeout(3000)
 
     # Identify repeating card elements
     cards = identify_exhibitor_cards(page)
@@ -420,12 +579,14 @@ def scrape_listing_page(page, listing_url: str) -> list[dict]:
             except Exception:
                 continue
     else:
-        # Fallback: full page parse
-        print("  No card selector matched — parsing full page.")
+        # Fallback: extract company names from image alt text across the full page
+        print("  No card selector matched — extracting from page images.")
         html = page.content()
-        website, linkedin = extract_links_from_html(html, listing_url)
-        # Not much we can do for names here — check for profile links
-        exhibitors = []
+        exhibitors = extract_from_page_images(html, listing_url)
+        if exhibitors:
+            print(f"  Found {len(exhibitors)} companies via image alt text.")
+        else:
+            print("  No companies found via image alt text.")
 
     # Check if profile click-through gives more data
     profile_links = find_profile_links(page, listing_url)
@@ -454,6 +615,21 @@ def scrape_listing_page(page, listing_url: str) -> list[dict]:
             print(", ".join([f for f in ["website", "linkedin"]
                               if (website if f == "website" else linkedin)]) or "nothing")
             time.sleep(0.3)
+
+    # Layer 2: Claude HTML analysis fallback
+    if not exhibitors:
+        print("  Layer 2: No results from selectors/profiles — trying Claude HTML analysis...")
+        exhibitors = claude_extract_from_html(page.content())
+        if exhibitors:
+            print(f"  Claude HTML analysis found {len(exhibitors)} companies.")
+        else:
+            # Layer 3: Claude Vision fallback
+            print("  Layer 3: HTML analysis returned nothing — trying Claude Vision...")
+            exhibitors = claude_extract_from_screenshot(page)
+            if exhibitors:
+                print(f"  Claude Vision found {len(exhibitors)} companies.")
+            else:
+                print("  All layers exhausted — no sponsors found.")
 
     # Deduplicate and drop rows with no usable data
     seen = set()
@@ -750,7 +926,7 @@ def main():
         browser.close()
 
     if not exhibitors:
-        print("\nNo exhibitors found. The page format may need a custom scraping strategy.")
+        print("\nNo sponsors found at " + args.url + ".\nThe page format may not be supported.")
         return
 
     # Phase 3

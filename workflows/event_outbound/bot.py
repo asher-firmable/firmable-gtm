@@ -249,9 +249,36 @@ def _scrape_thread(user_id: str, url: str, client, channel: str, msg_ts: str):
                     f":mag: *Step 2/4* — Finding sponsor listing page…")
             listing_url = find_exhibitor_url(page, url)
             _update(client, channel, msg_ts,
-                    f":mag: *Step 3/4* — Scraping sponsor cards…")
+                    f":mag: *Step 3/4* — Scraping {listing_url}…")
             exhibitors = scrape_listing_page(page, listing_url)
+
+            # Capture debug screenshot before closing browser (only if nothing found)
+            debug_png = None
+            if not exhibitors:
+                try:
+                    debug_png = page.screenshot(full_page=True, type="png")
+                except Exception as e:
+                    print(f"[debug screenshot failed] {e}")
+
             browser.close()
+
+        if not exhibitors:
+            _update(client, channel, msg_ts,
+                    f":warning: No sponsors found at {url}.\n"
+                    "Posting a screenshot so you can see what the scraper loaded:")
+            if debug_png:
+                try:
+                    client.files_upload_v2(
+                        channel=channel,
+                        content=debug_png,
+                        filename="scraper_debug.png",
+                        title=f"Scraper view of {listing_url}",
+                    )
+                except Exception as e:
+                    print(f"[debug upload failed] {e}")
+                    _post(client, channel, f"(Screenshot upload failed: {e})")
+            sessions.pop(user_id, None)
+            return
 
         _update(client, channel, msg_ts,
                 f":mag: *Step 4/4* — Resolving LinkedIn URLs and Firmable IDs "
@@ -261,13 +288,6 @@ def _scrape_thread(user_id: str, url: str, client, channel: str, msg_ts: str):
 
         if user_id not in sessions:
             return  # cancelled
-
-        if not exhibitors:
-            _update(client, channel, msg_ts,
-                    f":warning: No sponsors found at {url}.\n"
-                    "The page format may not be supported.")
-            sessions.pop(user_id, None)
-            return
 
         sessions[user_id]["exhibitors"] = exhibitors
 

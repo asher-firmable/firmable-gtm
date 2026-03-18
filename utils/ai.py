@@ -1,3 +1,4 @@
+import base64
 import os
 import anthropic
 from dotenv import load_dotenv
@@ -24,5 +25,23 @@ def ask_claude(prompt: str, context: str = "", model: str = "claude-sonnet-4-6")
         model=model,
         max_tokens=1024,
         messages=[{"role": "user", "content": full_prompt}],
+    )
+    return message.content[0].text
+
+
+def ask_claude_with_vision(image_bytes: bytes, prompt: str, model: str = "claude-sonnet-4-6") -> str:
+    """Send an image + prompt to Claude Vision. image_bytes should be raw PNG/JPEG bytes."""
+    client = _get_client()
+    image_data = base64.standard_b64encode(image_bytes).decode("utf-8")
+    message = client.messages.create(
+        model=model,
+        max_tokens=2048,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": image_data}},
+                {"type": "text", "text": prompt},
+            ],
+        }],
     )
     return message.content[0].text
