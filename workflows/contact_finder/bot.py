@@ -604,25 +604,21 @@ def handle_file_shared(event, client, say):
         filename = file_info.get("name", "upload.xlsx")
         url = file_info.get("url_private_download") or file_info.get("url_private")
         token = os.getenv("CONTACT_FINDER_SLACK_BOT_TOKEN")
-        token_preview = (token[:10] + "...") if token else "MISSING"
-        print(f"[file_shared] url={url} token={token_preview}")
-
-        headers = {"Authorization": f"Bearer {token}"}
-        resp = req.get(url, headers=headers, allow_redirects=True)
-        print(f"[file_shared] status={resp.status_code} final_url={resp.url} content-type={resp.headers.get('content-type')}")
-
-        if "html" in resp.headers.get("content-type", ""):
-            # Fallback: try passing token as a URL parameter (older Slack download method)
-            resp = req.get(url, params={"token": token})
-            print(f"[file_shared] fallback status={resp.status_code} content-type={resp.headers.get('content-type')}")
-
-        resp.raise_for_status()
-        content = resp.content
-        content_type = resp.headers.get("content-type", "")
-        if "html" in content_type:
+        if not token:
             client.chat_postMessage(
                 channel=channel_id,
-                text=f"File download returned HTML (status {resp.status_code}). URL: `{url}` Token present: `{bool(token)}`",
+                text="Bot misconfiguration: `CONTACT_FINDER_SLACK_BOT_TOKEN` is not set. Contact the bot admin.",
+            )
+            return
+        print(f"[file_shared] url={url}")
+        resp = req.get(url, headers={"Authorization": f"Bearer {token}"}, allow_redirects=True)
+        print(f"[file_shared] status={resp.status_code} content-type={resp.headers.get('content-type')}")
+        resp.raise_for_status()
+        content = resp.content
+        if "html" in resp.headers.get("content-type", ""):
+            client.chat_postMessage(
+                channel=channel_id,
+                text=f"Could not download the file (Slack returned HTML). Ensure the bot token has `files:read` scope.",
             )
             return
         companies, raw_headers = parse_companies_file(content, filename)
