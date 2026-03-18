@@ -23,6 +23,7 @@ Required .env keys:
 
 import csv
 import io
+import json
 import os
 import re
 import threading
@@ -40,7 +41,7 @@ load_dotenv()
 
 app = App(token=os.getenv("CONTACT_FINDER_SLACK_BOT_TOKEN"))
 
-# ── In-memory session store ─────────────────────────────────────────────────
+# ── Session store (persisted to disk so restarts don't lose state) ───────────
 # sessions[user_id] = {
 #     "channel": str,
 #     "companies": list[dict],
@@ -49,7 +50,24 @@ app = App(token=os.getenv("CONTACT_FINDER_SLACK_BOT_TOKEN"))
 #     "list_name": str,
 #     "preview": dict,
 # }
-sessions: dict = {}
+
+SESSIONS_FILE = os.path.join(os.path.dirname(__file__), "sessions.json")
+
+
+def _load_sessions() -> dict:
+    try:
+        with open(SESSIONS_FILE) as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def _save_sessions():
+    with open(SESSIONS_FILE, "w") as f:
+        json.dump(sessions, f)
+
+
+sessions: dict = _load_sessions()
 
 COUNTRIES = [
     ("Australia",    "AU"),
@@ -548,6 +566,7 @@ def handle_find_contacts(ack, body, client):
     channel_id = body["channel_id"]
 
     sessions[user_id] = {"channel": channel_id}  # always reset, clears any previous state
+    _save_sessions()
 
     client.chat_postMessage(
         channel=channel_id,
@@ -565,12 +584,20 @@ def handle_find_contacts(ack, body, client):
 def handle_file_shared(event, client, say):
     file_id = event.get("file_id")
     user_id = event.get("user_id")
-    channel_id = event.get("channel_id")
+    channel_id = event.get("channel_id") or (sessions.get(user_id, {}).get("channel"))
+
+    print(f"[file_shared] user={user_id} file={file_id} channel={channel_id} session_exists={user_id in sessions}")
 
     if user_id not in sessions:
+        if channel_id:
+            client.chat_postMessage(
+                channel=channel_id,
+                text="Please run `/find-contacts` first, then upload your file.",
+            )
         return
 
     sessions[user_id]["channel"] = channel_id
+    _save_sessions()
 
     try:
         file_info = client.files_info(file=file_id)["file"]
@@ -580,12 +607,12 @@ def handle_file_shared(event, client, say):
         resp.raise_for_status()
         content = resp.content
     except Exception as e:
-        say(channel=channel_id, text=f"Could not read the file: {e}")
+        client.chat_postMessage(channel=channel_id, text=f"Could not read the file: {e}")
         return
 
     companies, raw_headers = parse_companies_file(content, filename)
     if not companies:
-        say(channel=channel_id, text=(
+        client.chat_postMessage(channel=channel_id, text=(
             f"The file doesn't look right. Here are the column headers I found:\n"
             f"`{raw_headers}`\n\n"
             "I need columns for: company name, domain, and a Firmable company URL or ID."
@@ -593,6 +620,7 @@ def handle_file_shared(event, client, say):
         return
 
     sessions[user_id]["companies"] = companies
+    _save_sessions()
 
     client.chat_postMessage(
         channel=channel_id,
@@ -616,6 +644,7 @@ def handle_select_country(ack, body, client):
         return
 
     sessions[user_id]["country"] = country_code
+    _save_sessions()
     companies = sessions[user_id].get("companies", [])
 
     msg = client.chat_postMessage(
@@ -628,6 +657,7 @@ def handle_select_country(ack, body, client):
         try:
             contacts = find_contacts_for_companies(companies, country_code)
             sessions[user_id]["contacts"] = contacts
+            _save_sessions()
 
             if not contacts:
                 client.chat_update(
@@ -707,6 +737,7 @@ def handle_list_name_submit(ack, body, client):
         return
 
     sessions[user_id]["list_name"] = list_name
+    _save_sessions()
     channel = sessions[user_id]["channel"]
     contacts = sessions[user_id].get("contacts", [])
 
@@ -721,6 +752,7 @@ def handle_list_name_submit(ack, body, client):
             hs = HubSpotClient()
             preview = hs_preview(hs, contacts)
             sessions[user_id]["preview"] = preview
+            _save_sessions()
 
             client.chat_update(
                 channel=channel,
@@ -778,6 +810,7 @@ def handle_confirm_sync(ack, body, client):
                     ),
                 )
             sessions.pop(user_id, None)
+            _save_sessions()
         except Exception as e:
             client.chat_update(channel=channel, ts=msg_ts, text=f"Sync error: {e}")
 
@@ -792,6 +825,7 @@ def handle_cancel(ack, body, client):
     user_id = body["actions"][0]["value"]
     channel = body["channel"]["id"]
     sessions.pop(user_id, None)
+    _save_sessions()
     client.chat_postMessage(
         channel=channel,
         text="Cancelled. Nothing was written to HubSpot.\nRun `/find-contacts` to start a new search.",
