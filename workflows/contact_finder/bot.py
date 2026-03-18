@@ -606,11 +606,19 @@ def handle_file_shared(event, client, say):
         resp = req.get(url, headers={"Authorization": f"Bearer {os.getenv('CONTACT_FINDER_SLACK_BOT_TOKEN')}"})
         resp.raise_for_status()
         content = resp.content
+        content_type = resp.headers.get("content-type", "")
+        print(f"[file_shared] downloaded {len(content)} bytes, content-type={content_type}")
+        if "html" in content_type or "json" in content_type:
+            client.chat_postMessage(
+                channel=channel_id,
+                text=f"File download returned `{content_type}` instead of the file. Response: `{resp.text[:300]}`",
+            )
+            return
+        companies, raw_headers = parse_companies_file(content, filename)
     except Exception as e:
         client.chat_postMessage(channel=channel_id, text=f"Could not read the file: {e}")
         return
 
-    companies, raw_headers = parse_companies_file(content, filename)
     if not companies:
         client.chat_postMessage(channel=channel_id, text=(
             f"The file doesn't look right. Here are the column headers I found:\n"
