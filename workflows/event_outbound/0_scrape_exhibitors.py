@@ -179,6 +179,10 @@ TIER_LABEL_WORDS = {
     "knowledge", "demand", "branded", "global", "venue", "video", "registration",
     "experiential", "interested", "becoming", "partners", "sponsors", "exhibitors",
     "our", "2026", "2025", "2024",
+    # UI element junk alt texts
+    "loader", "loading", "spinner", "placeholder", "icon", "arrow", "button",
+    "close", "menu", "hamburger", "search", "image", "img", "banner", "nav",
+    "navigation", "toggle", "chevron",
 }
 
 
@@ -616,18 +620,24 @@ def scrape_listing_page(page, listing_url: str) -> list[dict]:
                               if (website if f == "website" else linkedin)]) or "nothing")
             time.sleep(0.3)
 
-    # Layer 2: Claude HTML analysis fallback
-    if not exhibitors:
-        print("  Layer 2: No results from selectors/profiles — trying Claude HTML analysis...")
-        exhibitors = claude_extract_from_html(page.content())
+    # Layer 2: Claude Vision — runs if selectors/images returned nothing or suspiciously few results.
+    # Vision comes before HTML analysis because logo grids are visually clear but DOM-noisy.
+    if len(exhibitors) < 5:
         if exhibitors:
-            print(f"  Claude HTML analysis found {len(exhibitors)} companies.")
+            print(f"  Only {len(exhibitors)} companies from DOM — likely junk. Trying Claude Vision...")
         else:
-            # Layer 3: Claude Vision fallback
-            print("  Layer 3: HTML analysis returned nothing — trying Claude Vision...")
-            exhibitors = claude_extract_from_screenshot(page)
-            if exhibitors:
-                print(f"  Claude Vision found {len(exhibitors)} companies.")
+            print("  Layer 2: No results — trying Claude Vision...")
+        vision_results = claude_extract_from_screenshot(page)
+        if vision_results:
+            exhibitors = vision_results
+            print(f"  Claude Vision found {len(exhibitors)} companies.")
+        else:
+            # Layer 3: Claude HTML analysis as final fallback
+            print("  Layer 3: Vision returned nothing — trying Claude HTML analysis...")
+            html_results = claude_extract_from_html(page.content())
+            if html_results:
+                exhibitors = html_results
+                print(f"  Claude HTML analysis found {len(exhibitors)} companies.")
             else:
                 print("  All layers exhausted — no sponsors found.")
 
