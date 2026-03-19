@@ -11,8 +11,11 @@ Flow:
   7. Bot shows a HubSpot preview (existing vs new) with Confirm / Cancel buttons
   8. On Confirm: upserts companies + contacts, creates HubSpot list, posts the URL
 
-Usage:
-    PYTHONPATH=. python3 workflows/contact_finder/bot.py
+Usage (local):
+    PYTHONPATH=. python3 find-contacts/scripts/bot.py
+
+Railway start command:
+    PYTHONPATH=. python find-contacts/scripts/bot.py
 
 Required .env keys:
     CONTACT_FINDER_SLACK_BOT_TOKEN   xoxb-...
