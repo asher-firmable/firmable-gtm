@@ -10,3 +10,4 @@ __pycache__/
 .venv/
 venv/
 find-contacts/sessions.json
+.claude/settings.local.json
