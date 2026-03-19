@@ -11,7 +11,55 @@
       "Bash(PYTHONPATH=. python3 workflows/event_outbound/2_sync_to_hubspot.py --input data/output/contacts_b2b_marketing_leaders_sydney.csv)",
       "Bash(echo \"B2B Marketing Leaders Sydney 2026:*)",
       "Bash(PYTHONPATH=. python3 workflows/event_outbound/2_sync_to_hubspot.py --input data/output/contacts_b2b_marketing_leaders_sydney.csv --list-name \"Event - B2B Marketing Leaders_Sydney\")",
-      "Bash(PYTHONPATH=. python3 - <<'EOF':*)"
+      "Bash(PYTHONPATH=. python3 - <<'EOF':*)",
+      "Bash(pip3 install:*)",
+      "Bash(PYTHONPATH=. python3 workflows/event_outbound/0_scrape_exhibitors.py --url https://b2bmarketingleaders.com.au/sydney/)",
+      "Bash(curl -s \"https://b2bmarketingleaders.com.au/sydney/\")",
+      "Bash(curl -s \"https://b2bmarketingleaders.com.au/sydney/partners/\")",
+      "Bash(PYTHONPATH=. python3 workflows/event_outbound/1_find_contacts.py --input data/output/exhibitors_20260317_1442.csv)",
+      "Bash(echo \"0:*)",
+      "Bash(PYTHONPATH=. python3 workflows/event_outbound/1_find_contacts.py --input data/output/exhibitors_20260317_1455.csv)",
+      "Bash(claude mcp:*)",
+      "Bash(N8N_API_URL=https://fbl-tech.app.n8n.cloud N8N_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMmNkYTkzZS1lNTgwLTRhZTktOWI1Zi0zOWVkY2RhN2FkMjIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMDM4NDAwYTMtNmVmYy00ODNjLWJmM2EtNzhmMDYyOTY1OWU0IiwiaWF0IjoxNzczNzk3OTgyfQ.tbvYOdhCY-ntYiSo-EsyOY8lv8L31sFzTE01bzhMw_w MCP_MODE=stdio LOG_LEVEL=error DISABLE_CONSOLE_OUTPUT=true npx n8n-mcp)",
+      "Bash(npm cache:*)",
+      "mcp__n8n-mcp__n8n_list_workflows",
+      "mcp__n8n-mcp__n8n_get_workflow",
+      "Bash(python3 -c \":*)",
+      "Bash(curl -s -H \"X-N8N-API-KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMmNkYTkzZS1lNTgwLTRhZTktOWI1Zi0zOWVkY2RhN2FkMjIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMDM4NDAwYTMtNmVmYy00ODNjLWJmM2EtNzhmMDYyOTY1OWU0IiwiaWF0IjoxNzczNzk3OTgyfQ.tbvYOdhCY-ntYiSo-EsyOY8lv8L31sFzTE01bzhMw_w\" \"https://fbl-tech.app.n8n.cloud/api/v1/credentials\")",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(c[''''id''''], c[''''name''''], c[''''type'''']\\) for c in data.get\\(''''data'''',[]\\)]\")",
+      "mcp__n8n-mcp__n8n_update_full_workflow",
+      "mcp__n8n-mcp__tools_documentation",
+      "mcp__n8n-mcp__get_node",
+      "mcp__n8n-mcp__n8n_update_partial_workflow",
+      "mcp__n8n-mcp__n8n_test_workflow",
+      "Bash(curl -s -X POST \"https://fbl-tech.app.n8n.cloud/api/v1/workflows/oBqJ5msi0p35yGQF/run\" -H \"X-N8N-API-KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMmNkYTkzZS1lNTgwLTRhZTktOWI1Zi0zOWVkY2RhN2FkMjIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMDM4NDAwYTMtNmVmYy00ODNjLWJmM2EtNzhmMDYyOTY1OWU0IiwiaWF0IjoxNzczNzk3OTgyfQ.tbvYOdhCY-ntYiSo-EsyOY8lv8L31sFzTE01bzhMw_w\" -H \"Content-Type: application/json\" -d '{}')",
+      "Bash(curl -s \"https://fbl-tech.app.n8n.cloud/api/v1/workflows/oBqJ5msi0p35yGQF\" -H \"X-N8N-API-KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwMmNkYTkzZS1lNTgwLTRhZTktOWI1Zi0zOWVkY2RhN2FkMjIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiMDM4NDAwYTMtNmVmYy00ODNjLWJmM2EtNzhmMDYyOTY1OWU0IiwiaWF0IjoxNzczNzk3OTgyfQ.tbvYOdhCY-ntYiSo-EsyOY8lv8L31sFzTE01bzhMw_w\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\([n[''''type''''] for n in d.get\\(''''nodes'''',[]\\)]\\)\")",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "WebFetch(domain:themartechsummit.com)",
+      "Bash(find '/Users/asherchua/Desktop/Claude Code/Firmable GTM Engineering' -name *.toml -o -name *.json -o -name Procfile -o -name Dockerfile -o -name *.yml -o -name *.yaml)",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\(''workflows/event_outbound/0_scrape_exhibitors.py''\\).read\\(\\)\\); print\\(''scraper OK''\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\(''workflows/event_outbound/bot.py''\\).read\\(\\)\\); print\\(''bot OK''\\)\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\(''utils/ai.py''\\).read\\(\\)\\); print\\(''ai OK''\\)\")",
+      "Bash(mkdir -p event-scraping-bot/output find-contacts/output)",
+      "Bash(touch event-scraping-bot/output/.gitkeep find-contacts/output/.gitkeep)",
+      "Bash(sed -i '' 's|staging/event-scraping-bot-staging/Scrape\\\\.py|staging/event-scraping-bot-staging/scripts/Scrape.py|g; s|staging/event-scraping-bot-staging/Enrich-Company\\\\.py|staging/event-scraping-bot-staging/scripts/Enrich-Company.py|g' staging/Replicate-to-prod-skill.md staging/event-scraping-bot-staging/CLAUDE.md staging/event-scraping-bot-staging/Event-Scraping-Skill.md)",
+      "Bash(sed -i '' 's|find-contacts/bot\\\\.py|find-contacts/scripts/bot.py|g' find-contacts/CLAUDE.md)",
+      "Bash(PYTHONPATH=. python3 event-scraping-bot/scripts/0_scrape_exhibitors.py --help)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import sys,json; d=json.load(sys.stdin); cmd=d.get('tool_input',{}).get('command',''); print('[REMINDER] A new directory was just created. Per project convention: (1) ensure it has a CLAUDE.md sub-agent file; (2) if you created it without user-provided context, ask the user what the folder is for before proceeding.') if 'mkdir' in cmd else None\""
+          }
+        ]
+      }
     ]
   }
 }

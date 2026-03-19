@@ -1,9 +1,12 @@
 .env
 data/output/
+event-scraping-bot/output/
+find-contacts/output/
+staging/*/output/
 __pycache__/
 *.pyc
 *.pyo
 .DS_Store
 .venv/
 venv/
-workflows/contact_finder/sessions.json
+find-contacts/sessions.json
