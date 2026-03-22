@@ -54,6 +54,10 @@ firmable-gtm-engineering/
 │   ├── output/                      ← Contact lookup results (gitignored)
 │   └── bot.py                       ← Interactive CLI / Slack bot
 │
+├── n8n/                             ← Create and edit n8n workflows via REST API
+│   ├── CLAUDE.md                    ← Sub-agent: n8n workflow management
+│   └── N8n-Changes-Skill.md         ← Skill: list, create, edit workflows
+│
 ├── outbound/                        ← Email copy generation and SmartLead campaign upload
 │   ├── CLAUDE.md                    ← Sub-agent: reads templates + customer stories before any email task
 │   ├── email-templates-examples.md  ← 7 cold email templates (PVP, PQS, Competitor Analysis, etc.)
@@ -91,6 +95,7 @@ firmable-gtm-engineering/
 |---|---|
 | Scrape event sponsors and run outreach pipeline | `event-scraping-bot/` |
 | Find contacts at specific companies | `find-contacts/` |
+| Create or edit n8n workflows | `n8n/` |
 | Write or improve cold email copy | `outbound/` |
 | Process a call transcript | `call-analysis/` |
 | Test a change before pushing to production | `staging/` |
