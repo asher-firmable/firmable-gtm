@@ -5,6 +5,46 @@ Total score determines routing: which outreach track, which SmartLead campaign, 
 
 ---
 
+## Core Principles
+
+### 1. Seniority / Buying Power
+Firmable targets **managers, leaders, and decision-makers** — people with budget authority or strong purchasing influence for their team. Individual contributors (AEs, SDRs, Recruitment Consultants, Sales Reps) do not qualify even if they personally do B2B outreach, because they are *users* not *buyers*.
+
+**ICP YES seniority** (manager, leader, or decision-maker with buying power or strong influence):
+- Manager, Head of, Director, VP, C-suite, GM, Partner
+- Founder / Co-Founder / CEO / MD / Managing Director
+- Ops and enablement roles at manager level that influence tool/tech decisions (e.g. Business Operations Manager, Revenue Operations Manager, Marketing Operations Manager, Demand Generation Manager)
+- SDR Manager, BDR Manager, Sales Development Manager
+- `[Geography/Country/Region] Lead`, `Market Lead`, `Country Lead` — titles indicating ownership of a geographic market with business development or expansion mandate (equivalent to a regional director)
+- "Lead" titles where context confirms team leadership responsibility
+
+**ICP NO seniority** (individual contributors — excluded regardless of industry or company type):
+- Account Executive, Senior AE, Mid-Market AE, Enterprise AE
+- Sales Representative, Sales Rep
+- Sales Development Representative, BDR, SDR (without "Manager")
+- Recruitment Consultant, Senior/Principal Consultant (IC billing roles without team management)
+- Account Manager, Customer Success Manager (individual book of business)
+- Brand Ambassador, Sales Ambassador
+- Specialist, Coordinator, Associate, Analyst
+
+> **Title-prefix note:** Seniority-sounding prefixes like "Director" or "Senior" do not automatically qualify. Always check whether the underlying role is a team leader or an individual contributor (e.g. "Director, Enterprise Account Executive" = IC AE, not a director).
+
+> **Default when uncertain:** If the title is manager/above AND the company has any plausible B2B dimension, classify as Yes. Do NOT use company size as a filter — sales team size data will come from the Firmable API separately and is used for scoring, not qualification.
+
+### 2. B2B Outreach Intent
+The **company** must proactively contact other businesses as part of its commercial or operational activity — whether to sell products or services, sell sponsorships or event packages, raise corporate donations, fill roles (recruitment), or develop strategic partnerships.
+
+**The outreach motion matters, not the industry label. Interpret this loosely.**
+
+Examples of qualifying outreach motions that may not look like "traditional sales":
+- A charity that solicits donations from corporate sponsors → same outbound BD motion as a SaaS company
+- An events company selling sponsorship packages to businesses → same prospecting need as a B2B sales team
+- A recruitment firm placing candidates with corporate clients → BD-heavy outbound motion
+
+When classifying a contact, ask two questions: **(1) Is this person a manager or above?** **(2) Does their company reach out to other businesses?** Both must be true for ICP Yes. For ambiguous company types, check the company website for B2B signals before deciding.
+
+---
+
 ## Scoring Dimensions
 
 ### 1. Sales Team Size
@@ -30,9 +70,11 @@ Total score determines routing: which outreach track, which SmartLead campaign, 
 | Recruitment / Staffing                        | 20     | High BD activity, large contact databases, APAC-focused    |
 | Consulting / Professional Services            | 15     | B2B sales motion, often ANZ-focused                        |
 | Financial Services                            | 15     | B2B sales, compliance-conscious (DNC fit is a plus)        |
+| Events / Sponsorship Sales                    | 15     | Sells sponsorship packages or event spaces to businesses — active B2B outreach motion |
 | Real Estate / PropTech                        | 12     | B2B sales teams, APAC footprint                            |
+| Non-profit with corporate fundraising         | 12     | Solicits donations or partnerships from corporate sponsors — same outbound motion as B2B sales |
 | Other B2B (logistics, construction, etc.)     | 8      | Moderate fit — evaluate on other signals                   |
-| B2C / Consumer                                | 0      | Poor fit — no outbound B2B sales motion                    |
+| B2C / Consumer (no B2B revenue line)          | 0      | Poor fit — no outbound B2B motion. Note: B2C companies with a sponsorship or corporate sales arm still qualify. |
 | Unknown / Unclear                             | 0      |                                                            |
 
 ---
