@@ -1,0 +1,10 @@
+{
+  "sender": {
+    "from_name": "YOUR_NAME",
+    "from_email": "YOUR_EMAIL@firmable.com",
+    "reply_to": "YOUR_EMAIL@firmable.com"
+  },
+  "sequence": {
+    "step_2_delay_days": 3
+  }
+}

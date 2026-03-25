@@ -21,70 +21,111 @@ Each domain folder has its own `CLAUDE.md` sub-agent. Read the relevant sub-agen
 ```
 firmable-gtm-engineering/
 ├── CLAUDE.md                        ← You are here (Big Brother)
-├── Update-Claude-Agent.md           ← Meta-skill: update this file when new folders/files are created
 │
 ├── knowledge/                       ← Shared knowledge base (read by all sub-agents)
-│   ├── firmable-context.md          ← Company, ICP, messaging, tone
+│   ├── firmable-product.md          ← Company overview, product, differentiators, messaging & tone
+│   ├── firmable-context.md          ← Redirect → firmable-product.md
+│   ├── firmable-overview.md         ← Redirect → firmable-product.md
+│   ├── icp-definition.md            ← ICP scoring rubric + qualification checklist (A/B/C/D tiers)
+│   ├── icp-criteria.md              ← Redirect → icp-definition.md
+│   ├── persona-definitions.md       ← 4 buyer personas with messaging angles + persona template
+│   ├── persona-messaging.md         ← Redirect → persona-definitions.md
+│   ├── messaging-frameworks.md      ← 6 email frameworks + persona→template routing table
+│   ├── competitors.md               ← ZoomInfo, Apollo, Lusha, LinkedIn Sales Nav — displacement angles
 │   ├── customer-insights.md         ← Synthesised call transcripts (Cotiss, Stripe)
-│   ├── firmable-overview.md         ← Competitive analysis and product positioning
 │   ├── firmable-api-reference.md    ← Firmable API endpoints and wrapper methods
-│   ├── icp-criteria.md              ← ICP scoring rubric (sales team size, industry, tech)
 │   ├── exclusions.md                ← DNC and outreach exclusion rules
-│   ├── persona-messaging.md         ← 4 buyer personas with messaging angles
-│   └── enrichment-prompts.md        ← Short prompts for ICP fit, email openers, score justification
+│   ├── enrichment-prompts.md        ← Short prompts for ICP fit, email openers, score justification
+│   └── Contact-Classifier-Skill.md  ← Skill: classify contacts against ICP
 │
-├── applications/                    ← Platform API wrappers (always import from here)
-│   ├── firmable.py                  ← FirmableClient — lookup_company, search_by_linkedin, find_contacts
-│   ├── hubspot.py                   ← HubSpotClient — create_or_update_contact
-│   ├── smartlead.py                 ← SmartLeadClient — add_leads_to_campaign
-│   └── ai.py                        ← ask_claude, ask_claude_with_vision
+├── scripts/                         ← Shared API wrappers (source of truth — import from here)
+│   ├── firmable_api.py              ← FirmableClient — lookup_company, lookup_company_by_id, find_contacts
+│   ├── hubspot_client.py            ← HubSpotClient — create_or_update_contact
+│   ├── smartlead_client.py          ← SmartLeadClient — add_leads_to_campaign, create_campaign
+│   ├── ai.py                        ← ask_claude, ask_claude_with_vision
+│   ├── classifier.py                ← classify_contacts, classify_contact
+│   └── utils.py                     ← load_csv, save_csv, ensure_dirs, timestamp, read_knowledge_file, reason_about
+│
+├── applications/                    ← Compatibility shims only — do not delete, do not add new code here
+│   ├── firmable.py                  ← re-exports from scripts/firmable_api.py
+│   ├── hubspot.py                   ← re-exports from scripts/hubspot_client.py
+│   ├── smartlead.py                 ← re-exports from scripts/smartlead_client.py
+│   ├── ai.py                        ← re-exports from scripts/ai.py
+│   └── classifier.py               ← re-exports from scripts/classifier.py
 │
 ├── data/                            ← Raw upstream input only (Clay CSVs, webhook payloads)
 │   └── input/                       ← Source files from Clay or manual upload
 │
-├── event-scraping-bot/              ← PRODUCTION: event sponsor outreach pipeline
-│   ├── CLAUDE.md                    ← Sub-agent: owns scrape → enrich → score → personalise → upload
-│   ├── Event-Scraping-Skill.md      ← Skill: step-by-step pipeline execution + monitoring
-│   ├── output/                      ← Campaign CSVs (gitignored)
-│   └── scripts/                     ← 0_scrape_*.py, 1_enrich.py, 2_score.py, 3_personalise.py, 4_upload.py, run_all.py, bot.py
+├── campaigns/                       ← Campaign data organised by region (data only, no scripts)
+│   ├── CLAUDE.md                    ← Campaign folder conventions
+│   ├── anz/                         ← Australia & New Zealand campaigns
+│   ├── us/                          ← US campaigns
+│   └── sea/                         ← South-East Asia campaigns
 │
-├── find-contacts/                   ← Ad-hoc and batch Firmable contact lookups
-│   ├── CLAUDE.md                    ← Sub-agent: contact lookup role
-│   ├── Contact-Finding-Skill.md     ← Skill: find contacts using Firmable People Search
-│   ├── output/                      ← Contact lookup results (gitignored)
-│   └── bot.py                       ← Interactive CLI / Slack bot
+├── projects/                        ← All production bots, pipelines, and internal tools
+│   ├── CLAUDE.md                    ← Index of all sub-projects
+│   ├── event-scraper/               ← PRODUCTION: event sponsor outreach pipeline
+│   │   ├── CLAUDE.md                ← Sub-agent: scrape → enrich → score → personalise → upload
+│   │   ├── Event-Scraping-Skill.md  ← Skill: step-by-step pipeline execution + monitoring
+│   │   ├── output/                  ← Campaign CSVs (gitignored)
+│   │   └── scripts/                 ← 0_scrape_*.py, 1_enrich.py, 2_score.py, 3_personalise.py, 4_upload.py, run_all.py, bot.py
+│   │
+│   ├── find-contacts/               ← Ad-hoc and batch Firmable contact lookups
+│   │   ├── CLAUDE.md                ← Sub-agent: contact lookup role
+│   │   ├── Contact-Finding-Skill.md ← Skill: find contacts using Firmable People Search
+│   │   ├── output/                  ← Contact lookup results (gitignored)
+│   │   └── scripts/                 ← bot.py, enrich_accounts.py
+│   │
+│   ├── n8n/                         ← Create and edit n8n workflows via REST API
+│   │   ├── CLAUDE.md                ← Sub-agent: n8n workflow management
+│   │   └── N8n-Changes-Skill.md     ← Skill: list, create, edit workflows
+│   │
+│   ├── outbound/                    ← Email copy generation and SmartLead campaign upload
+│   │   ├── CLAUDE.md                ← Sub-agent: reads templates + customer stories before any email task
+│   │   ├── email-templates-examples.md  ← 7 cold email templates (PVP, PQS, Competitor Analysis, etc.)
+│   │   ├── customer-stories-and-use-cases.md  ← Cotiss, Stripe, internal proof points for copy
+│   │   ├── raw-transcripts/         ← Raw call recordings for outbound context
+│   │   ├── email-writing/
+│   │   │   └── Email-Writing-Skill.md  ← Skill: persona-aware email generation
+│   │   └── account-pipeline/        ← End-to-end account pipeline: filter → contacts → research → emails → SmartLead
+│   │       ├── CLAUDE.md
+│   │       ├── Account-Pipeline-Skill.md
+│   │       ├── config.json          ← Sender details and sequence delays
+│   │       └── scripts/             ← 0_filter.py, 1_find_contacts.py, 2_research.py, 3_generate_emails.py, 4_upload.py, run_all.py
+│   │
+│   ├── call-analysis/               ← Call transcript processing and knowledge base maintenance
+│   │   ├── CLAUDE.md                ← Sub-agent: goals, folder structure, approval process
+│   │   ├── call-analysis-existing-customer/
+│   │   │   └── Skill-Agent-For-Existing-Customer.md  ← Satisfaction, product gaps, expansion signals
+│   │   └── call-analysis-prospect/
+│   │       └── Skill-Agent-For-Prospect.md           ← Pain points, objections, qualification signals
+│   │
+│   ├── staging/                     ← Test environment — changes here don't affect production
+│   │   ├── CLAUDE.md                ← Sub-agent: staging rules and purpose
+│   │   ├── Replicate-to-prod-skill.md  ← Skill: diff + promote staging → production (approval required)
+│   │   └── event-scraping-bot-staging/  ← Staging copy of event scraping pipeline
+│   │       ├── CLAUDE.md
+│   │       ├── Event-Scraping-Skill.md
+│   │       └── scripts/             ← Scrape.py, Enrich-Company.py
+│   │
+│   └── fun-projects/                ← Personal experiments and reverse-engineering
+│       ├── CLAUDE.md                ← Sub-agent: experimentation sandbox
+│       └── Write-To-Relevant-Folder-Skill.md  ← Skill: deploy a fun project to the right production folder
 │
-├── n8n/                             ← Create and edit n8n workflows via REST API
-│   ├── CLAUDE.md                    ← Sub-agent: n8n workflow management
-│   └── N8n-Changes-Skill.md         ← Skill: list, create, edit workflows
-│
-├── outbound/                        ← Email copy generation and SmartLead campaign upload
-│   ├── CLAUDE.md                    ← Sub-agent: reads templates + customer stories before any email task
-│   ├── email-templates-examples.md  ← 7 cold email templates (PVP, PQS, Competitor Analysis, etc.)
-│   ├── customer-stories-and-use-cases.md  ← Cotiss, Stripe, internal proof points for copy
-│   ├── raw-transcripts/             ← Raw call recordings for outbound context
-│   └── email-writing/
-│       └── Email-Writing-Skill.md   ← Skill: persona-aware email generation
-│
-├── call-analysis/                   ← Call transcript processing and knowledge base maintenance
-│   ├── CLAUDE.md                    ← Sub-agent: goals, folder structure, approval process
-│   ├── call-analysis-existing-customer/
-│   │   └── Skill-Agent-For-Existing-Customer.md  ← Satisfaction, product gaps, expansion signals
-│   └── call-analysis-prospect/
-│       └── Skill-Agent-For-Prospect.md           ← Pain points, objections, qualification signals
-│
-├── staging/                         ← Test environment — changes here don't affect production
-│   ├── CLAUDE.md                    ← Sub-agent: staging rules and purpose
-│   ├── Replicate-to-prod-skill.md   ← Skill: diff + promote staging → production (approval required)
-│   └── event-scraping-bot-staging/  ← Staging copy of event scraping pipeline
-│       ├── CLAUDE.md
-│       ├── Event-Scraping-Skill.md
-│       ├── Scrape.py                ← Copy of 0_scrape_exhibitors.py (modify freely)
-│       └── Enrich-Company.py        ← Copy of 1_enrich.py (modify freely)
-│
-└── fun-projects/                    ← Personal experiments and reverse-engineering
-    ├── CLAUDE.md                    ← Sub-agent: experimentation sandbox
-    └── Write-To-Relevant-Folder-Skill.md  ← Skill: deploy a fun project to the right production folder
+└── .claude/                         ← Claude Code skills and slash commands
+    ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
+    │   ├── account-qualification/   ← ICP scoring against icp-definition.md
+    │   ├── contact-validation/      ← Seniority + DNC filter
+    │   ├── email-copywriting/       ← Copy generation (persona-aware, hard rules)
+    │   ├── signal-research/         ← Buying signal research
+    │   ├── firmable-api/            ← FirmableClient patterns
+    │   ├── smartlead-push/          ← SmartLead campaign upload (confirm before activating)
+    │   ├── hubspot-sync/            ← CRM create/update (dedup on email/domain)
+    │   └── n8n-export/              ← Convert pipelines to n8n JSON
+    └── commands/                    ← Slash commands
+        ├── new-campaign.md          ← /new-campaign — campaign setup wizard
+        ├── qualify-list.md          ← /qualify-list — run classifier on CSV
+        └── generate-copy.md         ← /generate-copy — generate email copy
 ```
 
 ---
@@ -93,17 +134,21 @@ firmable-gtm-engineering/
 
 | Task | Go to |
 |---|---|
-| Scrape event sponsors and run outreach pipeline | `event-scraping-bot/` |
-| Find contacts at specific companies | `find-contacts/` |
-| Create or edit n8n workflows | `n8n/` |
-| Write or improve cold email copy | `outbound/` |
-| Process a call transcript | `call-analysis/` |
-| Test a change before pushing to production | `staging/` |
-| Build something new or experimental | `fun-projects/` |
+| Scrape event sponsors and run outreach pipeline | `projects/event-scraper/` |
+| Find contacts at specific companies | `projects/find-contacts/` |
+| Create or edit n8n workflows | `projects/n8n/` |
+| Write or improve cold email copy | `projects/outbound/` |
+| Run account-based outbound pipeline (Excel → SmartLead campaign) | `projects/outbound/account-pipeline/` |
+| Process a call transcript | `projects/call-analysis/` |
+| Test a change before pushing to production | `projects/staging/` |
+| Build something new or experimental | `projects/fun-projects/` |
+| Manage campaign data | `campaigns/` |
 | Look up Firmable API endpoints | `knowledge/firmable-api-reference.md` |
-| Check ICP scoring logic | `knowledge/icp-criteria.md` |
+| Check ICP scoring logic | `knowledge/icp-definition.md` |
 | Check exclusion/DNC rules | `knowledge/exclusions.md` |
-| Look up persona messaging | `knowledge/persona-messaging.md` |
+| Look up persona messaging | `knowledge/persona-definitions.md` |
+| Firmable product context + competitive positioning | `knowledge/firmable-product.md` |
+| Email framework selection | `knowledge/messaging-frameworks.md` |
 
 ---
 
@@ -111,11 +156,19 @@ firmable-gtm-engineering/
 - **API keys**: Always load from `.env` using `python-dotenv`. Never hardcode credentials.
 - **HTTP**: Use the `requests` library for raw API calls; `hubspot-api-client` for HubSpot.
 - **Error handling**: Log errors with context (which record failed, why). Never swallow exceptions silently.
-- **Imports**: Always import from `applications/`. Never write duplicate API code.
+- **Imports**: Always import from `scripts/`. Never write duplicate API code. `applications/` is shims only.
 - **Naming**: Python files use `snake_case`. One workflow per file.
 - **Output**: Each workflow writes to its own `output/` folder (gitignored). Never write to other workflow folders.
 - **Data flow**: Raw Clay/upstream files go to `data/input/`. Processed outputs go to the relevant workflow's `output/`.
 - **Clay**: Upstream source only — ingest via CSV in `data/input/` or webhook payloads. No direct Clay API calls.
+
+## Rules
+1. **Always check knowledge/ before writing copy or scoring accounts** — icp-definition.md, persona-definitions.md, and messaging-frameworks.md are the source of truth.
+2. **Ask before running any script that writes to HubSpot or SmartLead** — confirm lead count, campaign name, and sender before activating.
+3. **Never skip the exclusions check** — always apply `knowledge/exclusions.md` before scoring or uploading any list.
+4. **Use skills when available** — check `.claude/skills/` before writing enrichment or scoring logic from scratch.
+5. **Update this file when new folders are added** — any new top-level folder needs an entry in the Folder Structure tree and Routing Table.
+6. **Git commit prompting** — ask before committing. Never auto-commit without explicit instruction.
 
 ## Common Patterns
 
@@ -129,28 +182,28 @@ API_KEY = os.getenv("FIRMABLE_API_KEY")
 
 ### Call Firmable
 ```python
-from applications.firmable import FirmableClient
+from scripts.firmable_api import FirmableClient
 client = FirmableClient()
 company = client.lookup_company(domain="example.com.au")
 ```
 
 ### Call HubSpot
 ```python
-from applications.hubspot import HubSpotClient
+from scripts.hubspot_client import HubSpotClient
 hs = HubSpotClient()
 contact = hs.create_or_update_contact(email="name@example.com", properties={...})
 ```
 
 ### Call SmartLead
 ```python
-from applications.smartlead import SmartLeadClient
+from scripts.smartlead_client import SmartLeadClient
 sl = SmartLeadClient()
 sl.add_leads_to_campaign(campaign_id="123", leads=[...])
 ```
 
 ### AI enrichment step
 ```python
-from applications.ai import ask_claude
+from scripts.ai import ask_claude
 summary = ask_claude(prompt="Summarise this company for a sales rep", context=company_data)
 ```
 
@@ -171,7 +224,8 @@ Every new top-level folder must follow this checklist:
 ---
 
 ## Notes
-- Run scripts with `PYTHONPATH=.` from the repo root so `applications/` resolves correctly
-- When a new folder or file is created, run `Update-Claude-Agent.md` to keep this file current
+- Run scripts with `PYTHONPATH=.` from the repo root so `scripts/` resolves correctly
+- Use `pip3` (not `pip`) for all package installs
 - SmartLead API key: `SMARTLEAD_API_KEY` in `.env`
 - n8n webhook URL: `N8N_WEBHOOK_URL` in `.env`
+- `applications/` is kept as compatibility shims — do not add new code there

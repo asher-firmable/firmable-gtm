@@ -2,4 +2,4 @@
 
 This skill has moved.
 
-See: `event-scraping-bot/Event-Scraping-Skill.md`
+See: `projects/event-scraper/Event-Scraping-Skill.md`

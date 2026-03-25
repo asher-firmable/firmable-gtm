@@ -4,10 +4,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from applications.classifier import classify_contacts
+from scripts.classifier import classify_contacts
 
-INPUT = os.path.join(os.path.dirname(__file__), "input", "20260323_Firmable_people_cj3x8g.csv")
-OUTPUT = os.path.join(os.path.dirname(__file__), "output", "20260323_Firmable_people_classified_v2.csv")
+INPUT = os.path.join(os.path.dirname(__file__), "input", "20260325_ex_customer_contacts_new_role.csv")
+OUTPUT = os.path.join(os.path.dirname(__file__), "output", "20260325_ex_customer_contacts_new_role_classified.csv")
 
 
 def main():

@@ -19,8 +19,8 @@ Optional fields (improve accuracy): `first_name`, `last_name`, `company`, `summa
 ## Steps
 
 1. **Load knowledge context**
-   - Read `knowledge/icp-criteria.md` — scoring dimensions, ICP tiers, and B2B outreach intent principle
-   - Read `knowledge/persona-messaging.md` — the 4 buyer personas and their titles
+   - Read `knowledge/icp-definition.md` — scoring dimensions, ICP tiers, and B2B outreach intent principle
+   - Read `knowledge/persona-definitions.md` — the 4 buyer personas and their titles
 
 2. **Apply two conditions — both must be true for ICP Yes**
 
@@ -30,10 +30,18 @@ Optional fields (improve accuracy): `first_name`, `last_name`, `company`, `summa
    - SDR Manager, BDR Manager, Head of Sales Development, Sales Development Manager
    - RevOps Manager, Revenue Operations Manager, Marketing Operations Manager, Demand Generation Manager
    - VP Sales, Head of Sales, Sales Director, Country Manager, GM Sales, General Manager
-   - BD Manager (confirmed team leadership), Partner
+   - Partner, C-suite, MD, Managing Director
    - Founder / Co-Founder / CEO / MD at a company with a B2B outreach motion
    - Ops/enablement roles at manager level that influence tool/tech decisions (e.g. Business Operations Manager)
    - `[Geography/Country/Region] Lead`, `Market Lead`, `Country Lead` — geographic market ownership with BD/expansion mandate (treat as regional director equivalent)
+
+   **"Business Development Manager" ambiguity rule (applies to: Business Development Manager, Senior BDM, Business Development Executive):**
+   In ANZ, "Business Development Manager" is frequently an individual contributor (senior AE equivalent), not a people manager. To qualify as ICP Yes, the headline or summary must contain an explicit signal of team leadership — e.g., "leading a team", "managing a team of X", "player-coach", "managing SDRs/BDRs", "sales leader managing". If no such signal is present, classify as No.
+   - "Head of Business Development", "BD Director", "VP Business Development" → Yes without needing headline evidence (these are unambiguously senior)
+   - "Business Development Manager" / "Senior BDM" / "Business Development Executive" → requires team leadership evidence in headline → otherwise No
+
+   **Multiple-roles rule (applies to: Co-Founder, Founder, Owner):**
+   People sometimes hold more than one active professional role. When the title is Co-Founder, Founder, or Owner, check the headline/summary for a secondary current role at a different company or context (e.g., a headline reading "Business Development Lead | ..."). If the headline reveals a current role that carries B2B buying authority and is manager-level or above, use that secondary role as the primary seniority signal. If the co-founder/founder role itself is at a non-B2B company but the secondary headline role qualifies, the contact may still be ICP Yes.
 
    ICP NO (individual contributors — excluded regardless of company or industry):
    - Account Executive, Senior AE, Mid-Market AE, Enterprise AE
@@ -92,4 +100,7 @@ Optional fields (improve accuracy): `first_name`, `last_name`, `company`, `summa
 ## Notes
 - **Title is the primary signal.** Company and summary are supporting context only.
 - **When in doubt, lean Yes** — if the title is manager/above and the company has any plausible B2B dimension, classify as Yes. Don't over-filter at this stage.
-- For programmatic use, import `classify_contacts` from `applications/classifier.py`.
+- **BDM titles need evidence** — "Business Development Manager" and similar are IC by default in ANZ. Headline must confirm team leadership.
+- **Check headlines for secondary roles** — Co-Founder/Owner at a non-B2B company may have a current BD/leadership role visible in their headline; use that as the seniority basis.
+- For programmatic use, import `classify_contacts` from `scripts/classifier.py`.
+- `scripts/classifier.py` reads this file at runtime via `_build_system_prompt()` — update this file to change classifier behaviour.

@@ -1,13 +1,22 @@
 .env
 data/output/
-event-scraping-bot/output/
-find-contacts/output/
-staging/*/output/
+
+# Projects outputs
+projects/*/output/
+projects/*/*/output/
+
+# Campaign data
+campaigns/**/data/raw/*.csv
+campaigns/**/data/qualified/*.csv
+campaigns/**/data/validated/*.csv
+campaigns/**/data/final/*.csv
+!campaigns/**/data/**/.gitkeep
+
 __pycache__/
 *.pyc
 *.pyo
 .DS_Store
 .venv/
 venv/
-find-contacts/sessions.json
+projects/find-contacts/scripts/sessions.json
 .claude/settings.local.json

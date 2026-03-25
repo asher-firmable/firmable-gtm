@@ -1,0 +1,122 @@
+# Firmable Product Information
+
+> Reference file for what Firmable does, key features, positioning, and pricing. Used by skills like email-copywriting and account-qualification. Update when product changes or new features launch.
+
+---
+
+## Company Overview
+
+Firmable is an Australian-founded, AI-native B2B sales intelligence platform purpose-built for the APAC region. Think ZoomInfo built specifically for Australia, New Zealand, and Southeast Asia (SG, MY, ID, PH, HK, JP). HQ Melbourne. Founded 2023 by the team behind Aconex (acquired by Oracle for $1.6 billion). Backed by Airtree Ventures — $23M raised across seed and Series A (March 2026). Serves 1,000+ paying customers including CBRE, Monday.com, Canon, DHL, Robert Half, G2.
+
+**Tagline:** "From data to direction" / "Reach the right buyers at the right time"
+
+---
+
+## Core Product
+
+Firmable operates across three layers:
+
+### 1. Proprietary Data
+- **3M+ company profiles**, **25M+ contacts**, **1,000+ data attributes**
+- Verified local mobile numbers (22% connect rate vs ~5% industry avg, 95%+ mobile accuracy)
+- Firmographics: industry, revenue, employee count, location, ABN/NZBN identifiers
+- Contact data: verified mobiles, work emails, LinkedIn profiles, job titles, seniority
+- Technographics: tech stack adoption and changes
+- Australian Do Not Call Register — built-in, no global competitor has this
+- Entity resolution: connects parent companies, subsidiaries, franchises (critical for ANZ franchise-heavy economy)
+
+### 2. Buying Signals Engine
+AI agents continuously monitor for: leadership changes, funding rounds, hiring surges, company expansions, technology adoption changes, search intent (as of January 2026 — shows which companies are actively researching relevant topics). Signals surface as daily alerts tied to CRM accounts.
+
+### 3. AI-Powered Workflows
+- Natural-language ICP definition (describe ICP in plain English → auto-generate prospect lists)
+- AI-generated account summaries before calls
+- CRM enrichment agents (keep HubSpot, Salesforce, Pipedrive, MS Dynamics fresh automatically)
+- Chrome/Edge browser extension (surfaces contact details while browsing LinkedIn or any site)
+- API access for custom automation workflows
+
+---
+
+## Key Differentiators
+
+1. **APAC-first data**: Deepest coverage of Australian and NZ businesses. Not a US platform with APAC bolted on. Proprietary dataset built from scratch — not licensed.
+2. **Data freshness and accuracy**: Continuously verified. Customers report 85–90% contact accuracy (vs ~30% with global tools).
+3. **Verified local mobile numbers**: 22% connect rate vs ~5% industry average. SDRs doubled cold call connects within weeks of switching (Cotiss case study).
+4. **Compliance-native**: Australian DNC Register built-in. No global competitor offers this. Legal requirement for AU outbound calling.
+5. **APAC-native features**: ABN/NZBN identifiers, local industry classifications, entity resolution for ANZ business structures.
+6. **AI-native architecture**: Built from inception (2023) as AI-native. Not a legacy database with AI bolted on.
+7. **Pricing**: ~US$55–170/user/month. One credit = one full profile (phones + emails included). Dramatically cheaper than ZoomInfo ($15K+/year team minimum). Monthly billing available, no lock-in.
+
+---
+
+## Proof Points (use in copy)
+
+| Stat | Context |
+|---|---|
+| 22% connect rate vs ~5% avg | Firmable's own SDR team |
+| $160K/month pipeline per SDR | Firmable internal |
+| $2M pipeline from outbound | G2 reviewer |
+| 85–90% contact accuracy | Cotiss case study |
+| Doubled cold call connects within weeks | Cotiss case study |
+| 14/15 Specsavers mobile numbers found | Stripe evaluation |
+| 100% insurance vertical match (44/44) | Stripe evaluation |
+| One credit = full profile (~33 cents) | vs multi-credit waterfall competitors |
+
+---
+
+## Integrations and API
+
+- **CRM**: HubSpot, Salesforce, Pipedrive, Microsoft Dynamics
+- **Browser**: Chrome/Edge extension
+- **API**: Company search and lookup, contact search and lookup, enrichment, bulk operations, webhooks
+- **Pricing for API access**: Enterprise plan (US$170+/user/month)
+
+---
+
+## Pricing
+
+| Plan | Price (USD) | Users | Profiles/Year |
+|---|---|---|---|
+| Individual | $55/user/mo | 1 | 1,200 |
+| Small Teams | $75/user/mo | Up to 3 | 3,000 |
+| Teams Pro | $110/user/mo | 3+ | 6,000 |
+| Enterprise | $170+/user/mo | Custom | Custom + API, SSO, intent data |
+
+14-day free trial, 25 profiles included, no credit card required. Monthly billing available (Individual: $110/mo).
+
+---
+
+## Messaging & Tone
+
+### Two modes based on prospect awareness
+
+**Not problem-aware** (smaller teams, new to outbound/BD):
+- Lead with the problem they don't know they have: no data = no pipeline
+- Hook: offer a free sample list of their ICP (demonstrates product immediately)
+- Keep it simple — one clear CTA, short email
+
+**Problem-aware** (using ZoomInfo, Lusha, Apollo, or similar):
+- Lead with the APAC gap: "Your current tool wasn't built for this region"
+- Technographic signal (detected competitor usage) = strong trigger
+- Direct contrast: coverage, pricing, local mobiles, DNC compliance
+- Proof: 22% connect rate, $2M pipeline, recognisable logos
+
+### Tone rules
+- Problem-first, then proof, then CTA
+- Confident, direct, local — not corporate or generic
+- Short sentences. No fluff. No AI/SaaS clichés.
+- Never use: "leverage", "synergy", "best-in-class", "cutting-edge", "industry-leading"
+
+---
+
+## Recent Developments (as of March 2026)
+
+- **March 2026 Series A ($14M)**: Led by Airtree. Earmarked for US expansion, AI agent development, specialist sales data.
+- **January 2026**: Search intent signals launched (Enterprise add-on). Shows which companies are actively researching relevant topics.
+- **May 2025**: New Zealand launch
+- **November 2024**: Salesforce integration launched
+- **US expansion**: Targeting APAC-headquartered or APAC-selling companies in the US first — wedge strategy
+
+---
+
+*Last updated: March 2026. Update this file when product changes, pricing changes, or new features launch.*
