@@ -64,53 +64,20 @@ firmable-gtm-engineering/
 │
 ├── projects/                        ← All production bots, pipelines, and internal tools
 │   ├── CLAUDE.md                    ← Index of all sub-projects
-│   ├── event-scraper/               ← PRODUCTION: event sponsor outreach pipeline
-│   │   ├── CLAUDE.md                ← Sub-agent: scrape → enrich → score → personalise → upload
-│   │   ├── Event-Scraping-Skill.md  ← Skill: step-by-step pipeline execution + monitoring
-│   │   ├── output/                  ← Campaign CSVs (gitignored)
-│   │   └── scripts/                 ← 0_scrape_*.py, 1_enrich.py, 2_score.py, 3_personalise.py, 4_upload.py, run_all.py, bot.py
+│   ├── slack-bots/                  ← Slack-integrated bots deployed on Railway
+│   │   ├── CLAUDE.md                ← Index of all Slack bot sub-projects
+│   │   ├── event-scraper/           ← PRODUCTION: event sponsor outreach pipeline
+│   │   │   ├── CLAUDE.md            ← Sub-agent: scrape → enrich → score → personalise → upload
+│   │   │   ├── Event-Scraping-Skill.md ← Skill: step-by-step pipeline execution + monitoring
+│   │   │   ├── output/              ← Campaign CSVs (gitignored)
+│   │   │   └── scripts/             ← 0_scrape_*.py, 1_enrich.py, 2_score.py, 3_personalise.py, 4_upload.py, run_all.py, bot.py
+│   │   │
+│   │   └── find-contacts/           ← Ad-hoc and batch Firmable contact lookups
+│   │       ├── CLAUDE.md            ← Sub-agent: contact lookup role
+│   │       ├── Contact-Finding-Skill.md ← Skill: find contacts using Firmable People Search
+│   │       ├── output/              ← Contact lookup results (gitignored)
+│   │       └── scripts/             ← bot.py, enrich_accounts.py
 │   │
-│   ├── find-contacts/               ← Ad-hoc and batch Firmable contact lookups
-│   │   ├── CLAUDE.md                ← Sub-agent: contact lookup role
-│   │   ├── Contact-Finding-Skill.md ← Skill: find contacts using Firmable People Search
-│   │   ├── output/                  ← Contact lookup results (gitignored)
-│   │   └── scripts/                 ← bot.py, enrich_accounts.py
-│   │
-│   ├── n8n/                         ← Create and edit n8n workflows via REST API
-│   │   ├── CLAUDE.md                ← Sub-agent: n8n workflow management
-│   │   └── N8n-Changes-Skill.md     ← Skill: list, create, edit workflows
-│   │
-│   ├── outbound/                    ← Email copy generation and SmartLead campaign upload
-│   │   ├── CLAUDE.md                ← Sub-agent: reads templates + customer stories before any email task
-│   │   ├── email-templates-examples.md  ← 7 cold email templates (PVP, PQS, Competitor Analysis, etc.)
-│   │   ├── customer-stories-and-use-cases.md  ← Cotiss, Stripe, internal proof points for copy
-│   │   ├── raw-transcripts/         ← Raw call recordings for outbound context
-│   │   ├── email-writing/
-│   │   │   └── Email-Writing-Skill.md  ← Skill: persona-aware email generation
-│   │   └── account-pipeline/        ← End-to-end account pipeline: filter → contacts → research → emails → SmartLead
-│   │       ├── CLAUDE.md
-│   │       ├── Account-Pipeline-Skill.md
-│   │       ├── config.json          ← Sender details and sequence delays
-│   │       └── scripts/             ← 0_filter.py, 1_find_contacts.py, 2_research.py, 3_generate_emails.py, 4_upload.py, run_all.py
-│   │
-│   ├── call-analysis/               ← Call transcript processing and knowledge base maintenance
-│   │   ├── CLAUDE.md                ← Sub-agent: goals, folder structure, approval process
-│   │   ├── call-analysis-existing-customer/
-│   │   │   └── Skill-Agent-For-Existing-Customer.md  ← Satisfaction, product gaps, expansion signals
-│   │   └── call-analysis-prospect/
-│   │       └── Skill-Agent-For-Prospect.md           ← Pain points, objections, qualification signals
-│   │
-│   ├── staging/                     ← Test environment — changes here don't affect production
-│   │   ├── CLAUDE.md                ← Sub-agent: staging rules and purpose
-│   │   ├── Replicate-to-prod-skill.md  ← Skill: diff + promote staging → production (approval required)
-│   │   └── event-scraping-bot-staging/  ← Staging copy of event scraping pipeline
-│   │       ├── CLAUDE.md
-│   │       ├── Event-Scraping-Skill.md
-│   │       └── scripts/             ← Scrape.py, Enrich-Company.py
-│   │
-│   └── fun-projects/                ← Personal experiments and reverse-engineering
-│       ├── CLAUDE.md                ← Sub-agent: experimentation sandbox
-│       └── Write-To-Relevant-Folder-Skill.md  ← Skill: deploy a fun project to the right production folder
 │
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
@@ -134,14 +101,8 @@ firmable-gtm-engineering/
 
 | Task | Go to |
 |---|---|
-| Scrape event sponsors and run outreach pipeline | `projects/event-scraper/` |
-| Find contacts at specific companies | `projects/find-contacts/` |
-| Create or edit n8n workflows | `projects/n8n/` |
-| Write or improve cold email copy | `projects/outbound/` |
-| Run account-based outbound pipeline (Excel → SmartLead campaign) | `projects/outbound/account-pipeline/` |
-| Process a call transcript | `projects/call-analysis/` |
-| Test a change before pushing to production | `projects/staging/` |
-| Build something new or experimental | `projects/fun-projects/` |
+| Scrape event sponsors and run outreach pipeline | `projects/slack-bots/event-scraper/` |
+| Find contacts at specific companies | `projects/slack-bots/find-contacts/` |
 | Manage campaign data | `campaigns/` |
 | Look up Firmable API endpoints | `knowledge/firmable-api-reference.md` |
 | Check ICP scoring logic | `knowledge/icp-definition.md` |
