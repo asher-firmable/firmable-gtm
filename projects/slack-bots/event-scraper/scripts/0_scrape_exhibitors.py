@@ -285,8 +285,12 @@ def _looks_like_tier_label(text: str) -> bool:
     """Return True if the text looks like a partnership tier label, not a company name."""
     if not text:
         return True
-    words = set(re.sub(r"[^a-z\s]", "", text.lower()).split())
-    # If more than half the words are tier-label words, it's probably a label
+    clean_words = re.sub(r"[^a-z\s]", "", text.lower()).split()
+    # All-caps phrases with more than 2 words are tier labels, not company names.
+    # Real all-caps company names are short acronyms: ROI DNA (2), ON24 (1), IBM (1).
+    if text == text.upper() and len(clean_words) > 2:
+        return True
+    words = set(clean_words)
     if len(words) == 0:
         return True
     overlap = words & TIER_LABEL_WORDS
