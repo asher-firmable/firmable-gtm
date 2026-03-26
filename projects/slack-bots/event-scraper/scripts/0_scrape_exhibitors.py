@@ -263,7 +263,7 @@ def _extract_name_from_description(html_soup) -> str:
                 return candidate
         # If no verb found but it's short (< 5 words), it might just be the name
         words = text.split()
-        if len(words) <= 4 and not _looks_like_tier_label(text):
+        if len(words) <= 4 and not _looks_like_tier_label(text) and not _looks_like_tagline(text):
             return text.strip()
 
     # Try first <p> tag
@@ -317,7 +317,7 @@ def extract_company_name(el_html: str) -> str:
         t = soup.select_one(cls)
         if t:
             text = t.get_text(strip=True)
-            if text and not _looks_like_tier_label(text):
+            if text and not _looks_like_tier_label(text) and not _looks_like_tagline(text):
                 return text
 
     # Priority 4: heading tags — skip if they look like tier labels or taglines
