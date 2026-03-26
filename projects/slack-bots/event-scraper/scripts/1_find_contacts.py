@@ -41,9 +41,14 @@ _CONTACT_PRIORITY = {
 
 
 def extract_work_email(person: dict) -> str:
-    # API returns {"work": [{"value": "..."}], "personal": [...]}
-    emails = person.get("emails", {})
-    if isinstance(emails, dict):
+    # API returns [{"type": "work", "email": "...", "deliverability": "valid"}]
+    emails = person.get("emails", [])
+    if isinstance(emails, list):
+        for entry in emails:
+            if entry.get("type") == "work" and entry.get("email"):
+                return entry["email"]
+    elif isinstance(emails, dict):
+        # legacy dict format fallback
         for entry in emails.get("work", []):
             val = entry.get("value", "")
             if val:
@@ -52,10 +57,10 @@ def extract_work_email(person: dict) -> str:
 
 
 def extract_phone(person: dict) -> str:
-    # API returns [{"value": "+61...", "is_dnd": false}]
+    # API returns [{"number": "+61...", "dnd": false}]
     for entry in person.get("phones", []):
-        if not entry.get("is_dnd", True) and entry.get("value"):
-            return entry["value"]
+        if not entry.get("dnd", True) and entry.get("number"):
+            return entry["number"]
     return ""
 
 

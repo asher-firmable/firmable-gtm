@@ -13,8 +13,11 @@ load_dotenv()
 
 
 def load_csv(filepath: str) -> pd.DataFrame:
-    """Load a CSV, normalising column names to lowercase snake_case."""
-    df = pd.read_csv(filepath)
+    """Load a CSV or Excel file, normalising column names to lowercase snake_case."""
+    if filepath.endswith(".xlsx"):
+        df = pd.read_excel(filepath)
+    else:
+        df = pd.read_csv(filepath)
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
     return df
 

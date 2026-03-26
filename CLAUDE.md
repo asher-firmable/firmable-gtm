@@ -78,6 +78,15 @@ firmable-gtm-engineering/
 │   │       ├── output/              ← Contact lookup results (gitignored)
 │   │       └── scripts/             ← bot.py, enrich_accounts.py
 │   │
+│   ├── account-level-enrichment-sea/   ← Enrich accounts with regional headcount + AI notes; sync to HubSpot (SEA)
+│   │   ├── CLAUDE.md                    ← Sub-agent: enrichment + HubSpot sync pipeline
+│   │   ├── output/                      ← Enriched CSVs (gitignored)
+│   │   └── scripts/                     ← enrich_accounts.py, hubspot_check.py, hubspot_sync.py
+│   │
+│   └── signal-contact-activation/      ← ICP classify new-role contacts (job-change signal activation)
+│       ├── CLAUDE.md                    ← Sub-agent: column mapping, BDM rule, classifier usage
+│       ├── output/                      ← Classified CSVs (gitignored)
+│       └── scripts/                     ← classify_new_roles.py
 │
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
@@ -101,6 +110,8 @@ firmable-gtm-engineering/
 
 | Task | Go to |
 |---|---|
+| Enrich accounts with regional headcount + AI notes + HubSpot sync (SEA) | `projects/account-level-enrichment-sea/` |
+| Classify new-role contacts against ICP (job-change signal activation) | `projects/signal-contact-activation/` |
 | Scrape event sponsors and run outreach pipeline | `projects/slack-bots/event-scraper/` |
 | Find contacts at specific companies | `projects/slack-bots/find-contacts/` |
 | Manage campaign data | `campaigns/` |
@@ -126,6 +137,7 @@ firmable-gtm-engineering/
 ## Rules
 1. **Always check knowledge/ before writing copy or scoring accounts** — icp-definition.md, persona-definitions.md, and messaging-frameworks.md are the source of truth.
 2. **Ask before running any script that writes to HubSpot or SmartLead** — confirm lead count, campaign name, and sender before activating.
+2a. **HubSpot create safety check** — before creating a new company record, verify the domain is consistent with the company name (domain root should contain or match a word from the company name). If inconsistent, flag to the user and skip creation — never auto-create records with mismatched data. List all flagged cases in the summary output.
 3. **Never skip the exclusions check** — always apply `knowledge/exclusions.md` before scoring or uploading any list.
 4. **Use skills when available** — check `.claude/skills/` before writing enrichment or scoring logic from scratch.
 5. **Update this file when new folders are added** — any new top-level folder needs an entry in the Folder Structure tree and Routing Table.

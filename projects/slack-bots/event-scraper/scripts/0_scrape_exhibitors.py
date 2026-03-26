@@ -212,6 +212,24 @@ def _clean_alt_text(alt: str) -> str:
     return alt
 
 
+# Common action verbs that start marketing taglines, not company names
+_TAGLINE_VERB_RE = re.compile(
+    r"^(create|build|transform|discover|deliver|empower|enable|make|drive|grow|"
+    r"connect|inspire|accelerate|unlock|leverage|maximise|maximize|boost|"
+    r"revolutionise|revolutionize|reimagine|rethink|redefine|navigate|harness|"
+    r"explore|engage|elevate|amplify|innovate|digitalise|digitalize|automate)\b",
+    re.IGNORECASE,
+)
+
+
+def _looks_like_tagline(text: str) -> bool:
+    """Return True if the text looks like a marketing tagline, not a company name."""
+    words = text.split()
+    if len(words) > 6:
+        return True
+    return bool(_TAGLINE_VERB_RE.match(text.strip()))
+
+
 # Verbs that indicate the company name ends and a description begins
 _NAME_STOP_RE = re.compile(
     r"\b(is |are |was |has |have |offers?|provides?|helps?|delivers?|enables?|"
@@ -282,7 +300,7 @@ def extract_company_name(el_html: str) -> str:
     # Priority 1: logo image alt text (most reliable — logos always have company name)
     for img in soup.find_all("img", alt=True):
         alt = _clean_alt_text(img["alt"].strip())
-        if alt and len(alt) > 1 and not _looks_like_tier_label(alt):
+        if alt and len(alt) > 1 and not _looks_like_tier_label(alt) and not _looks_like_tagline(alt):
             return alt
 
     # Priority 2: extract from description text (first strong/p sentence before verb)
@@ -302,12 +320,12 @@ def extract_company_name(el_html: str) -> str:
             if text and not _looks_like_tier_label(text):
                 return text
 
-    # Priority 4: heading tags — skip if they look like tier labels
+    # Priority 4: heading tags — skip if they look like tier labels or taglines
     for tag in ["h2", "h3", "h4", "h5"]:
         t = soup.find(tag)
         if t:
             text = t.get_text(strip=True)
-            if text and not _looks_like_tier_label(text):
+            if text and not _looks_like_tier_label(text) and not _looks_like_tagline(text):
                 return text
 
     return ""
@@ -388,7 +406,7 @@ def extract_from_page_images(html: str, base_url: str) -> list[dict]:
         if not alt or len(alt) < 2:
             continue
         name = _clean_alt_text(alt)
-        if not name or _looks_like_tier_label(name) or len(name) < 2:
+        if not name or _looks_like_tier_label(name) or _looks_like_tagline(name) or len(name) < 2:
             continue
         name_key = name.lower()
         if name_key in seen_names:
