@@ -289,15 +289,36 @@ def _scrape_thread(user_id: str, url: str, client, channel: str, msg_ts: str):
         if user_id not in sessions:
             return  # cancelled
 
-        sessions[user_id]["exhibitors"] = exhibitors
+        # Split into qualified (has domain or firmable ID) and dropped (junk)
+        qualified = []
+        dropped = []
+        for ex in exhibitors:
+            domain = _scrape.extract_domain(ex.get("website_url", ""))
+            ex["_domain"] = domain  # cache for display
+            if domain or ex.get("firmable_company_id"):
+                qualified.append(ex)
+            else:
+                dropped.append(ex)
 
-        names = "\n".join(f"• {ex['company_name']}" for ex in exhibitors)
-        text = f":white_check_mark: Found *{len(exhibitors)} sponsors* from {url}:\n{names}"
+        sessions[user_id]["exhibitors"] = qualified
+
+        lines = [f":white_check_mark: Found *{len(exhibitors)} sponsors* from {url}:"]
+        for i, ex in enumerate(qualified, 1):
+            domain = ex.get("_domain", "")
+            domain_str = f" `{domain}`" if domain else ""
+            lines.append(f"{i}. {ex['company_name']}{domain_str}")
+
+        if dropped:
+            lines.append(f"\n:warning: Skipping {len(dropped)} entr{'y' if len(dropped) == 1 else 'ies'} with no domain:")
+            for ex in dropped:
+                lines.append(f"  • {ex['company_name']}")
+
+        text = "\n".join(lines)
         blocks = [
             {"type": "section", "text": {"type": "mrkdwn", "text": text}},
             {"type": "divider"},
             {"type": "section", "text": {"type": "mrkdwn",
-             "text": "Proceed to fetch sales team sizes for all companies?"}},
+             "text": f"Proceed to fetch sales team sizes for *{len(qualified)} companies*?"}},
         ] + _action_buttons(
             "proceed_to_sizes", "cancel_session", user_id,
             yes_label=":bar_chart: Yes, fetch sales team sizes",
