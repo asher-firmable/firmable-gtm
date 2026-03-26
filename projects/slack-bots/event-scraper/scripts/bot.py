@@ -28,6 +28,7 @@ import importlib.util
 import io
 import csv
 import os
+import re
 import sys
 import threading
 import traceback
@@ -73,6 +74,27 @@ find_contacts_for_company = _ctcts.find_contacts_for_company
 # ---------------------------------------------------------------------------
 # Slack app + session store
 # ---------------------------------------------------------------------------
+
+def _domain_matches_company(company_name: str, domain: str) -> bool:
+    """Return True if the domain is plausibly related to the company name.
+
+    Checks two things:
+    1. Any significant word (>=3 alpha chars) from the name appears in the domain root.
+    2. The domain root matches the initials of the name words (handles abbreviations
+       like 'Financial Times' → 'ft.com').
+    """
+    if not domain or not company_name:
+        return False
+    domain_root = domain.split(".")[0].lower()
+    name_words = [w for w in re.sub(r"[^a-z\s]", "", company_name.lower()).split() if len(w) >= 3]
+    for word in name_words:
+        if word in domain_root or domain_root in word:
+            return True
+    initials = "".join(w[0] for w in name_words if w)
+    if initials and domain_root == initials:
+        return True
+    return False
+
 
 app = App(token=os.environ["EVENT_BOT_SLACK_BOT_TOKEN"])
 
@@ -289,13 +311,16 @@ def _scrape_thread(user_id: str, url: str, client, channel: str, msg_ts: str):
         if user_id not in sessions:
             return  # cancelled
 
-        # Split into qualified (has domain or firmable ID) and dropped (junk)
+        # Split: qualified = Firmable ID confirmed, OR domain matches name.
+        # Dropped = no domain/firmable ID, OR domain totally unrelated to name.
         qualified = []
         dropped = []
         for ex in exhibitors:
             domain = _scrape.extract_domain(ex.get("website_url", ""))
             ex["_domain"] = domain  # cache for display
-            if domain or ex.get("firmable_company_id"):
+            has_firmable = bool(ex.get("firmable_company_id"))
+            domain_matches = _domain_matches_company(ex["company_name"], domain)
+            if has_firmable or domain_matches:
                 qualified.append(ex)
             else:
                 dropped.append(ex)
