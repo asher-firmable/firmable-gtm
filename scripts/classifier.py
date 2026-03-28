@@ -91,9 +91,6 @@ ICP NO seniority — individual contributors, excluded regardless of industry:
 - If no such signal is present in the headline/summary → classify as No.
 - Exception: "Head of Business Development", "BD Director", "VP Business Development" qualify without needing headline evidence.
 
-**Multiple-roles rule:**
-When the title is Co-Founder, Founder, or Owner, check the headline/summary for a secondary active professional role. If the headline reveals a current role at a different context (e.g., "Business Development Lead at X" in the headline) that is manager-level with a B2B mandate, use that secondary role as the primary seniority signal — even if the co-founder/owner role itself is at a non-B2B entity.
-
 **Condition 2 — Company has a B2B interaction:**
 The company sells to, partners with, recruits for, sponsors, or fundraises from other businesses in any capacity. Interpret this loosely — if there is any plausible B2B commercial interaction, the company qualifies. Do NOT use company size or employee count as a signal; that data will come from the Firmable API separately.
 

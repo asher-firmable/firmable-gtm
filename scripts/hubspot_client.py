@@ -145,3 +145,43 @@ class HubSpotClient:
         """Return the HubSpot portal (account) ID."""
         result = self._get("/integrations/v1/me")
         return str(result.get("portalId", ""))
+
+    # ── Eligibility / read-only engagement queries ─────────────────────────
+
+    def get_contact_by_email(self, email: str) -> dict | None:
+        """Look up a single contact by email. Returns contact dict with lifecyclestage and
+        associatedcompanyid, or None if not found."""
+        payload = {
+            "filterGroups": [{"filters": [{"propertyName": "email", "operator": "EQ", "value": email}]}],
+            "properties": ["hs_object_id", "email", "firstname", "lastname", "lifecyclestage", "associatedcompanyid"],
+            "limit": 1,
+        }
+        result = self._post("/crm/v3/objects/contacts/search", payload)
+        results = result.get("results", [])
+        return results[0] if results else None
+
+    def get_company_properties(self, company_id: str, properties: list) -> dict:
+        """Fetch specific properties from a company record. Returns the properties dict."""
+        prop_str = ",".join(properties)
+        result = self._get(f"/crm/v3/objects/companies/{company_id}", params={"properties": prop_str})
+        return result.get("properties", {})
+
+    def get_associated_ids(self, from_object_type: str, from_id: str, to_object_type: str) -> list:
+        """Return a list of string IDs associated with the given object via the v4 associations API."""
+        result = self._get(f"/crm/v4/objects/{from_object_type}/{from_id}/associations/{to_object_type}")
+        return [str(r["toObjectId"]) for r in result.get("results", [])]
+
+    def batch_get_objects(self, object_type: str, ids: list, properties: list) -> list:
+        """Batch read CRM objects by ID. Handles chunks of 100. Returns flat list of result dicts."""
+        if not ids:
+            return []
+        all_results = []
+        for i in range(0, len(ids), 100):
+            chunk = ids[i:i + 100]
+            payload = {
+                "inputs": [{"id": obj_id} for obj_id in chunk],
+                "properties": properties,
+            }
+            result = self._post(f"/crm/v3/objects/{object_type}/batch/read", payload)
+            all_results.extend(result.get("results", []))
+        return all_results

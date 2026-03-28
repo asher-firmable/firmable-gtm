@@ -83,10 +83,12 @@ firmable-gtm-engineering/
 │   │   ├── output/                      ← Enriched CSVs (gitignored)
 │   │   └── scripts/                     ← enrich_accounts.py, hubspot_check.py, hubspot_sync.py
 │   │
-│   └── signal-contact-activation/      ← ICP classify new-role contacts (job-change signal activation)
-│       ├── CLAUDE.md                    ← Sub-agent: column mapping, BDM rule, classifier usage
-│       ├── output/                      ← Classified CSVs (gitignored)
-│       └── scripts/                     ← classify_new_roles.py
+│   └── signal-contact-activation/      ← ICP classify contacts by buying signal type
+│       ├── CLAUDE.md                    ← Index of signal sub-folders
+│       └── contacts-new-role/           ← Signal: contacts who started a new role (past 90 days)
+│           ├── CLAUDE.md                ← Sub-agent: column mapping, BDM rule, classifier usage
+│           ├── output/                  ← Classified CSVs (gitignored)
+│           └── scripts/                 ← classify_new_roles.py
 │
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)

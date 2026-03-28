@@ -33,9 +33,31 @@ Fill `brief.md` with:
 
 Then ask: "Campaign folder is set up. Want to start with step 1 (qualify/source accounts), or do you already have a list ready?"
 
+## Campaign readiness checklist (run before SmartLead upload)
+
+Before uploading any contact list to SmartLead, confirm all steps are complete:
+
+1. **Account qualification** — ICP scoring via `account-qualification` skill
+2. **Contact validation** — Persona/title check via `contact-validation` skill
+3. **HubSpot eligibility check** — Pre-flight gate via `scripts/hubspot_eligibility.py`
+   - Removes customers + active trials
+   - Removes contacts with recent comms (calls/emails/meetings in last 30 days)
+   - Removes contacts with no scheduled task on their record or account
+4. **Classifier** — AI scoring via `scripts/classifier.py`
+5. **Copy generation** — via `email-copywriting` skill
+6. **SmartLead upload** — confirm lead count, campaign name, and sender before activating
+
+```bash
+# Step 3 — HubSpot eligibility check
+PYTHONPATH=. python3 scripts/hubspot_eligibility.py \
+  --input campaigns/[region]/[campaign]/data/validated/contacts.csv \
+  --output campaigns/[region]/[campaign]/data/final/eligible.csv
+```
+
 ## References
 - Account pipeline scripts: `projects/outbound/account-pipeline/scripts/`
 - Account pipeline skill: `projects/outbound/account-pipeline/Account-Pipeline-Skill.md`
+- HubSpot eligibility skill: `.claude/skills/hubspot-eligibility/SKILL.md`
 - ICP criteria: `knowledge/icp-definition.md`
 - Persona definitions: `knowledge/persona-definitions.md`
 - Email frameworks: `knowledge/messaging-frameworks.md`

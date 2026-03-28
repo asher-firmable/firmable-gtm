@@ -40,9 +40,6 @@ Optional fields (improve accuracy): `first_name`, `last_name`, `company`, `summa
    - "Head of Business Development", "BD Director", "VP Business Development" → Yes without needing headline evidence (these are unambiguously senior)
    - "Business Development Manager" / "Senior BDM" / "Business Development Executive" → requires team leadership evidence in headline → otherwise No
 
-   **Multiple-roles rule (applies to: Co-Founder, Founder, Owner):**
-   People sometimes hold more than one active professional role. When the title is Co-Founder, Founder, or Owner, check the headline/summary for a secondary current role at a different company or context (e.g., a headline reading "Business Development Lead | ..."). If the headline reveals a current role that carries B2B buying authority and is manager-level or above, use that secondary role as the primary seniority signal. If the co-founder/founder role itself is at a non-B2B company but the secondary headline role qualifies, the contact may still be ICP Yes.
-
    ICP NO (individual contributors — excluded regardless of company or industry):
    - Account Executive, Senior AE, Mid-Market AE, Enterprise AE
    - Sales Development Representative, BDR, SDR (without "Manager")
