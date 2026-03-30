@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import requests
 from dotenv import load_dotenv
@@ -149,11 +151,11 @@ class HubSpotClient:
     # ── Eligibility / read-only engagement queries ─────────────────────────
 
     def get_contact_by_email(self, email: str) -> dict | None:
-        """Look up a single contact by email. Returns contact dict with lifecyclestage and
-        associatedcompanyid, or None if not found."""
+        """Look up a single contact by email. Returns contact dict with lifecyclestage,
+        associatedcompanyid, and hs_last_contacted, or None if not found."""
         payload = {
             "filterGroups": [{"filters": [{"propertyName": "email", "operator": "EQ", "value": email}]}],
-            "properties": ["hs_object_id", "email", "firstname", "lastname", "lifecyclestage", "associatedcompanyid"],
+            "properties": ["hs_object_id", "email", "firstname", "lastname", "lifecyclestage", "associatedcompanyid", "hs_last_contacted"],
             "limit": 1,
         }
         result = self._post("/crm/v3/objects/contacts/search", payload)

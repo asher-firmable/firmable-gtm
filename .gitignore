@@ -10,6 +10,7 @@ projects/*/*/output/
 campaigns/**/data/raw/*.csv
 campaigns/**/data/qualified/*.csv
 campaigns/**/data/validated/*.csv
+campaigns/**/data/eligible/*.csv
 campaigns/**/data/final/*.csv
 !campaigns/**/data/**/.gitkeep
 

@@ -41,6 +41,9 @@ firmable-gtm-engineering/
 ├── scripts/                         ← Shared API wrappers (source of truth — import from here)
 │   ├── firmable_api.py              ← FirmableClient — lookup_company, lookup_company_by_id, find_contacts
 │   ├── hubspot_client.py            ← HubSpotClient — create_or_update_contact
+│   ├── hubspot_eligibility.py       ← Pre-campaign pipeline: HubSpot eligibility + Firmable enrichment
+│   ├── normalize_company_names.py   ← Strip legal suffixes, dot-TLDs, parentheticals from company_name
+│   ├── enrich_persona_region.py     ← Add persona + region columns via web-fetch + Claude
 │   ├── smartlead_client.py          ← SmartLeadClient — add_leads_to_campaign, create_campaign
 │   ├── ai.py                        ← ask_claude, ask_claude_with_vision
 │   ├── classifier.py                ← classify_contacts, classify_contact
@@ -117,6 +120,9 @@ firmable-gtm-engineering/
 | Scrape event sponsors and run outreach pipeline | `projects/slack-bots/event-scraper/` |
 | Find contacts at specific companies | `projects/slack-bots/find-contacts/` |
 | Manage campaign data | `campaigns/` |
+| Run pre-campaign eligibility check + Firmable enrichment | `scripts/hubspot_eligibility.py` |
+| Normalise company names in a campaign CSV | `scripts/normalize_company_names.py` |
+| Add persona + region to a campaign CSV | `scripts/enrich_persona_region.py` |
 | Look up Firmable API endpoints | `knowledge/firmable-api-reference.md` |
 | Check ICP scoring logic | `knowledge/icp-definition.md` |
 | Check exclusion/DNC rules | `knowledge/exclusions.md` |
