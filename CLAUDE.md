@@ -62,6 +62,10 @@ firmable-gtm-engineering/
 ├── campaigns/                       ← Campaign data organised by region (data only, no scripts)
 │   ├── CLAUDE.md                    ← Campaign folder conventions
 │   ├── anz/                         ← Australia & New Zealand campaigns
+│   │   ├── CLAUDE.md                ← ANZ pipeline docs + command reference
+│   │   ├── run_pipeline.py          ← Full ANZ pipeline: eligibility → size filter → normalise → persona → final
+│   │   └── ANZ_SMB_SaaS/
+│   │       └── Software_General_Outreach/ ← ANZ SMB SaaS/Software general outreach (sales team ≤4)
 │   ├── us/                          ← US campaigns
 │   └── sea/                         ← South-East Asia campaigns
 │
@@ -120,6 +124,8 @@ firmable-gtm-engineering/
 | Scrape event sponsors and run outreach pipeline | `projects/slack-bots/event-scraper/` |
 | Find contacts at specific companies | `projects/slack-bots/find-contacts/` |
 | Manage campaign data | `campaigns/` |
+| ANZ SMB SaaS/Software general outreach (sales team ≤4) | `campaigns/anz/ANZ_SMB_SaaS/Software_General_Outreach/` |
+| Run full ANZ pre-outreach pipeline (any ANZ campaign) | `campaigns/anz/run_pipeline.py` |
 | Run pre-campaign eligibility check + Firmable enrichment | `scripts/hubspot_eligibility.py` |
 | Normalise company names in a campaign CSV | `scripts/normalize_company_names.py` |
 | Add persona + region to a campaign CSV | `scripts/enrich_persona_region.py` |
