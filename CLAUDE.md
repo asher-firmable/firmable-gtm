@@ -64,8 +64,14 @@ firmable-gtm-engineering/
 │   ├── anz/                         ← Australia & New Zealand campaigns
 │   │   ├── CLAUDE.md                ← ANZ pipeline docs + command reference
 │   │   ├── run_pipeline.py          ← Full ANZ pipeline: eligibility → size filter → normalise → persona → final
-│   │   └── ANZ_SMB_SaaS/
-│   │       └── Software_General_Outreach/ ← ANZ SMB SaaS/Software general outreach (sales team ≤4)
+│   │   ├── ANZ_SMB_SaaS/
+│   │   │   └── Software_General_Outreach/ ← ANZ SMB SaaS/Software general outreach (sales team ≤4)
+│   │   └── events-outbound/         ← ANZ event/expo exhibitor outreach campaigns
+│   │       ├── CLAUDE.md            ← Events outbound conventions
+│   │       └── sydney-build-expo-2026/
+│   │           ├── CLAUDE.md        ← Sub-agent: scrape exhibitors from Sydney Build Expo 2026
+│   │           ├── scrape_exhibitors.py ← Playwright scraper → output/exhibitors.csv
+│   │           └── output/          ← Scraped CSVs (gitignored)
 │   ├── us/                          ← US campaigns
 │   └── sea/                         ← South-East Asia campaigns
 │
@@ -125,6 +131,8 @@ firmable-gtm-engineering/
 | Find contacts at specific companies | `projects/slack-bots/find-contacts/` |
 | Manage campaign data | `campaigns/` |
 | ANZ SMB SaaS/Software general outreach (sales team ≤4) | `campaigns/anz/ANZ_SMB_SaaS/Software_General_Outreach/` |
+| Scrape ANZ event/expo exhibitor lists | `campaigns/anz/events-outbound/` |
+| Sydney Build Expo 2026 exhibitor scrape | `campaigns/anz/events-outbound/sydney-build-expo-2026/` |
 | Run full ANZ pre-outreach pipeline (any ANZ campaign) | `campaigns/anz/run_pipeline.py` |
 | Run pre-campaign eligibility check + Firmable enrichment | `scripts/hubspot_eligibility.py` |
 | Normalise company names in a campaign CSV | `scripts/normalize_company_names.py` |

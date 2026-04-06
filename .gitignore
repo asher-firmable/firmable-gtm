@@ -6,6 +6,9 @@ data/output/
 projects/*/output/
 projects/*/*/output/
 
+# Campaign outputs (scraped/processed data)
+campaigns/**/output/
+
 # Campaign data
 campaigns/**/input/*.csv
 campaigns/**/data/raw/*.csv
