@@ -96,12 +96,17 @@ firmable-gtm-engineering/
 │   │   ├── output/                      ← Enriched CSVs (gitignored)
 │   │   └── scripts/                     ← enrich_accounts.py, hubspot_check.py, hubspot_sync.py
 │   │
-│   └── signal-contact-activation/      ← ICP classify contacts by buying signal type
-│       ├── CLAUDE.md                    ← Index of signal sub-folders
-│       └── contacts-new-role/           ← Signal: contacts who started a new role (past 90 days)
-│           ├── CLAUDE.md                ← Sub-agent: column mapping, BDM rule, classifier usage
-│           ├── output/                  ← Classified CSVs (gitignored)
-│           └── scripts/                 ← classify_new_roles.py
+│   ├── signal-contact-activation/      ← ICP classify contacts by buying signal type
+│   │   ├── CLAUDE.md                    ← Index of signal sub-folders
+│   │   └── contacts-new-role/           ← Signal: contacts who started a new role (past 90 days)
+│   │       ├── CLAUDE.md                ← Sub-agent: column mapping, BDM rule, classifier usage
+│   │       ├── output/                  ← Classified CSVs (gitignored)
+│   │       └── scripts/                 ← classify_new_roles.py
+│   │
+│   └── sea-company-upload/             ← Pre-upload HubSpot audit for company lists
+│       ├── CLAUDE.md                    ← Sub-agent: drop CSV in input/, run check, read terminal summary
+│       ├── input/                       ← Drop company CSV here before running
+│       └── output/                      ← Reserved for future CSV export (gitignored)
 │
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
@@ -125,6 +130,7 @@ firmable-gtm-engineering/
 
 | Task | Go to |
 |---|---|
+| Check company list against HubSpot before upload (SEA or any region) | `projects/sea-company-upload/` |
 | Enrich accounts with regional headcount + AI notes + HubSpot sync (SEA) | `projects/account-level-enrichment-sea/` |
 | Classify new-role contacts against ICP (job-change signal activation) | `projects/signal-contact-activation/` |
 | Scrape event sponsors and run outreach pipeline | `projects/slack-bots/event-scraper/` |

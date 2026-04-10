@@ -23,25 +23,25 @@ class HubSpotClient:
 
     def _get(self, endpoint, params=None):
         url = f"{self.BASE_URL}{endpoint}"
-        response = requests.get(url, headers=self.headers, params=params)
+        response = requests.get(url, headers=self.headers, params=params, timeout=30)
         response.raise_for_status()
         return response.json()
 
     def _post(self, endpoint, payload):
         url = f"{self.BASE_URL}{endpoint}"
-        response = requests.post(url, headers=self.headers, json=payload)
+        response = requests.post(url, headers=self.headers, json=payload, timeout=30)
         response.raise_for_status()
         return response.json()
 
     def _patch(self, endpoint, payload):
         url = f"{self.BASE_URL}{endpoint}"
-        response = requests.patch(url, headers=self.headers, json=payload)
+        response = requests.patch(url, headers=self.headers, json=payload, timeout=30)
         response.raise_for_status()
         return response.json()
 
     def _put(self, endpoint, payload):
         url = f"{self.BASE_URL}{endpoint}"
-        response = requests.put(url, headers=self.headers, json=payload)
+        response = requests.put(url, headers=self.headers, json=payload, timeout=30)
         response.raise_for_status()
         return response.json()
 
@@ -172,6 +172,33 @@ class HubSpotClient:
         """Return a list of string IDs associated with the given object via the v4 associations API."""
         result = self._get(f"/crm/v4/objects/{from_object_type}/{from_id}/associations/{to_object_type}")
         return [str(r["toObjectId"]) for r in result.get("results", [])]
+
+    def get_deal_stage_label_map(self) -> dict:
+        """Return a dict mapping deal stage ID → human-readable label across all pipelines."""
+        result = self._get("/crm/v3/pipelines/deals")
+        label_map = {}
+        for pipeline in result.get("results", []):
+            for stage in pipeline.get("stages", []):
+                label_map[stage["id"]] = stage["label"]
+        return label_map
+
+    def get_company_deal_stages(self, company_id: str) -> list:
+        """Return a list of dealstage values for all deals associated with a company."""
+        deal_ids = self.get_associated_ids("companies", company_id, "deals")
+        if not deal_ids:
+            return []
+        deals = self.batch_get_objects("deals", deal_ids, ["dealstage"])
+        return [d.get("properties", {}).get("dealstage", "") for d in deals]
+
+    def get_owners(self) -> list:
+        """Return list of HubSpot owners (users). Each item has id, email, firstName, lastName."""
+        result = self._get("/crm/v3/owners", params={"limit": 100})
+        return result.get("results", [])
+
+    def get_property_options(self, object_type: str, property_name: str) -> list:
+        """Return enum options for a CRM property. Each item has 'label' and 'value'."""
+        result = self._get(f"/crm/v3/properties/{object_type}/{property_name}")
+        return result.get("options", [])
 
     def batch_get_objects(self, object_type: str, ids: list, properties: list) -> list:
         """Batch read CRM objects by ID. Handles chunks of 100. Returns flat list of result dicts."""
