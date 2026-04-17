@@ -73,7 +73,11 @@ firmable-gtm-engineering/
 │   │           ├── scrape_exhibitors.py ← Playwright scraper → output/exhibitors.csv
 │   │           └── output/          ← Scraped CSVs (gitignored)
 │   ├── us/                          ← US campaigns
-│   └── sea/                         ← South-East Asia campaigns
+│   ├── sea/                         ← South-East Asia campaigns
+│   └── company-checks/              ← Pre-campaign HubSpot eligibility gate (any region)
+│       ├── CLAUDE.md                ← Sub-agent: filter logic, input/output conventions
+│       ├── input/                   ← Drop company CSV here before running /smartlead-pre-campaign-check
+│       └── output/                  ← Eligible company CSVs (gitignored)
 │
 ├── projects/                        ← All production bots, pipelines, and internal tools
 │   ├── CLAUDE.md                    ← Index of all sub-projects
@@ -119,9 +123,10 @@ firmable-gtm-engineering/
     │   ├── hubspot-sync/            ← CRM create/update (dedup on email/domain)
     │   └── n8n-export/              ← Convert pipelines to n8n JSON
     └── commands/                    ← Slash commands
-        ├── new-campaign.md          ← /new-campaign — campaign setup wizard
-        ├── qualify-list.md          ← /qualify-list — run classifier on CSV
-        └── generate-copy.md         ← /generate-copy — generate email copy
+        ├── new-campaign.md                    ← /new-campaign — campaign setup wizard
+        ├── qualify-list.md                    ← /qualify-list — run classifier on CSV
+        ├── generate-copy.md                   ← /generate-copy — generate email copy
+        └── smartlead-pre-campaign-check.md    ← /smartlead-pre-campaign-check — company eligibility gate
 ```
 
 ---
@@ -130,6 +135,7 @@ firmable-gtm-engineering/
 
 | Task | Go to |
 |---|---|
+| SmartLead pre-campaign eligibility gate (any region — filter trial/comms/tasks) | `campaigns/company-checks/` + `/smartlead-pre-campaign-check` |
 | Check company list against HubSpot before upload (SEA or any region) | `projects/sea-company-upload/` |
 | Enrich accounts with regional headcount + AI notes + HubSpot sync (SEA) | `projects/account-level-enrichment-sea/` |
 | Classify new-role contacts against ICP (job-change signal activation) | `projects/signal-contact-activation/` |
