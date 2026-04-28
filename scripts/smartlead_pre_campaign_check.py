@@ -41,8 +41,8 @@ TRIAL_EXCLUDE      = {"Active Trial", "Paying Customer from Trial"}
 ELIGIBLE_OUTREACH  = {"Pool", "Time Out"}
 THIRTY_DAYS_MS     = 30 * 24 * 60 * 60 * 1000
 
-DOMAIN_COLS        = ["domain", "website", "company_website", "company_domain"]
-NAME_COLS          = ["name", "company_name", "company"]
+DOMAIN_COLS        = ["domain", "website", "company_website", "company_domain", "domain name"]
+NAME_COLS          = ["name", "company_name", "company", "company name"]
 FIRMABLE_LINK_COLS = [
     "firmable company link", "firmable_company_link",
     "firmable link",         "firmable_link",

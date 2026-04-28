@@ -83,7 +83,7 @@ class FirmableClient:
         Uses the OS Search API (separate base URL and key from the main API).
         Requires FIRMABLE_OS_API_KEY in .env.
         Returns dict with keys: au_sales_team_size, nz_sales_team_size,
-        sea_sales_team_size, total_sales_team_size. Values are int or None.
+        sea_sales_team_size, us_sales_team_size, total_sales_team_size. Values are int or None.
         """
         os_api_key = os.getenv("FIRMABLE_OS_API_KEY")
         if not os_api_key:
@@ -91,40 +91,21 @@ class FirmableClient:
         payload = {
             "query": {
                 "bool": {
-                    "filter": [{"ids": {"values": [company_id]}}],
-                    "must": [], "should": [], "must_not": [],
+                    "filter": [
+                        {"has_parent": {
+                            "parent_type": "company",
+                            "query": {"ids": {"values": [company_id]}},
+                        }},
+                        {"term": {"department": 2}},
+                    ]
                 }
             },
             "aggs": {
-                "to_people": {
-                    "children": {"type": "person"},
-                    "aggs": {
-                        "by_country": {
-                            "terms": {
-                                "script": {
-                                    "source": "for (String country : ['au','nz','id','sg','my','jp','hk','ph']) { if (doc[country + '.location.country'].size() > 0) { return country.toUpperCase(); } } return 'Unknown';",
-                                    "lang": "painless",
-                                },
-                                "size": 20,
-                            },
-                            "aggs": {
-                                "dept_counts": {
-                                    "filters": {
-                                        "filters": {
-                                            "sales":           {"term": {"department": 2}},
-                                            "marketing":       {"term": {"department": 11}},
-                                            "sales_marketing": {"terms": {"department": [2, 11]}},
-                                        }
-                                    }
-                                }
-                            },
-                        }
-                    },
+                "by_country": {
+                    "terms": {"field": "countries", "size": 20}
                 }
             },
-            "_source": ["*"],
             "size": 0,
-            "sort": [{"search_rank": "desc"}],
         }
         resp = requests.post(
             "https://staging-search.firmable.com/apikey/os_search",
@@ -136,27 +117,22 @@ class FirmableClient:
         buckets = (
             resp.json()
             .get("aggregations", {})
-            .get("to_people", {})
             .get("by_country", {})
             .get("buckets", [])
         )
 
-        def _sales(code):
-            b = next((b for b in buckets if b["key"] == code), None)
-            if not b:
-                return None
-            return b.get("dept_counts", {}).get("buckets", {}).get("sales", {}).get("doc_count")
+        counts = {b["key"]: b["doc_count"] for b in buckets}
 
-        sea_vals = [v for v in (_sales(c) for c in ["PH", "MY", "SG", "ID", "HK", "JP"]) if v is not None]
-        total_vals = [
-            b.get("dept_counts", {}).get("buckets", {}).get("sales", {}).get("doc_count")
-            for b in buckets
-        ]
-        total_vals = [v for v in total_vals if v is not None]
+        def _get(code):
+            v = counts.get(code)
+            return v if v is not None else None
+
+        sea_vals = [counts[c] for c in ["ph", "my", "sg", "id", "hk", "jp"] if c in counts]
 
         return {
-            "au_sales_team_size":    _sales("AU"),
-            "nz_sales_team_size":    _sales("NZ"),
+            "au_sales_team_size":    _get("au"),
+            "nz_sales_team_size":    _get("nz"),
             "sea_sales_team_size":   sum(sea_vals) if sea_vals else None,
-            "total_sales_team_size": sum(total_vals) if total_vals else None,
+            "us_sales_team_size":    _get("us"),
+            "total_sales_team_size": sum(counts.values()) if counts else None,
         }

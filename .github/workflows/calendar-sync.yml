@@ -1,0 +1,30 @@
+name: Microsoft → Google Calendar Sync
+
+on:
+  schedule:
+    - cron: '0 4 * * *'   # 12:00 PM SGT (UTC+8)
+    - cron: '0 10 * * *'  # 6:00 PM SGT (UTC+8)
+  workflow_dispatch:        # manual trigger for testing
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r projects/calendar-sync/requirements.txt
+
+      - name: Run calendar sync
+        env:
+          MS_CLIENT_ID: ${{ secrets.MS_CLIENT_ID }}
+          MS_CLIENT_SECRET: ${{ secrets.MS_CLIENT_SECRET }}
+          MS_TENANT_ID: ${{ secrets.MS_TENANT_ID }}
+          MS_REFRESH_TOKEN: ${{ secrets.MS_REFRESH_TOKEN }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
+        run: python projects/calendar-sync/scripts/sync_calendar.py

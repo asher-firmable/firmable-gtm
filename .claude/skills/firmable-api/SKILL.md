@@ -46,10 +46,13 @@ person = client.get_person(ln_url="https://linkedin.com/in/username")
 
 ### Sales team sizing
 ```python
-# Requires FIRMABLE_OS_API_KEY in .env
+# Requires FIRMABLE_OS_API_KEY in .env (separate key from FIRMABLE_API_KEY)
 sizes = client.get_sales_team_size(company_id="f000000117274")
-# Returns: au_sales_team_size, nz_sales_team_size, sea_sales_team_size, total_sales_team_size
+# Returns: au_sales_team_size, nz_sales_team_size, sea_sales_team_size, us_sales_team_size, total_sales_team_size
+# Values are int or None (None = company not found; 0 = found but no sales people in that region)
 ```
+
+**Important — do NOT rewrite this query from scratch.** The OS Search API uses `has_parent` + `terms` on a `countries` field with lowercase codes (`au`, `nz`, `sg`, etc.). Earlier implementations using `children` aggregation + Painless scripts silently return 0 for global companies with real ANZ/SEA headcount. The correct implementation is already in `scripts/firmable_api.py` — always call via the client. See `knowledge/firmable-api-reference.md` §4 for details.
 
 ## Best practices
 - Respect rate limits — add `time.sleep(0.5)` between calls in bulk loops

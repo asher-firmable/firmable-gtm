@@ -261,13 +261,58 @@ contacts = client.find_contacts(
 
 ---
 
+---
+
+### 4. OS Search API — Sales Team Size by Region
+
+Separate API for regional sales headcount. Requires `FIRMABLE_OS_API_KEY` (different key from main API).
+
+**Endpoint:** `POST https://staging-search.firmable.com/apikey/os_search`  
+**Auth:** `x-api-key` header (not Bearer token)
+
+**Correct query pattern** — use `has_parent` + `terms` on `countries` field:
+
+```python
+payload = {
+    "query": {
+        "bool": {
+            "filter": [
+                {"has_parent": {
+                    "parent_type": "company",
+                    "query": {"ids": {"values": [company_id]}},
+                }},
+                {"term": {"department": 2}},   # 2 = Sales
+            ]
+        }
+    },
+    "aggs": {
+        "by_country": {
+            "terms": {"field": "countries", "size": 20}
+        }
+    },
+    "size": 0,
+}
+```
+
+**Important:** Country codes in the `countries` field are **lowercase** (`au`, `nz`, `sg`, `ph`, `my`, `id`, `hk`, `jp`, `us`).
+
+**Do NOT use** the `children` aggregation or Painless scripts to derive country — these fail silently for non-ANZ-headquartered companies (e.g. global SaaS companies with AU sales teams return 0 when they have real data). The `countries` field + `has_parent` approach works correctly across all company types.
+
+**SEA countries:** `ph`, `my`, `sg`, `id`, `hk`, `jp`
+
+Always call via `FirmableClient.get_sales_team_size(company_id)` — never write raw OS Search calls.
+
+---
+
 ## Wrapper Notes
 
-`utils/firmable.py` wraps these endpoints. Correct base URL is `https://api.firmable.com` (no `/v1`).
+`scripts/firmable_api.py` wraps these endpoints. Correct base URL is `https://api.firmable.com` (no `/v1`).
 
-| Wrapper Method          | Endpoint                  | Notes                                     |
-|-------------------------|---------------------------|-------------------------------------------|
-| `lookup_company(fqdn)`  | `GET /company?fqdn=`      | Pass domain only, no `https://` prefix    |
-| `search_by_linkedin(url)` | `GET /company?ln_url=`  | Pass full LinkedIn URL                    |
-| `get_person(**kwargs)`  | `GET /people`             | Pass one of: id, ln_url, work_email, etc. |
-| `find_contacts(...)`    | `POST /people/search`     | Requires Firmable company ID              |
+| Wrapper Method                    | Endpoint                  | Notes                                              |
+|-----------------------------------|---------------------------|----------------------------------------------------|
+| `lookup_company(fqdn)`            | `GET /company?fqdn=`      | Pass domain only, no `https://` prefix             |
+| `lookup_company_by_id(id)`        | `GET /company?id=`        | Pass Firmable company ID                           |
+| `search_by_linkedin(url)`         | `GET /company?ln_url=`    | Pass full LinkedIn URL                             |
+| `get_person(**kwargs)`            | `GET /people`             | Pass one of: id, ln_url, work_email, etc.          |
+| `find_contacts(...)`              | `POST /people/search`     | Requires Firmable company ID                       |
+| `get_sales_team_size(company_id)` | OS Search API             | Requires `FIRMABLE_OS_API_KEY`; returns regional headcount |

@@ -149,6 +149,76 @@ def normalize_fathom_url(url: str) -> str:
     return url.split("?")[0].split("#")[0]
 
 
+def fetch_fathom_from_meetings(hs: HubSpotClient, contact_to_info: dict) -> dict:
+    """
+    PULL approach: contact → associated meetings → hs_internal_meeting_notes.
+    contact_to_info: {contact_id: {"company_name": str, "close_date_ms": int}}
+    Returns: {company_name: [{"url", "ts", "title", "pre_close"}, ...]}
+    Only keeps fathom.video/share/ links (invite/ links require login and break for external viewers).
+    Results are sorted: pre-close first, then by timestamp ascending.
+    """
+    from collections import defaultdict
+
+    all_contact_ids = list(contact_to_info.keys())
+    print(f"Fetching meetings for {len(all_contact_ids)} contacts...")
+
+    # Step 1: get meeting IDs associated with each contact
+    contact_meeting_ids: dict = {}
+    for cid in all_contact_ids:
+        r = with_retry(lambda c=cid: hs._get(f"/crm/v4/objects/contacts/{c}/associations/meetings"))
+        mids = [str(t["toObjectId"]) for t in r.get("results", [])]
+        if mids:
+            contact_meeting_ids[cid] = mids
+
+    all_meeting_ids = list({mid for mids in contact_meeting_ids.values() for mid in mids})
+    print(f"  {len(all_meeting_ids)} unique meetings — reading internal notes...")
+
+    # Step 2: batch read meeting properties
+    meeting_data: dict = {}
+    for i in range(0, len(all_meeting_ids), 100):
+        chunk = all_meeting_ids[i:i + 100]
+        r = with_retry(lambda c=chunk: hs._post(
+            "/crm/v3/objects/meetings/batch/read",
+            {"inputs": [{"id": x} for x in c],
+             "properties": ["hs_internal_meeting_notes", "hs_timestamp", "hs_meeting_title", "hs_createdate"]}
+        ))
+        for m in r.get("results", []):
+            meeting_data[m["id"]] = m.get("properties", {})
+        time.sleep(0.05)
+
+    # Step 3: extract share/ links only, keyed by company
+    company_fathom: dict = defaultdict(list)
+    for cid, mids in contact_meeting_ids.items():
+        info = contact_to_info[cid]
+        cname = info["company_name"]
+        close_ms = info["close_date_ms"]
+        for mid in mids:
+            props = meeting_data.get(mid, {})
+            notes = props.get("hs_internal_meeting_notes", "") or ""
+            all_urls = [normalize_fathom_url(u) for u in FATHOM_RE.findall(notes)]
+            share_urls = [u for u in all_urls if "/share/" in u]
+            if not share_urls:
+                continue
+            ts_ms = ts_to_ms(props.get("hs_timestamp") or props.get("hs_createdate"))
+            title = (props.get("hs_meeting_title") or "").strip()
+            pre_close = bool(close_ms and ts_ms and ts_ms < close_ms)
+            for url in share_urls:
+                company_fathom[cname].append({
+                    "url": url, "ts": ts_ms, "title": title, "pre_close": pre_close,
+                })
+
+    # Step 4: deduplicate and sort (pre-close first, then earliest)
+    for cname in company_fathom:
+        seen, unique = set(), []
+        for l in sorted(company_fathom[cname], key=lambda x: (0 if x["pre_close"] else 1, x["ts"])):
+            if l["url"] not in seen:
+                seen.add(l["url"])
+                unique.append(l)
+        company_fathom[cname] = unique
+
+    return dict(company_fathom)
+
+
 def fetch_all_fathom_links(hs: HubSpotClient, anz_deal_ids: set, contact_to_deal: dict) -> dict:
     """
     Portal-wide search for Fathom links in notes and calls.
@@ -370,94 +440,74 @@ def main():
             f"{r['title'][:38]:<38}  {r['close_date']:<12}"
         )
 
-    # ── 7. Fetch Fathom links (portal-wide note/call search) ─────────────────
+    # ── 7. Fetch Fathom links (PULL via contact-associated meetings) ──────────
     print(f"\n{'='*105}")
-    print("Searching portal for Fathom recording links (notes + calls)...")
+    print("Pulling Fathom recordings from contact-associated meetings (share/ links only)...")
     print(f"{'='*105}\n")
 
+    # Use ALL contacts at qualifying deals (not just senior) — the AE may have run the call
     qualifying_deal_ids = {r["deal_id"] for r in rows}
-    # Map contact_id → deal_id so Fathom notes on contacts can be traced back to deals
-    contact_to_deal = {r["contact_id"]: r["deal_id"] for r in rows}
-    fathom_by_deal = fetch_all_fathom_links(hs, qualifying_deal_ids, contact_to_deal)
+    contact_to_info: dict = {}
+    for deal_id in qualifying_deal_ids:
+        deal_entry = next((e for e in anz_deals if e["deal_id"] == deal_id), None)
+        if not deal_entry:
+            continue
+        for cid in deal_to_contacts.get(deal_id, []):
+            contact_to_info[cid] = {
+                "company_name": deal_entry["company_name"],
+                "close_date_ms": deal_entry["close_date_ms"],
+            }
 
-    for r in rows:
-        r["fathom_links"] = fathom_by_deal.get(r["deal_id"], [])
-        r["close_date_ms"] = next(
-            (e["close_date_ms"] for e in anz_deals if e["deal_id"] == r["deal_id"]), 0
-        )
+    company_fathom = fetch_fathom_from_meetings(hs, contact_to_info)
 
     # ── 8. Company-grouped output (pre-close recordings preferred) ────────────
-    # Build per-company view
-    company_view = {}
+    company_view: dict = {}
     for r in rows:
         cname = r["company_name"]
         if cname not in company_view:
             company_view[cname] = {
                 "contacts": [],
-                "links_pre": [],   # before deal close (Discovery/Demo)
-                "links_post": [],  # after deal close (onboarding etc.)
+                "links": company_fathom.get(cname, []),  # sorted: pre-close first, then by ts
                 "close_date": r["close_date"],
             }
-        entry = company_view[cname]
         contact_label = f"{r['name']} — {r['title']}"
-        if contact_label not in entry["contacts"]:
-            entry["contacts"].append(contact_label)
+        if contact_label not in company_view[cname]["contacts"]:
+            company_view[cname]["contacts"].append(contact_label)
 
-        close_ms = r["close_date_ms"]
-        for link in r.get("fathom_links", []):
-            bucket = "links_pre" if (close_ms and link["ts"] < close_ms) else "links_post"
-            if link not in entry[bucket]:
-                entry[bucket].append(link)
-
-    # Deduplicate links within each company
-    for cname, cv in company_view.items():
-        for bucket in ("links_pre", "links_post"):
-            seen, unique = set(), []
-            for l in sorted(cv[bucket], key=lambda x: x["ts"]):
-                if l["url"] not in seen:
-                    seen.add(l["url"])
-                    unique.append(l)
-            cv[bucket] = unique
-
-    print(f"\n{'='*110}")
-    print("FINAL OUTPUT — grouped by company, pre-close recordings preferred")
-    print(f"{'='*110}")
+    print(f"\n{'='*120}")
+    print("FINAL OUTPUT — share/ links only, pre-close preferred, with meeting title")
+    print(f"{'='*120}")
 
     companies_with_links = 0
-    pad = " " * 92
 
     for cname, cv in company_view.items():
-        pre = cv["links_pre"]
-        post = cv["links_post"]
-
-        # Prefer 2 pre-close; fill with post-close if needed
+        links = cv["links"]
+        pre = [l for l in links if l["pre_close"]]
+        post = [l for l in links if not l["pre_close"]]
         chosen = pre[:2]
-        post_used = []
         if len(chosen) < 2:
-            extras = post[:2 - len(chosen)]
-            post_used = extras
-            chosen += extras
+            chosen += post[:2 - len(chosen)]
 
-        has_links = bool(chosen)
-        if has_links:
+        if chosen:
             companies_with_links += 1
 
-        print(f"\n{'─'*110}")
+        print(f"\n{'─'*120}")
         print(f"  Company   : {cname}  (closed {cv['close_date']})")
         for c in cv["contacts"]:
             print(f"  Contact   : {c}")
 
         if chosen:
             for i, l in enumerate(chosen):
-                flag = " [post-close]" if l in post_used else ""
-                label = f"  Recording {i+1}: "
-                print(f"{label}{l['url']}{flag}")
+                flag = "[pre-close]" if l["pre_close"] else "[post-close]"
+                title_str = (l["title"] or "—")[:50]
+                print(f"  Recording {i+1}: {flag}  {title_str}")
+                print(f"               {l['url']}")
         else:
-            print("  Recordings: No Fathom links found")
+            print("  Recordings: No share/ Fathom links found")
 
-    print(f"\n{'='*110}")
-    print(f"Companies with Fathom recordings: {companies_with_links} / {len(company_view)}")
-    print(f"{'='*110}\n")
+    print(f"\n{'='*120}")
+    print(f"Companies with share/ Fathom recordings: {companies_with_links} / {len(company_view)}")
+    print(f"{'='*120}\n")
 
 
 if __name__ == "__main__":
