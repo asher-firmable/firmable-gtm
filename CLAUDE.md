@@ -76,9 +76,14 @@ firmable-gtm-engineering/
 │   ├── sea/                         ← South-East Asia campaigns
 │   ├── sea-conferences/             ← SEA conference/expo exhibitor scraping campaigns
 │   │   ├── CLAUDE.md                ← Index of SEA conference campaigns
-│   │   └── asiatechx-sg-2025/
-│   │       ├── CLAUDE.md            ← Sub-agent: scrape AsiaTechX SG 2025 exhibitors
+│   │   ├── asiatechx-sg-2025/
+│   │   │   ├── CLAUDE.md            ← Sub-agent: scrape AsiaTechX SG 2025 exhibitors
+│   │   │   ├── scrape_exhibitors.py ← requests+BS4 scraper → output/exhibitors.csv
+│   │   │   └── output/              ← Scraped CSVs (gitignored)
+│   │   └── hr-tech-festival-asia-2026/
+│   │       ├── CLAUDE.md            ← Sub-agent: scrape HR Tech Festival Asia 2026 sponsors
 │   │       ├── scrape_exhibitors.py ← requests+BS4 scraper → output/exhibitors.csv
+│   │       ├── run_pipeline.py      ← Full pipeline: scrape → copy → enrich (sales team sizes)
 │   │       └── output/              ← Scraped CSVs (gitignored)
 │   ├── company-checks/              ← Pre-campaign HubSpot eligibility gate (any region)
 │   │   ├── CLAUDE.md                ← Sub-agent: filter logic, input/output conventions
@@ -119,16 +124,10 @@ firmable-gtm-engineering/
 │   │       ├── output/                  ← Classified CSVs (gitignored)
 │   │       └── scripts/                 ← classify_new_roles.py
 │   │
-│   ├── sea-company-upload/             ← Pre-upload HubSpot audit for company lists
-│   │   ├── CLAUDE.md                    ← Sub-agent: drop CSV in input/, run check, read terminal summary
-│   │   ├── input/                       ← Drop company CSV here before running
-│   │   └── output/                      ← Reserved for future CSV export (gitignored)
-│   │
-│   └── calendar-sync/                  ← Twice-daily Microsoft Outlook → Google Calendar sync (GitHub Actions)
-│       ├── CLAUDE.md                    ← Sub-agent: credentials, setup steps, sync logic
-│       ├── requirements.txt             ← msal, google-api-python-client, google-auth, python-dotenv
-│       └── scripts/
-│           └── sync_calendar.py        ← Fetch MS events → diff → upsert/delete in Google Calendar
+│   └── sea-company-upload/             ← Pre-upload HubSpot audit for company lists
+│       ├── CLAUDE.md                    ← Sub-agent: drop CSV in input/, run check, read terminal summary
+│       ├── input/                       ← Drop company CSV here before running
+│       └── output/                      ← Reserved for future CSV export (gitignored)
 │
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
@@ -164,6 +163,7 @@ firmable-gtm-engineering/
 | Scrape ANZ event/expo exhibitor lists | `campaigns/anz/events-outbound/` |
 | Scrape SEA conference/expo exhibitor lists | `campaigns/sea-conferences/` |
 | AsiaTechX Singapore 2025 exhibitor scrape | `campaigns/sea-conferences/asiatechx-sg-2025/` |
+| HR Tech Festival Asia 2026 exhibitor scrape | `campaigns/sea-conferences/hr-tech-festival-asia-2026/` |
 | Sydney Build Expo 2026 exhibitor scrape | `campaigns/anz/events-outbound/sydney-build-expo-2026/` |
 | Run full ANZ pre-outreach pipeline (any ANZ campaign) | `campaigns/anz/run_pipeline.py` |
 | Run pre-campaign eligibility check + Firmable enrichment | `scripts/hubspot_eligibility.py` |
@@ -175,7 +175,6 @@ firmable-gtm-engineering/
 | Look up persona messaging | `knowledge/persona-definitions.md` |
 | Firmable product context + competitive positioning | `knowledge/firmable-product.md` |
 | Email framework selection | `knowledge/messaging-frameworks.md` |
-| Sync Microsoft Outlook calendar to Google Calendar | `projects/calendar-sync/` |
 | Enrich company list with ANZ/SEA/US sales team size (from domain or Firmable ID) | `campaigns/quick-sales-team-size-check/` |
 
 ---
