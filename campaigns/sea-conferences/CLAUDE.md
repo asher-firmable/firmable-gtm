@@ -13,9 +13,15 @@ Outbound campaigns targeting exhibitors and sponsors at SEA tech conferences and
 Each event gets its own sub-folder named `{event-name}-{year}/`:
 ```
 sea-conferences/
-└── asiatechx-sg-2025/
+├── asiatechx-sg-2025/
+│   ├── CLAUDE.md
+│   ├── scrape_exhibitors.py
+│   └── output/
+│       └── exhibitors.csv
+└── hr-tech-festival-asia-2026/
     ├── CLAUDE.md
     ├── scrape_exhibitors.py
+    ├── run_pipeline.py
     └── output/
         └── exhibitors.csv
 ```

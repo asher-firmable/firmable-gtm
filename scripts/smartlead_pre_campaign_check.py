@@ -9,6 +9,7 @@ Filters OUT companies where:
   2. outreach_engagement_status is set and not "Pool" or "Time Out"
   3. notes_last_contacted (company level) is within the last 30 days
   4. Any active (NOT_STARTED, no/future due date) company-level task exists
+  5. Any open (non-closed) deal exists on the company
 
 Companies NOT found in HubSpot are treated as eligible by default.
 
@@ -23,11 +24,17 @@ Usage:
   PYTHONPATH=. python3 scripts/smartlead_pre_campaign_check.py \\
     --input campaigns/company-checks/input/companies.csv \\
     --output eligible_acme_campaign.csv
+
+  # With more workers (faster, higher API usage):
+  PYTHONPATH=. python3 scripts/smartlead_pre_campaign_check.py \\
+    --output eligible_acme_campaign.csv --workers 8
 """
 
 import argparse
 import csv
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -41,10 +48,11 @@ TRIAL_EXCLUDE      = {"Active Trial", "Paying Customer from Trial"}
 ELIGIBLE_OUTREACH  = {"Pool", "Time Out"}
 THIRTY_DAYS_MS     = 30 * 24 * 60 * 60 * 1000
 
-DOMAIN_COLS        = ["domain", "website", "company_website", "company_domain", "domain name"]
+DOMAIN_COLS        = ["domain", "website", "company_website", "company website", "company_domain", "domain name"]
 NAME_COLS          = ["name", "company_name", "company", "company name"]
 FIRMABLE_LINK_COLS = [
     "firmable company link", "firmable_company_link",
+    "firmable company url",  "firmable_company_url",
     "firmable link",         "firmable_link",
     "firmable url",          "firmable_url",
 ]
@@ -122,20 +130,22 @@ def _parse_hs_timestamp(raw: str) -> int:
 
 # ── HubSpot check ──────────────────────────────────────────────────────────────
 
-def _check_company(hs: HubSpotClient, root: str, now_ms: int, cache: dict) -> dict:
+def _check_company(hs: HubSpotClient, root: str, now_ms: int, cache: dict, cache_lock: threading.Lock) -> dict:
     """Look up company by root domain and run all eligibility checks.
 
     Returns dict: {found, eligible, fail_reasons}.
     Results are cached per root domain to avoid duplicate API calls.
     """
-    if root in cache:
-        return cache[root]
+    with cache_lock:
+        if root in cache:
+            return cache[root]
 
     not_found = {"found": False, "eligible": True, "fail_reasons": []}
 
     companies = hs.search_companies(root)
     if not companies:
-        cache[root] = not_found
+        with cache_lock:
+            cache[root] = not_found
         return not_found
 
     company_id = companies[0]["id"]
@@ -186,13 +196,85 @@ def _check_company(hs: HubSpotClient, root: str, now_ms: int, cache: dict) -> di
         except Exception as e:
             fail_reasons.append(f"tasks: error checking ({e})")
 
+    # Check 5: open deals (only run if checks 1-4 passed)
+    if not fail_reasons:
+        try:
+            deal_ids = hs.get_associated_ids("companies", company_id, "deals")
+            if deal_ids:
+                deals = hs.batch_get_objects("deals", deal_ids, ["hs_is_closed"])
+                for deal in deals:
+                    is_closed = (deal.get("properties", {}).get("hs_is_closed") or "").lower()
+                    if is_closed != "true":
+                        fail_reasons.append("deals: open deal exists")
+                        break
+            time.sleep(0.1)
+        except Exception as e:
+            fail_reasons.append(f"deals: error checking ({e})")
+
     result = {
         "found":        True,
         "eligible":     len(fail_reasons) == 0,
         "fail_reasons": fail_reasons,
     }
-    cache[root] = result
+    with cache_lock:
+        cache[root] = result
     return result
+
+
+# ── Row worker ─────────────────────────────────────────────────────────────────
+
+def _process_row(
+    i: int,
+    row: dict,
+    total: int,
+    hs: HubSpotClient,
+    now_ms: int,
+    cache: dict,
+    cache_lock: threading.Lock,
+    print_lock: threading.Lock,
+    name_col: Optional[str],
+    domain_col: str,
+    firmable_col: Optional[str],
+) -> dict:
+    """Process one CSV row. Returns a result dict with status and output fields."""
+    name          = (row.get(name_col) or f"Row {i}").strip() if name_col else f"Row {i}"
+    raw_domain    = (row.get(domain_col) or "").strip()
+    firmable_link = (row.get(firmable_col) or "").strip() if firmable_col else ""
+
+    prefix = f"[{i}/{total}] {name} | {raw_domain or '(no domain)'}"
+
+    if not raw_domain:
+        with print_lock:
+            print(f"{prefix} ... SKIPPED (no domain)")
+        return {"status": "skipped", "name": name}
+
+    domain = _clean_domain(raw_domain)
+    root   = _root_domain(domain)
+
+    result = _check_company(hs, root, now_ms, cache, cache_lock)
+
+    if not result["eligible"]:
+        reasons_str = " | ".join(result["fail_reasons"])
+        with print_lock:
+            print(f"{prefix} ... FILTERED ({reasons_str})")
+        return {
+            "status":       "filtered",
+            "name":         name,
+            "domain":       domain,
+            "reasons":      reasons_str,
+            "fail_reasons": result["fail_reasons"],
+        }
+    else:
+        note = " (not in HubSpot)" if not result["found"] else ""
+        with print_lock:
+            print(f"{prefix} ... ELIGIBLE{note}")
+        return {
+            "status":         "eligible",
+            "name":           name,
+            "domain":         domain,
+            "firmable_link":  firmable_link,
+            "firmable_id":    _extract_firmable_id(firmable_link),
+        }
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
@@ -208,6 +290,10 @@ def main():
     parser.add_argument(
         "--output", required=True,
         help="Output filename, e.g. eligible_acme.csv — written to campaigns/company-checks/output/",
+    )
+    parser.add_argument(
+        "--workers", type=int, default=3,
+        help="Number of parallel workers (default: 3). Reduce if hitting HubSpot rate limits.",
     )
     args = parser.parse_args()
 
@@ -258,41 +344,49 @@ def main():
     print(f"  Domain column        : {domain_col}")
     print(f"  Name column          : {name_col or '(not found — using row index)'}")
     print(f"  Firmable link column : {firmable_col or '(not found)'}")
+    print(f"  Workers              : {args.workers}")
     print()
 
-    hs     = HubSpotClient()
-    now_ms = int(time.time() * 1000)
-    cache  = {}
+    hs         = HubSpotClient()
+    now_ms     = int(time.time() * 1000)
+    cache      = {}
+    cache_lock = threading.Lock()
+    print_lock = threading.Lock()
 
+    # ── Parallel processing ────────────────────────────────────────────────────
+    row_results = {}
+
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = {
+            executor.submit(
+                _process_row,
+                i, row, total, hs, now_ms, cache, cache_lock, print_lock,
+                name_col, domain_col, firmable_col,
+            ): i
+            for i, row in enumerate(rows, 1)
+        }
+        for future in as_completed(futures):
+            i = futures[future]
+            try:
+                row_results[i] = future.result()
+            except Exception as e:
+                with print_lock:
+                    print(f"[{i}/{total}] ERROR: {e}")
+                row_results[i] = {"status": "skipped", "name": f"Row {i}"}
+
+    # ── Aggregate results in original row order ────────────────────────────────
     skipped  = []
-    filtered = []   # list of {name, domain, reasons}
-    eligible = []   # list of output row dicts
+    filtered = []
+    eligible = []
+    filter_counts = {"trial": 0, "outreach_status": 0, "comms": 0, "tasks": 0, "open_deals": 0}
 
-    filter_counts = {"trial": 0, "outreach_status": 0, "comms": 0, "tasks": 0}
-
-    for i, row in enumerate(rows, 1):
-        name          = (row.get(name_col) or f"Row {i}").strip() if name_col else f"Row {i}"
-        raw_domain    = (row.get(domain_col) or "").strip()
-        firmable_link = (row.get(firmable_col) or "").strip() if firmable_col else ""
-
-        print(f"[{i}/{total}] {name} | {raw_domain or '(no domain)'}", end=" ... ", flush=True)
-
-        if not raw_domain:
-            print("SKIPPED (no domain)")
-            skipped.append(name)
-            continue
-
-        domain = _clean_domain(raw_domain)
-        root   = _root_domain(domain)
-
-        result = _check_company(hs, root, now_ms, cache)
-        time.sleep(0.1)
-
-        if not result["eligible"]:
-            reasons_str = " | ".join(result["fail_reasons"])
-            print(f"FILTERED ({reasons_str})")
-            filtered.append({"name": name, "domain": domain, "reasons": reasons_str})
-            for r in result["fail_reasons"]:
+    for i in range(1, total + 1):
+        res = row_results[i]
+        if res["status"] == "skipped":
+            skipped.append(res["name"])
+        elif res["status"] == "filtered":
+            filtered.append({"name": res["name"], "domain": res["domain"], "reasons": res["reasons"]})
+            for r in res["fail_reasons"]:
                 if r.startswith("trial"):
                     filter_counts["trial"] += 1
                 elif r.startswith("outreach"):
@@ -301,15 +395,14 @@ def main():
                     filter_counts["comms"] += 1
                 elif r.startswith("tasks"):
                     filter_counts["tasks"] += 1
-        else:
-            note = " (not in HubSpot)" if not result["found"] else ""
-            print(f"ELIGIBLE{note}")
-            firmable_id = _extract_firmable_id(firmable_link)
+                elif r.startswith("deals"):
+                    filter_counts["open_deals"] += 1
+        elif res["status"] == "eligible":
             eligible.append({
-                "company_name":          name,
-                "domain":                domain,
-                "firmable_company_link": firmable_link,
-                "firmable_company_id":   firmable_id,
+                "company_name":          res["name"],
+                "domain":                res["domain"],
+                "firmable_company_link": res["firmable_link"],
+                "firmable_company_id":   res["firmable_id"],
             })
 
     # ── Terminal summary ───────────────────────────────────────────────────────
@@ -323,6 +416,7 @@ def main():
     print(f"  Filtered — outreach status:     {filter_counts['outreach_status']}")
     print(f"  Filtered — comms < 30 days:     {filter_counts['comms']}")
     print(f"  Filtered — active tasks:        {filter_counts['tasks']}")
+    print(f"  Filtered — open deals:          {filter_counts['open_deals']}")
     print(f"  ELIGIBLE:                       {len(eligible)}")
     print(sep)
 

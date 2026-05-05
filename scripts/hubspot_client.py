@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import time
 import requests
 from dotenv import load_dotenv
 
@@ -21,29 +22,30 @@ class HubSpotClient:
 
     # ── Base HTTP methods ──────────────────────────────────────────────────
 
+    def _do_request(self, method, url, **kwargs):
+        """Execute an HTTP request, retrying up to 5 times on 429 rate limit errors."""
+        max_retries = 5
+        for attempt in range(max_retries):
+            response = method(url, headers=self.headers, timeout=30, **kwargs)
+            if response.status_code == 429:
+                wait = int(response.headers.get("Retry-After", 10))
+                time.sleep(wait)
+                continue
+            response.raise_for_status()
+            return response.json()
+        raise requests.HTTPError(f"Rate limited after {max_retries} retries: {url}")
+
     def _get(self, endpoint, params=None):
-        url = f"{self.BASE_URL}{endpoint}"
-        response = requests.get(url, headers=self.headers, params=params, timeout=30)
-        response.raise_for_status()
-        return response.json()
+        return self._do_request(requests.get, f"{self.BASE_URL}{endpoint}", params=params)
 
     def _post(self, endpoint, payload):
-        url = f"{self.BASE_URL}{endpoint}"
-        response = requests.post(url, headers=self.headers, json=payload, timeout=30)
-        response.raise_for_status()
-        return response.json()
+        return self._do_request(requests.post, f"{self.BASE_URL}{endpoint}", json=payload)
 
     def _patch(self, endpoint, payload):
-        url = f"{self.BASE_URL}{endpoint}"
-        response = requests.patch(url, headers=self.headers, json=payload, timeout=30)
-        response.raise_for_status()
-        return response.json()
+        return self._do_request(requests.patch, f"{self.BASE_URL}{endpoint}", json=payload)
 
     def _put(self, endpoint, payload):
-        url = f"{self.BASE_URL}{endpoint}"
-        response = requests.put(url, headers=self.headers, json=payload, timeout=30)
-        response.raise_for_status()
-        return response.json()
+        return self._do_request(requests.put, f"{self.BASE_URL}{endpoint}", json=payload)
 
     # ── Contacts ───────────────────────────────────────────────────────────
 

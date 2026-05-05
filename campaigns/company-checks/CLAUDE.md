@@ -23,6 +23,7 @@ A company is filtered out if ANY of the following are true:
 2. `outreach_engagement_status` is set and NOT "Pool" or "Time Out"
 3. `notes_last_contacted` (company level) is within the last 30 days
 4. Any active (NOT_STARTED, future/open due date) company-level task exists
+5. Any open (non-closed) deal exists on the company
 
 Companies NOT found in HubSpot are treated as eligible by default.
 

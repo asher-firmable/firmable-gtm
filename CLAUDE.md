@@ -143,7 +143,8 @@ firmable-gtm-engineering/
         ├── new-campaign.md                    ← /new-campaign — campaign setup wizard
         ├── qualify-list.md                    ← /qualify-list — run classifier on CSV
         ├── generate-copy.md                   ← /generate-copy — generate email copy
-        └── smartlead-pre-campaign-check.md    ← /smartlead-pre-campaign-check — company eligibility gate
+        ├── smartlead-pre-campaign-check.md    ← /smartlead-pre-campaign-check — company eligibility gate
+        └── event-exhibitor-check.md           ← /event-exhibitor-check — HubSpot + Firmable enrichment for event exhibitor lists
 ```
 
 ---
@@ -161,6 +162,7 @@ firmable-gtm-engineering/
 | Manage campaign data | `campaigns/` |
 | ANZ SMB SaaS/Software general outreach (sales team ≤4) | `campaigns/anz/ANZ_SMB_SaaS/Software_General_Outreach/` |
 | Scrape ANZ event/expo exhibitor lists | `campaigns/anz/events-outbound/` |
+| Enrich event exhibitor list with HubSpot + Firmable data | `/event-exhibitor-check` |
 | Scrape SEA conference/expo exhibitor lists | `campaigns/sea-conferences/` |
 | AsiaTechX Singapore 2025 exhibitor scrape | `campaigns/sea-conferences/asiatechx-sg-2025/` |
 | HR Tech Festival Asia 2026 exhibitor scrape | `campaigns/sea-conferences/hr-tech-festival-asia-2026/` |

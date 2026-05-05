@@ -28,7 +28,8 @@ class FirmableClient:
 
     def lookup_company(self, domain: str) -> dict:
         """Look up a company by domain name (fqdn). Strip protocol/path first."""
-        fqdn = domain.replace("https://", "").replace("http://", "").split("/")[0].lstrip("www.")
+        import re as _re
+        fqdn = _re.sub(r"^www\.", "", domain.replace("https://", "").replace("http://", "").split("/")[0])
         return self._get("/company", params={"fqdn": fqdn})
 
     def lookup_company_by_id(self, company_id: str) -> dict:

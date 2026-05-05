@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANZ SMB Closed-Won Analysis — Why They Chose Firmable</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0F172A;
+      --surface:   #1E293B;
+      --surface2:  #273549;
+      --border:    #334155;
+      --primary:   #3B82F6;
+      --primary-d: #2563EB;
+      --accent:    #6366F1;
+      --green:     #10B981;
+      --amber:     #F59E0B;
+      --rose:      #F43F5E;
+      --text:      #F1F5F9;
+      --muted:     #94A3B8;
+      --radius:    12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ── Layout ── */
+    .page { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    /* ── Header ── */
+    .header { margin-bottom: 48px; }
+    .header-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+    .header-meta { color: var(--muted); font-size: 13px; }
+    .header-meta span { margin-right: 20px; }
+
+    /* ── Stat Cards ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    @media (max-width: 768px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+    }
+    .stat-card .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .stat-card .value {
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-card .sub { font-size: 12px; color: var(--muted); }
+    .stat-card.blue  .value { color: var(--primary); }
+    .stat-card.green .value { color: var(--green); }
+    .stat-card.amber .value { color: var(--amber); }
+    .stat-card.rose  .value { color: var(--rose); }
+
+    /* ── Section ── */
+    .section { margin-bottom: 56px; }
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .section-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin-bottom: 56px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    /* ── Two-col grid ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── Chart containers ── */
+    .chart-wrap { position: relative; }
+    .chart-wrap.sm  { height: 220px; }
+    .chart-wrap.md  { height: 320px; }
+    .chart-wrap.lg  { height: 420px; }
+    .chart-wrap.xl  { height: 500px; }
+
+    /* ── HQ split ── */
+    .hq-split { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 768px) { .hq-split { grid-template-columns: 1fr; } }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 12px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: .04em;
+    }
+    .badge-amber { background: rgba(245,158,11,.15); color: var(--amber); }
+    .badge-blue  { background: rgba(59,130,246,.15);  color: var(--primary); }
+    .badge-green { background: rgba(16,185,129,.15);  color: var(--green); }
+
+    /* ── Quote cards ── */
+    .quotes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    @media (max-width: 768px) { .quotes-grid { grid-template-columns: 1fr; } }
+    .quote-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .quote-text {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+      font-style: italic;
+      margin-bottom: 12px;
+    }
+    .quote-attr {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .quote-attr span { color: var(--primary); }
+
+    /* ── Insight callout ── */
+    .callout {
+      background: rgba(59,130,246,.08);
+      border: 1px solid rgba(59,130,246,.25);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      font-size: 13px;
+      color: var(--text);
+      margin-top: 16px;
+    }
+    .callout strong { color: var(--primary); }
+
+    /* ── Company list ── */
+    .company-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .company-tag {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .company-tag.global {
+      background: rgba(245,158,11,.1);
+      border-color: rgba(245,158,11,.3);
+      color: var(--amber);
+    }
+
+    /* ── Positioning list ── */
+    .implication-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .implication-list li {
+      display: flex;
+      gap: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .implication-list .num {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      background: var(--primary-d);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+    .implication-list .text strong { color: var(--primary); }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <div class="header-eyebrow">Firmable Internal — GTM Research</div>
+    <h1>ANZ SMB Closed-Won Analysis<br>Why They Chose Firmable</h1>
+    <div class="header-meta">
+      <span>Period: Jan 2026 – May 2026</span>
+      <span>Deals processed: 300 of 399</span>
+      <span>Fathom match rate: ~34%</span>
+      <span>Generated: May 2026</span>
+    </div>
+  </header>
+
+  <!-- ── STAT CARDS ── -->
+  <div class="stat-grid">
+    <div class="stat-card blue">
+      <div class="label">Deals Processed</div>
+      <div class="value">300</div>
+      <div class="sub">Jan – May 2026 (2026 cohort)</div>
+    </div>
+    <div class="stat-card green">
+      <div class="label">Fathom Matches</div>
+      <div class="value">102</div>
+      <div class="sub">~34% match rate</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="label">ANZ-HQ Companies</div>
+      <div class="value">96</div>
+      <div class="sub">~94% of matched companies</div>
+    </div>
+    <div class="stat-card rose">
+      <div class="label">Non-ANZ HQ (MNC)</div>
+      <div class="value">6</div>
+      <div class="sub">Global subsidiaries with ANZ office</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ── HQ BREAKDOWN ── -->
+  <section class="section">
+    <div class="section-title">Headquarter Location Breakdown</div>
+    <div class="section-sub">HubSpot deal records carry AU/NZ codes by office location. This splits by actual global HQ.</div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">ANZ HQ vs. Non-ANZ HQ</div>
+        <div class="chart-wrap sm">
+          <canvas id="hqDonut"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Non-ANZ HQ Companies (†)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Global Parent / HQ</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Hitachi Vantara</td><td>Hitachi Ltd (Japan)</td><td><span class="badge badge-amber">JP</span></td></tr>
+            <tr><td>SoftBank Robotics</td><td>SoftBank Group (Japan)</td><td><span class="badge badge-amber">JP</span></td></tr>
+            <tr><td>BRITA Water</td><td>BRITA GmbH (Germany)</td><td><span class="badge badge-blue">DE</span></td></tr>
+            <tr><td>Nilfisk</td><td>Nilfisk A/S (Denmark)</td><td><span class="badge badge-blue">DK</span></td></tr>
+            <tr><td>INFUSE</td><td>INFUSE LLC (USA)</td><td><span class="badge badge-rose" style="background:rgba(244,63,94,.15);color:#F43F5E;">US</span></td></tr>
+            <tr><td>Enboarder</td><td>Enboarder Inc. (Austin, TX)</td><td><span class="badge badge-rose" style="background:rgba(244,63,94,.15);color:#F43F5E;">US</span></td></tr>
+          </tbody>
+        </table>
+        <div class="callout" style="margin-top:16px;">
+          <strong>Note:</strong> These 6 subsidiaries operate under a different buying dynamic — their tool selection may reflect a global IT mandate + local data gap, not a pure SMB data quality decision.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── DISCOVERY CHANNELS ── -->
+  <section class="section">
+    <div class="section-title">Discovery Channel Breakdown</div>
+    <div class="section-sub">Captured in ~12% of matched calls. The remaining ~90% of summaries don't record how the prospect found Firmable.</div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Confirmed Discovery Channel</div>
+        <div class="chart-wrap md">
+          <canvas id="discoveryBar"></canvas>
+        </div>
+      </div>
+      <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div class="card-title">Named SDR Closures</div>
+          <table>
+            <thead><tr><th>Company</th><th>SDR</th></tr></thead>
+            <tbody>
+              <tr><td>Blackbird IT</td><td>Ignatius</td></tr>
+              <tr><td>CUB Club</td><td>Ashton</td></tr>
+              <tr><td>Employers Comp</td><td>Oscar</td></tr>
+              <tr><td>VRC St Leger</td><td>Oscar</td></tr>
+              <tr><td>Workfacta</td><td>Oscar</td></tr>
+              <tr><td>Yindili</td><td>Tom + James</td></tr>
+              <tr><td>Cyberlinx</td><td>Darcy</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout">
+          <strong>Gap:</strong> ~90% of deals have no recorded discovery channel. "How did you hear about us?" should be a standard call-opening question captured in Fathom.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── PAIN POINTS ── -->
+  <section class="section">
+    <div class="section-title">Pain Points &amp; Triggers</div>
+    <div class="section-sub">Grouped by theme across 102 matched companies. Companies can appear in multiple themes.</div>
+    <div class="card">
+      <div class="card-title">Frequency by Theme</div>
+      <div class="chart-wrap lg">
+        <canvas id="painBar"></canvas>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:16px;">
+      <strong>Key insight:</strong> The "first outbound motion" cohort (~17 companies) is as large as the "Apollo/ZoomInfo replacement" cohort (~20). These buyers aren't comparing tools — they're deciding whether to invest in outbound at all. Current Firmable messaging is oriented toward tool switchers, not first-timers.
+    </div>
+
+    <div style="margin-top:20px;" class="two-col">
+      <div class="card">
+        <div class="card-title">Non-ANZ Tool Failures — Named Vendors</div>
+        <table>
+          <thead><tr><th>Company</th><th>Tool</th><th>Failure</th></tr></thead>
+          <tbody>
+            <tr><td>CUB Club</td><td>Apollo</td><td>ANZ data = scraped LinkedIn, no net-new contacts</td></tr>
+            <tr><td>MYMAX</td><td>Apollo</td><td>43 valid leads of 800 (5% hit rate)</td></tr>
+            <tr><td>Asset Vision</td><td>Apollo</td><td>3-year-old export → HubSpot sender reputation damage</td></tr>
+            <tr><td>WorkingMouse</td><td>Apollo</td><td>75% coverage gap vs Firmable AU database</td></tr>
+            <tr><td>Roger Roger</td><td>Apollo</td><td>NZ database: 765k Apollo vs 1.26M Firmable</td></tr>
+            <tr><td>Blackbird IT</td><td>ZoomInfo</td><td>US enterprise model, not AU SMB (500+ seat focus)</td></tr>
+            <tr><td>Eff. Freight</td><td>ZoomInfo</td><td>Expensive, clunky, ~80% ANZ accuracy</td></tr>
+            <tr><td>Yindili</td><td>Lucia</td><td>35% bounce rate (70 of 200 emails)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">First Outbound Motion — Trigger Events</div>
+        <table>
+          <thead><tr><th>Company</th><th>Trigger</th></tr></thead>
+          <tbody>
+            <tr><td>Workfacta</td><td>Launching first SDR after 4–5 years organic growth</td></tr>
+            <tr><td>Kreate Australia</td><td>Shifting reactive → proactive, targeting larger clients</td></tr>
+            <tr><td>Gov. Institute of AU</td><td>B2C org building first B2B outbound; new AE hired</td></tr>
+            <tr><td>DyCom Group</td><td>30-yr IT company pivoting "farmer" → "hunter" model</td></tr>
+            <tr><td>Sutton IT</td><td>SEO too difficult → outbound as alternative</td></tr>
+            <tr><td>TitanWater</td><td>Business acquired 7 months prior; no prior outbound</td></tr>
+            <tr><td>MedRisk</td><td>Launching new digital pre-employment medical service</td></tr>
+            <tr><td>dsdassist</td><td>Building 4× pipeline for 2026 direct-to-customer motion</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── COMPETITIVE DISPLACEMENT ── -->
+  <section class="section">
+    <div class="section-title">Competitive Displacement</div>
+    <div class="section-sub">Tools named in Fathom recordings. "No prior tool" is the single largest cohort.</div>
+    <div class="card">
+      <div class="card-title">Tools Displaced / Compared Against</div>
+      <div class="chart-wrap lg">
+        <canvas id="compBar"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── DECISION FACTORS ── -->
+  <section class="section">
+    <div class="section-title">Decision Factors</div>
+    <div class="section-sub">What specifically tipped the deal, extracted from call summaries.</div>
+    <div class="card">
+      <div class="card-title">Frequency of Named Decision Factors</div>
+      <div class="chart-wrap xl">
+        <canvas id="decisionBar"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── BUYER PROFILES ── -->
+  <section class="section">
+    <div class="section-title">Buyer Profiles &amp; ICP Patterns</div>
+    <div class="section-sub">How matched companies break down by vertical and outbound maturity.</div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">By Vertical</div>
+        <div class="chart-wrap lg">
+          <canvas id="verticalBar"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">By Outbound Maturity at Purchase</div>
+        <div class="chart-wrap md">
+          <canvas id="maturityDonut"></canvas>
+        </div>
+        <table style="margin-top:20px;">
+          <thead><tr><th>Stage</th><th>Count</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>Building first motion</td><td><strong>~17</strong></td><td>No prior tool; Firmable is entry point</td></tr>
+            <tr><td>Replacing failing tool</td><td><strong>~20</strong></td><td>Apollo / ZoomInfo not working for ANZ</td></tr>
+            <tr><td>Adding / scaling</td><td><strong>~10</strong></td><td>Had something working; needed more volume or accuracy</td></tr>
+            <tr><td>Re-engaging after bad trial</td><td><strong>~3</strong></td><td>Cyder Solutions, Symetrix, 1Breadcrumb</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── NOTABLE QUOTES ── -->
+  <section class="section">
+    <div class="section-title">Notable Quotes</div>
+    <div class="section-sub">Sourced from Fathom transcripts. Pilot companies (Blackbird IT, CUB Club, The Evolved Group) have full transcripts.</div>
+    <div class="quotes-grid">
+      <div class="quote-card">
+        <div class="quote-text">"We did look at ZoomInfo but that seems to have a focus on the US and not massively usable for the Australian market... they're targeted more towards your 500, 1,000 seat plus."</div>
+        <div class="quote-attr"><span>Chris Wagner</span> — CGO, Blackbird IT</div>
+      </div>
+      <div class="quote-card">
+        <div class="quote-text">"We found most people were people that we've already spoken to through LinkedIn... I imagine what they did for ANZ, because it's sort of an afterthought market, they would have just scraped LinkedIn and that would have been their Australian data set."</div>
+        <div class="quote-attr"><span>Anthony Mullane</span> — Co-founder / Head of Growth, CUB Club</div>
+      </div>
+      <div class="quote-card">
+        <div class="quote-text">"Our legacy provider came in with prices quite a bit more than they used to. So we're broadening our view." / "A lot of this today has been different from who we've spoken to, and in a good way. So I'm enthused."</div>
+        <div class="quote-attr"><span>Ben Griffiths</span> — The Evolved Group</div>
+      </div>
+      <div class="quote-card">
+        <div class="quote-text">Apollo returned only 43 valid leads out of 800 for an AU campaign — approximately 5% hit rate.</div>
+        <div class="quote-attr"><span>Tanya Stainton</span> — MYMAX (from Fathom summary)</div>
+      </div>
+      <div class="quote-card">
+        <div class="quote-text">Apollo NZ database: 765,000 records. Firmable NZ database: 1,260,000 records — 65% more coverage.</div>
+        <div class="quote-attr"><span>Cory Gordon</span> — Roger Roger Marketing (from Fathom summary)</div>
+      </div>
+      <div class="quote-card">
+        <div class="quote-text">Lucia email tool: 35% bounce rate — 70 of 200 emails bounced — wasting credits and damaging sender reputation.</div>
+        <div class="quote-attr"><span>Daniel Johnson</span> — Yindili (from Fathom summary)</div>
+      </div>
+      <div class="quote-card">
+        <div class="quote-text">Apollo export was 3 years old — high bounce rates had damaged their HubSpot sender reputation before they switched.</div>
+        <div class="quote-attr"><span>Gareth Thomas</span> — Asset Vision (from Fathom summary)</div>
+      </div>
+      <div class="quote-card">
+        <div class="quote-text">Scrap + Hunter: poor AU/NZ data quality forced manual verification on every contact and blocked their phone-first outbound strategy entirely.</div>
+        <div class="quote-attr"><span>Jeremiah Chow</span> — Simplifi (from Fathom summary)</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── POSITIONING IMPLICATIONS ── -->
+  <section class="section">
+    <div class="section-title">Implications for Positioning &amp; Messaging</div>
+    <div class="section-sub">Drawn from the ANZ-native cohort only (~96 companies).</div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">What's Landing</div>
+        <ul class="implication-list">
+          <li>
+            <div class="num">1</div>
+            <div class="text"><strong>"ANZ-native" is the core claim</strong> — it's not just a feature, it's the reason they're in the room. Lead with it every time.</div>
+          </li>
+          <li>
+            <div class="num">2</div>
+            <div class="text"><strong>The Apollo comparison is ready-made</strong> — customers bring it up unprompted. Apollo's ANZ data = scraped LinkedIn = no net-new contacts. Clean, provable displacement angle.</div>
+          </li>
+          <li>
+            <div class="num">3</div>
+            <div class="text"><strong>JobAdder integration is a recruitment-vertical acquisition moat</strong> — 4 named deals where it was decisive. Worth a standalone recruitment landing page and sequence.</div>
+          </li>
+          <li>
+            <div class="num">4</div>
+            <div class="text"><strong>Direct mobile numbers are primary value for cold callers and field sales</strong> — a distinct persona from the "data quality" buyer; responds to different copy entirely.</div>
+          </li>
+          <li>
+            <div class="num">5</div>
+            <div class="text"><strong>The "first outbound motion" buyer is under-served</strong> — they're not comparing tools, they're deciding whether to invest in outbound at all. Firmable needs messaging for this context.</div>
+          </li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Gaps to Investigate</div>
+        <ul class="implication-list">
+          <li>
+            <div class="num" style="background:var(--rose);">!</div>
+            <div class="text"><strong>Discovery channel unknown for ~90% of deals</strong> — better tagging in Fathom notes or a HubSpot deal source field is needed immediately.</div>
+          </li>
+          <li>
+            <div class="num" style="background:var(--rose);">!</div>
+            <div class="text"><strong>"How did you hear about us?" is missing from most calls</strong> — should be a standard call-opening question with a structured Fathom capture field.</div>
+          </li>
+          <li>
+            <div class="num" style="background:var(--rose);">!</div>
+            <div class="text"><strong>Self-serve / no-recording cohort is invisible</strong> — ~66% of 300 deals have no Fathom recording. Understanding their path requires an in-product survey or post-signup email.</div>
+          </li>
+          <li>
+            <div class="num" style="background:var(--amber);">?</div>
+            <div class="text"><strong>Non-ANZ HQ companies (6)</strong> — represent a different motion (global mandate + local data gap). Worth a separate ICP track: "global company with ANZ team."</div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ── COMPANY LIST ── -->
+  <section class="section">
+    <div class="section-title">All Matched Companies</div>
+    <div class="section-sub">102 companies with confirmed Fathom recordings. <span style="color:var(--amber);">Amber = Non-ANZ HQ (†)</span></div>
+    <div class="card">
+      <div class="company-grid">
+        <span class="company-tag">Blackbird IT</span>
+        <span class="company-tag">CUB Club</span>
+        <span class="company-tag">ACM Healthcare</span>
+        <span class="company-tag">IT Live</span>
+        <span class="company-tag">The Evolved Group</span>
+        <span class="company-tag">CirculaTech</span>
+        <span class="company-tag">Working Capital Partners</span>
+        <span class="company-tag">The People Plugin</span>
+        <span class="company-tag global">Nilfisk †</span>
+        <span class="company-tag">AuditCo</span>
+        <span class="company-tag">Asset Vision</span>
+        <span class="company-tag">Employers Comp</span>
+        <span class="company-tag">Tri-Star Logistics</span>
+        <span class="company-tag">VRC St Leger</span>
+        <span class="company-tag">BCI</span>
+        <span class="company-tag">Roger Roger Marketing</span>
+        <span class="company-tag global">SoftBank Robotics †</span>
+        <span class="company-tag">HIVE Creative</span>
+        <span class="company-tag">Effective Freight Solutions</span>
+        <span class="company-tag">Workfacta</span>
+        <span class="company-tag global">Enboarder †</span>
+        <span class="company-tag">Chain Reaction</span>
+        <span class="company-tag">1Breadcrumb</span>
+        <span class="company-tag">Koatas</span>
+        <span class="company-tag">ONTRAC Group</span>
+        <span class="company-tag">Handle</span>
+        <span class="company-tag">TOT Transport</span>
+        <span class="company-tag">Raizor Insurance</span>
+        <span class="company-tag">Yindili</span>
+        <span class="company-tag">Vectura Recruitment</span>
+        <span class="company-tag">Business Benchmark Group</span>
+        <span class="company-tag">Service Quality</span>
+        <span class="company-tag">HUBB SYDNEY</span>
+        <span class="company-tag">Yorkshire Bridge</span>
+        <span class="company-tag">Blue Bike Solutions</span>
+        <span class="company-tag">MedRisk</span>
+        <span class="company-tag">Scoutr</span>
+        <span class="company-tag">WorkingMouse</span>
+        <span class="company-tag">Dfnce</span>
+        <span class="company-tag">YellowfinBI</span>
+        <span class="company-tag global">BRITA Water †</span>
+        <span class="company-tag">Tasman FX</span>
+        <span class="company-tag">OMPL</span>
+        <span class="company-tag">Lumi</span>
+        <span class="company-tag">Insights Exchange</span>
+        <span class="company-tag">Nodal Talent</span>
+        <span class="company-tag">Bentleys</span>
+        <span class="company-tag">MYMAX</span>
+        <span class="company-tag">KBI Group</span>
+        <span class="company-tag">JLSG</span>
+        <span class="company-tag">Cyder Solutions</span>
+        <span class="company-tag">Pelorus Capital</span>
+        <span class="company-tag">Spier Services</span>
+        <span class="company-tag">Sutton IT Management</span>
+        <span class="company-tag">A.I.R Recruitment</span>
+        <span class="company-tag">InLogic</span>
+        <span class="company-tag">Impactlab</span>
+        <span class="company-tag">Broad Reform</span>
+        <span class="company-tag">DataSentinel</span>
+        <span class="company-tag">Blinkpay</span>
+        <span class="company-tag">Kreate Australia</span>
+        <span class="company-tag">KPA Search Partners</span>
+        <span class="company-tag">Symetrix</span>
+        <span class="company-tag">EndVision</span>
+        <span class="company-tag">TGA Cables</span>
+        <span class="company-tag">Simplifi</span>
+        <span class="company-tag">TitanWater</span>
+        <span class="company-tag">RubyOnyx</span>
+        <span class="company-tag global">INFUSE †</span>
+        <span class="company-tag global">Hitachi Vantara †</span>
+        <span class="company-tag">Interite</span>
+        <span class="company-tag">Cyberlinx</span>
+        <span class="company-tag">M&amp;S Transport</span>
+        <span class="company-tag">Konnexus</span>
+        <span class="company-tag">Veitch Lister Consulting</span>
+        <span class="company-tag">Elias Recruitment</span>
+        <span class="company-tag">Jobwire</span>
+        <span class="company-tag">DyCom Group</span>
+        <span class="company-tag">Sunshine Finance Brokers</span>
+        <span class="company-tag">Governance Institute of Australia</span>
+        <span class="company-tag">Custom365</span>
+        <span class="company-tag">Profcoll</span>
+        <span class="company-tag">Charles Elena</span>
+        <span class="company-tag">Hoselink</span>
+        <span class="company-tag">dsdassist</span>
+        <span class="company-tag">Zank &amp; Co.</span>
+        <span class="company-tag">Vision Property</span>
+        <span class="company-tag">Valiant</span>
+        <span class="company-tag">Intermodal Terminal</span>
+        <span class="company-tag">Fractional Growth Engine</span>
+        <span class="company-tag">GraceWell Group</span>
+        <span class="company-tag">Folio.Insure</span>
+        <span class="company-tag">Infrastructure Sustainability Council</span>
+        <span class="company-tag">Perth Support</span>
+        <span class="company-tag">qbox</span>
+        <span class="company-tag">Empyrean</span>
+        <span class="company-tag">Growth Think Tank</span>
+        <span class="company-tag">Dialable</span>
+        <span class="company-tag">Chris Kelly / Fleetwood</span>
+        <span class="company-tag">FormsExpress</span>
+        <span class="company-tag">Karabiner</span>
+        <span class="company-tag">ValAuth</span>
+        <span class="company-tag">Dfnce</span>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    Generated from Fathom call recordings via Claude Code | Firmable GTM Engineering | May 2026 — Data covers Jan–May 2026 closed-won ANZ SMB New Deal cohort only. Nov/Dec 2025 cohort not included.
+  </footer>
+
+</div>
+
+<script>
+  Chart.defaults.color = '#94A3B8';
+  Chart.defaults.borderColor = '#334155';
+  Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  Chart.defaults.font.size = 12;
+
+  const BLUE   = '#3B82F6';
+  const INDIGO = '#6366F1';
+  const GREEN  = '#10B981';
+  const AMBER  = '#F59E0B';
+  const ROSE   = '#F43F5E';
+  const TEAL   = '#14B8A6';
+  const PURPLE = '#A855F7';
+  const ORANGE = '#F97316';
+
+  // ── HQ Donut ──
+  new Chart(document.getElementById('hqDonut'), {
+    type: 'doughnut',
+    data: {
+      labels: ['ANZ HQ (~96)', 'Non-ANZ HQ (6)'],
+      datasets: [{
+        data: [96, 6],
+        backgroundColor: [GREEN, AMBER],
+        borderColor: '#1E293B',
+        borderWidth: 3,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} companies` } }
+      }
+    }
+  });
+
+  // ── Discovery Bar ──
+  new Chart(document.getElementById('discoveryBar'), {
+    type: 'bar',
+    data: {
+      labels: ['Outbound (Firmable SDR)', 'Referral', 'Unknown / not recorded', 'Inbound / organic'],
+      datasets: [{
+        label: 'Companies',
+        data: [7, 5, 90, 0],
+        backgroundColor: [BLUE, GREEN, '#334155', ROSE],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#273549' }, ticks: { stepSize: 10 } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ── Pain Points Bar ──
+  new Chart(document.getElementById('painBar'), {
+    type: 'bar',
+    data: {
+      labels: [
+        'Global tool doesn\'t work for ANZ',
+        'First-ever outbound motion',
+        'Vertical / niche coverage gap',
+        'Need direct mobile + email (bypass gatekeepers)',
+        'Scale / automate manual process',
+        'Price / model mismatch with incumbent',
+      ],
+      datasets: [{
+        label: 'Companies',
+        data: [20, 17, 12, 10, 7, 3],
+        backgroundColor: [ROSE, BLUE, PURPLE, TEAL, AMBER, INDIGO],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#273549' }, max: 25 },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ── Competitive Bar ──
+  new Chart(document.getElementById('compBar'), {
+    type: 'bar',
+    data: {
+      labels: [
+        'No prior tool (first outbound)',
+        'Apollo',
+        'ZoomInfo',
+        'Manual / LinkedIn (no tool)',
+        'Lusha',
+        'Static list brokers',
+        'Lucia / Lusher',
+        'Signal Hire',
+        'RocketReach',
+        'LinkedIn Sales Nav',
+        'Scrap + Hunter',
+        'Cognism',
+        'Spirian',
+      ],
+      datasets: [{
+        label: 'Times named',
+        data: [17, 9, 6, 4, 4, 4, 3, 1, 1, 1, 1, 1, 1],
+        backgroundColor: [GREEN, ROSE, AMBER, '#334155', ORANGE, PURPLE, INDIGO, TEAL, BLUE, '#6B7280', '#6B7280', '#6B7280', '#6B7280'],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#273549' }, max: 20 },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ── Decision Factors Bar ──
+  new Chart(document.getElementById('decisionBar'), {
+    type: 'bar',
+    data: {
+      labels: [
+        'ANZ-native data accuracy / depth',
+        'Direct mobile + email contact data',
+        'HubSpot native integration',
+        'Signals feature (new-in-role, AI signals)',
+        'JobAdder integration',
+        'Price vs. incumbent',
+        'Technographics (Shopify, fintech stack)',
+        'NZ data depth',
+        'Pipedrive integration',
+        'Australian founders / local credibility',
+      ],
+      datasets: [{
+        label: 'Frequency',
+        data: [40, 10, 8, 8, 4, 4, 3, 3, 1, 1],
+        backgroundColor: [BLUE, TEAL, GREEN, PURPLE, ORANGE, AMBER, INDIGO, ROSE, '#6B7280', '#6B7280'],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#273549' }, max: 45 },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ── Vertical Bar ──
+  new Chart(document.getElementById('verticalBar'), {
+    type: 'bar',
+    data: {
+      labels: [
+        'Recruitment',
+        'SaaS / Software',
+        'Finance / Fintech / Brokers',
+        'IT / MSPs',
+        'Professional Services',
+        'Construction / Trade',
+        'Marketing Agencies / BDaaS',
+        'Logistics / Transport',
+        'Healthcare',
+      ],
+      datasets: [{
+        label: 'Companies',
+        data: [11, 8, 8, 7, 7, 6, 5, 4, 4],
+        backgroundColor: [BLUE, GREEN, AMBER, INDIGO, TEAL, ORANGE, PURPLE, ROSE, '#6B7280'],
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#273549' }, ticks: { stepSize: 2 }, max: 14 },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ── Maturity Donut ──
+  new Chart(document.getElementById('maturityDonut'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Replacing failing tool (~20)', 'Building first motion (~17)', 'Adding / scaling (~10)', 'Re-engaging after bad trial (~3)'],
+      datasets: [{
+        data: [20, 17, 10, 3],
+        backgroundColor: [ROSE, BLUE, GREEN, AMBER],
+        borderColor: '#1E293B',
+        borderWidth: 3,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 12, boxWidth: 10, font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label.split('(')[0].trim()}: ${ctx.raw}` } }
+      }
+    }
+  });
+</script>
+</body>
+</html>

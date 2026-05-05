@@ -5,6 +5,7 @@ Run this before uploading any company list to SmartLead. It checks each domain a
 2. Companies with an outreach engagement status other than "Pool" or "Time Out"
 3. Companies contacted in the last 30 days
 4. Companies with active scheduled tasks
+5. Companies with any open (non-closed) deal
 
 Output is a clean CSV of eligible companies only: company name, domain, Firmable link, and Firmable ID.
 

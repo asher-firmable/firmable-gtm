@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANZ SMB — Vertical Cold Email Messaging Matrix</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0F172A;
+      --surface:  #1E293B;
+      --surface2: #273549;
+      --border:   #334155;
+      --text:     #F1F5F9;
+      --muted:    #94A3B8;
+      --radius:   12px;
+
+      --blue:   #3B82F6;
+      --green:  #10B981;
+      --indigo: #6366F1;
+      --amber:  #F59E0B;
+      --teal:   #14B8A6;
+      --purple: #A855F7;
+      --rose:   #F43F5E;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    /* ── Page shell ── */
+    .page { max-width: 1100px; margin: 0 auto; padding: 40px 24px 100px; }
+
+    /* ── Header ── */
+    .header { margin-bottom: 40px; }
+    .eyebrow {
+      font-size: 11px; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--blue); margin-bottom: 10px;
+    }
+    .header h1 { font-size: 26px; font-weight: 700; line-height: 1.25; margin-bottom: 8px; }
+    .header-meta { font-size: 13px; color: var(--muted); }
+    .header-meta span { margin-right: 20px; }
+
+    /* ── Sticky nav ── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,23,42,.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex; gap: 4px;
+      padding: 10px 0 10px;
+      margin-bottom: 48px;
+      overflow-x: auto;
+    }
+    .nav a {
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 14px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; color: var(--muted);
+      text-decoration: none; white-space: nowrap;
+      transition: background .15s, color .15s;
+      border: 1px solid transparent;
+    }
+    .nav a:hover { background: var(--surface2); color: var(--text); }
+    .nav a.active { color: var(--text); border-color: var(--border); background: var(--surface); }
+    .nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Vertical section ── */
+    .vertical {
+      margin-bottom: 64px;
+      scroll-margin-top: 70px;
+    }
+    .vertical-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 24px;
+    }
+    .vertical-accent {
+      width: 4px; border-radius: 4px; align-self: stretch; min-height: 40px; flex-shrink: 0;
+    }
+    .vertical-title { font-size: 22px; font-weight: 700; }
+    .vertical-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Four-block grid ── */
+    .blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 800px) { .blocks { grid-template-columns: 1fr; } }
+
+    .block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+    }
+    .block.full { grid-column: 1 / -1; }
+
+    .block-label {
+      font-size: 10px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── Goal block ── */
+    .goal-summary { font-size: 14px; line-height: 1.7; color: var(--text); margin-bottom: 14px; }
+    .goal-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .goal-list li {
+      display: flex; gap: 10px; align-items: flex-start;
+      font-size: 13px; color: var(--text); line-height: 1.6;
+    }
+    .goal-list .icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+
+    /* ── Problem block ── */
+    .problem-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .problem-list li { font-size: 13px; line-height: 1.65; color: var(--text); }
+    .problem-list .pain-label {
+      display: inline-block; font-weight: 600; color: var(--rose);
+      margin-right: 6px;
+    }
+    .problem-list .source {
+      font-size: 11px; color: var(--muted); margin-top: 2px;
+    }
+
+    /* ── Use cases block ── */
+    .usecase-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+    .usecase-item { font-size: 13px; line-height: 1.65; }
+    .usecase-company {
+      font-weight: 600; font-size: 12px;
+      letter-spacing: .02em; margin-bottom: 2px;
+    }
+    .usecase-desc { color: var(--text); }
+    .usecase-edge {
+      font-size: 11px; color: var(--muted);
+      border-left: 2px solid var(--border);
+      padding-left: 10px; margin-top: 5px;
+    }
+
+    /* ── Angles block ── */
+    .angles-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .angle-item { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.6; }
+    .angle-tag {
+      flex-shrink: 0;
+      font-size: 9px; font-weight: 700; letter-spacing: .1em;
+      padding: 3px 7px; border-radius: 4px;
+      margin-top: 2px; white-space: nowrap;
+    }
+    .tag-earn   { background: rgba(16,185,129,.15);  color: #10B981; }
+    .tag-save   { background: rgba(59,130,246,.15);  color: #3B82F6; }
+    .tag-money  { background: rgba(234,179,8,.15);   color: #EAB308; }
+    .angle-text { color: var(--text); }
+    .angle-text em { color: var(--muted); font-style: normal; font-size: 12px; display: block; margin-top: 2px; }
+
+    /* ── Divider ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin-bottom: 64px; }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex; gap: 20px; margin-bottom: 36px; flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+    .legend-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: .1em;
+      padding: 3px 7px; border-radius: 4px;
+    }
+
+    /* ── Stat bar ── */
+    .stat-bar {
+      display: flex; gap: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .stat-item {
+      flex: 1; padding: 16px 22px;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-size: 28px; font-weight: 700; line-height: 1;
+      color: var(--blue); margin-bottom: 4px;
+    }
+    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    @media (max-width: 600px) { .stat-bar { flex-direction: column; } .stat-item { border-right: none; border-bottom: 1px solid var(--border); } .stat-item:last-child { border-bottom: none; } }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 64px; padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="eyebrow">Firmable GTM — Cold Email Research</div>
+    <h1>ANZ SMB Vertical Messaging Matrix</h1>
+    <div class="header-meta">
+      <span>6 target verticals</span>
+      <span>Source: 102 closed-won Fathom matches, Jan–May 2026</span>
+      <span>Use to brief copy, build sequences, and personalise outreach</span>
+    </div>
+  </header>
+
+  <!-- STAT BAR -->
+  <div class="stat-bar">
+    <div class="stat-item">
+      <div class="stat-num">300</div>
+      <div class="stat-label">Closed-Won Deals Analysed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">102</div>
+      <div class="stat-label">Fathom Recordings Matched</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">34%</div>
+      <div class="stat-label">Match Rate</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">Jan–May '26</div>
+      <div class="stat-label">Closed-Won Period</div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="#recruitment" class="active"><span class="nav-dot" style="background:var(--blue)"></span>Recruitment</a>
+    <a href="#saas"><span class="nav-dot" style="background:var(--green)"></span>SaaS / Software</a>
+    <a href="#it-msp"><span class="nav-dot" style="background:var(--indigo)"></span>IT / MSPs</a>
+    <a href="#construction"><span class="nav-dot" style="background:var(--amber)"></span>Construction / Trade</a>
+    <a href="#finance"><span class="nav-dot" style="background:var(--teal)"></span>Finance / Fintech / Brokers</a>
+    <a href="#professional"><span class="nav-dot" style="background:var(--purple)"></span>Professional Services</a>
+  </nav>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><span class="legend-badge tag-earn">EARN REVENUE</span> Win more clients, fill more roles, close more deals</div>
+    <div class="legend-item"><span class="legend-badge tag-save">SAVE TIME</span> Reduce manual effort, consolidate tools, move faster</div>
+    <div class="legend-item"><span class="legend-badge tag-money">SAVE MONEY</span> Cut tool costs, eliminate wasted spend, replace expensive vendors</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       1. RECRUITMENT
+  ══════════════════════════════════════════ -->
+  <section class="vertical" id="recruitment">
+    <div class="vertical-header">
+      <div class="vertical-accent" style="background:var(--blue)"></div>
+      <div>
+        <div class="vertical-title">Recruitment</div>
+        <div class="vertical-sub">~11 companies matched · Dominant vertical in dataset · JobAdder integration is a primary acquisition lever</div>
+      </div>
+    </div>
+
+    <div class="blocks">
+      <!-- GOAL -->
+      <div class="block">
+        <div class="block-label">Goal</div>
+        <p class="goal-summary">Fill more roles and win more client companies. Revenue is per placement or retainer — so pipeline volume and speed directly equal income. Every day a role goes unfilled or a client goes uncontacted is money left on the table.</p>
+        <ul class="goal-list">
+          <li><span class="icon">→</span> Win new client companies with open roles (BD motion)</li>
+          <li><span class="icon">→</span> Reach hiring managers directly before roles go to market on Seek or LinkedIn</li>
+          <li><span class="icon">→</span> Source niche candidates (allied health, legal, aged care) that generic databases don't carry</li>
+          <li><span class="icon">→</span> Automate the "who is hiring right now?" research that currently eats hours each day</li>
+        </ul>
+      </div>
+
+      <!-- PROBLEM -->
+      <div class="block">
+        <div class="block-label">Problem</div>
+        <ul class="problem-list">
+          <li>
+            <span class="pain-label">No direct contact info.</span> LinkedIn Recruiter gives profiles, not mobile numbers. Every outreach is a connection request that may not be seen for days — or ever.
+            <div class="source">A.I.R Recruitment, HUBB SYDNEY, Blue Bike Solutions</div>
+          </li>
+          <li>
+            <span class="pain-label">Same contacts they already know.</span> Apollo and Lusha scrape LinkedIn, so their AU data overlaps entirely with what recruiters already have from years on the platform.
+            <div class="source">Nodal Talent (3-week-old startup evaluated Apollo vs Firmable vs Lusher)</div>
+          </li>
+          <li>
+            <span class="pain-label">No niche vertical depth.</span> Apollo has no ANZ healthcare vertical. Generic tools don't carry allied health professionals, legal sector contacts, or aged care role-level data.
+            <div class="source">ACM Healthcare (radiologists/nurses), GraceWell Group (allied health), KPA Search (lawyers)</div>
+          </li>
+          <li>
+            <span class="pain-label">No hiring activity signal.</span> By the time a job appears on Seek, three competitors have already called. Recruiters need to know a company is about to hire, not that they've started.
+            <div class="source">Chain Reaction, Vectura Recruitment, Jobwire</div>
+          </li>
+          <li>
+            <span class="pain-label">ATS friction.</span> CSV export → clean → import into JobAdder kills hours on every prospecting run.
+            <div class="source">Elias Recruitment, Vectura Recruitment, ACM Healthcare</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- USE CASES -->
+      <div class="block full">
+        <div class="block-label">Use Cases — How They Actually Use Firmable</div>
+        <ul class="usecase-list">
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--blue)">HUBB SYDNEY — Executive Search</div>
+            <div class="usecase-desc">Headhunting ASX small-cap board directors and C-suite. A purchased static list failed. They needed 04 direct mobile numbers to bypass PA gatekeepers entirely — not profiles to message.</div>
+            <div class="usecase-edge">Edge case: The higher the seniority, the more a direct mobile matters. Board-level contacts almost never respond to LinkedIn InMail from unknown recruiters.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--blue)">Chain Reaction — Solo Recruiter</div>
+            <div class="usecase-desc">Rebuilding pipeline after a 6-month hiatus. Using Signals (new-in-role, hiring activity) to find hiring managers at the exact moment a new role opens — before it goes live on job boards.</div>
+            <div class="usecase-edge">Edge case: A solo recruiter with no SDR support uses Signals as a passive lead source that works overnight. She doesn't have time to prospect manually.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--blue)">Vectura Recruitment — Recruitment Automation</div>
+            <div class="usecase-desc">Fully automated recruitment BD: Signal Agents track hiring activity at target companies and surface them automatically. JobAdder integration pushes contacts straight into the ATS — zero manual steps.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--blue)">ACM Healthcare — Niche Vertical</div>
+            <div class="usecase-desc">Apollo simply doesn't carry AU/NZ healthcare professionals (radiologists, nurses, sonographers) at a role-specific level. Firmable's JobAdder integration was decisive — contacts go directly into their ATS.</div>
+            <div class="usecase-edge">Edge case: For specialist healthcare roles, role-title filtering matters more than company size or industry. Firmable's contact-level search (not just company-level) is what makes this possible.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--blue)">Jobwire — Multi-Brand Recruitment (Warehousing/NFP/Aged Care)</div>
+            <div class="usecase-desc">Owns two recruitment companies (~20 staff). Using Signals to identify companies actively posting roles in warehousing, NFP, and aged care — sectors where timing is everything and most roles are filled before they're advertised widely.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--blue)">KPA Search Partners — Legal Sector</div>
+            <div class="usecase-desc">Executive legal recruitment. Needed to find managing partners and HR directors at law firms — a niche professional role that generic tools categorise too broadly. Evaluating Firmable for subscription to replace manual LinkedIn research.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--blue)">GraceWell Group — Allied Health (Hard-to-Fill)</div>
+            <div class="usecase-desc">Allied health professionals (OTs, physiotherapists, speech pathologists) for permanent and contract placements. Referred by a former recruiter who used Firmable at a prior agency. Needed direct contact info for health professionals — not just companies.</div>
+            <div class="usecase-edge">Edge case: Some allied health professionals are sole traders or work across multiple clinics — Firmable's individual-level search (not company search) is what surfaces them.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--blue)">A.I.R Recruitment — Replacing LinkedIn Recruiter Lite</div>
+            <div class="usecase-desc">Moving off LinkedIn Recruiter Lite to avoid the "white-glove" InMail approach and get direct phone/email. The goal: call hiring managers instead of waiting to be accepted as a connection.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--blue)">Elias Recruitment — Small Sydney Firm (3 People)</div>
+            <div class="usecase-desc">Finding hiring decision-makers at target companies, pushing directly to JobAdder in one click. The firm is too small to afford a separate sourcing and prospecting tool — Firmable needs to do both.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--blue)">Yorkshire Bridge — Executive Search BD Project</div>
+            <div class="usecase-desc">Building a targeted list of ~2,000 contacts for a specific executive search BD project. Chose the Small Teams plan ($1,320/yr, 3k credits) — a time-boxed use case, not ongoing prospecting.</div>
+            <div class="usecase-edge">Edge case: Project-based recruitment BD (not ongoing subscription) is a common buying pattern for boutique exec search firms. Credit-based pricing maps well to this.</div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- ANGLES -->
+      <div class="block full">
+        <div class="block-label">Copy Angles</div>
+        <ul class="angles-list">
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"You're sending connection requests when the hiring manager's mobile number is right there." <em>Works for: any recruiter using LinkedIn as primary outreach channel</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"JobAdder-native — find a hiring manager, push to your ATS in one click. No CSV, no import, no clean-up." <em>Works for: agencies on JobAdder</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Find the hiring manager before the role hits Seek — Firmable's Signals flag companies that start recruiting up to 2 weeks before the job is posted." <em>Works for: contingency recruitment, temp agencies</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"ACM Healthcare found 9.2M AU contacts in Firmable — including radiologists, nurses, and sonographers that Apollo simply doesn't carry for the ANZ market." <em>Works for: healthcare, allied health, legal recruiters</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Be the recruiter your clients call for the critical roles — because you always seem to have a number no one else can find." <em>Works for: executive search and specialist recruitment firms</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Filter by company, role title, headcount, and hiring activity — find the exact hiring manager, not just the company." <em>Works for: specialist recruitment firms</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"Stop spending 2 hours a day figuring out who's hiring. Firmable's Signal Agents do it for you overnight." <em>Works for: small recruitment teams / solo operators</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"GraceWell Group filled 3 allied health roles in the first month — contacts their competitors couldn't find on LinkedIn or Apollo." <em>Works for: niche health/aged care recruitment</em></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════
+       2. SAAS / SOFTWARE
+  ══════════════════════════════════════════ -->
+  <section class="vertical" id="saas">
+    <div class="vertical-header">
+      <div class="vertical-accent" style="background:var(--green)"></div>
+      <div>
+        <div class="vertical-title">SaaS / Software</div>
+        <div class="vertical-sub">~8 companies matched · Mix of first-time outbound and Apollo/ZoomInfo replacements · Technographic targeting is a standout use case</div>
+      </div>
+    </div>
+
+    <div class="blocks">
+      <div class="block">
+        <div class="block-label">Goal</div>
+        <p class="goal-summary">Build a repeatable pipeline for their product. Most are either launching outbound for the first time (no prior tool) or replacing a global tool that produced thin, stale, or overlapping ANZ data. They want qualified prospects — companies that match their ICP precisely — not just any company in a broad industry category.</p>
+        <ul class="goal-list">
+          <li><span class="icon">→</span> Find companies that match their product's ICP (tech stack, company size, industry)</li>
+          <li><span class="icon">→</span> Identify companies already primed for their product (prior tool usage, active tech stack)</li>
+          <li><span class="icon">→</span> Move from founder-led or inbound-only sales to a repeatable outbound motion</li>
+          <li><span class="icon">→</span> Replace global tools (Apollo/ZoomInfo) that treat ANZ as an afterthought</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Problem</div>
+        <ul class="problem-list">
+          <li>
+            <span class="pain-label">Apollo's ANZ data = scraped LinkedIn.</span> WorkingMouse found a 75% coverage gap. They were missing 3 in 4 of their prospective customers because Apollo simply hadn't crawled them.
+            <div class="source">WorkingMouse, Broad Reform, Hitachi Vantara, Hoselink</div>
+          </li>
+          <li>
+            <span class="pain-label">No technographic filtering.</span> Handle needed Shopify-install data. Blinkpay needed Stripe users. Neither Apollo nor ZoomInfo could surface prospects by what software they run.
+            <div class="source">Handle (Shopify), Blinkpay (Stripe + WinCave), qbox (Apple product users)</div>
+          </li>
+          <li>
+            <span class="pain-label">No behavioural/historical signal.</span> DataSentinel needed to find people who previously worked at companies using a competitor product — a signal no standard tool supports.
+            <div class="source">DataSentinel</div>
+          </li>
+          <li>
+            <span class="pain-label">No starting point at all.</span> Workfacta, dsdassist, InLogic had never done outbound. Firmable is their first tool — they have no contact database, no sequence, no process.
+            <div class="source">Workfacta, dsdassist, InLogic, Kreate Australia</div>
+          </li>
+          <li>
+            <span class="pain-label">Stale data damaging deliverability.</span> Asset Vision's Apollo export was 3 years old. High bounce rates damaged their HubSpot sender reputation — they couldn't send campaigns without risking their domain.
+            <div class="source">Asset Vision, Yindili (35% Lucia bounce rate)</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="block full">
+        <div class="block-label">Use Cases — How They Actually Use Firmable</div>
+        <ul class="usecase-list">
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--green)">Handle — Technographic Filtering (Shopify)</div>
+            <div class="usecase-desc">e-commerce SaaS. Generic industry + headcount filters returned too many irrelevant prospects. Used Firmable's technographic filter to isolate AU companies with a Shopify install — their ideal customer, pre-qualified by tech stack before any outreach.</div>
+            <div class="usecase-edge">Edge case: The technographic filter effectively replaces an entire qualification call. A company running Shopify is already self-selected as an e-commerce operator — no need to verify fit manually.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--green)">Blinkpay — Technographic Filtering (Stripe + WinCave)</div>
+            <div class="usecase-desc">B2B payments platform (NZ). Used technographics to find the 20 NZ companies using WinCave and 9,000 using Stripe. Companies already processing payments on Stripe are the exact customer profile — pre-qualified, no cold education needed.</div>
+            <div class="usecase-edge">Edge case: Blinkpay isn't searching by industry at all. Their ICP is defined entirely by what software the company runs, not what sector they're in. This is a fundamentally different prospecting logic — and one only technographic filtering supports.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--green)">DataSentinel — Behavioural / Prior-Tool Signal</div>
+            <div class="usecase-desc">Cybersecurity/compliance SaaS. Building targeted lists of people who previously worked at companies that used a DataSentinel-like product. These prospects already understand the category — much shorter sales cycle. Finding them requires searching by prior employment history, not by current role or company.</div>
+            <div class="usecase-edge">Edge case: This is the most sophisticated use case in the dataset. It's not about who the person is today — it's about what they know from a previous role. Signal-based, not demographic.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--green)">WorkingMouse — Apollo Replacement for ANZ Coverage</div>
+            <div class="usecase-desc">Custom software development company launching their first SDR motion. Apollo had a 75% coverage gap for their AU market — meaning the majority of their ICP didn't appear in Apollo at all. Firmable's 9.2M AU contacts closed that gap.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--green)">Workfacta — First-Ever Outbound (OKR/Meeting Rhythm SaaS)</div>
+            <div class="usecase-desc">4–5 years of organic growth from Sydney. Launched first SDR motion targeting AU wineries specifically. Firmable provided the initial ICP list — a niche sector that required precise filtering by industry + company size.</div>
+            <div class="usecase-edge">Edge case: "First outbound motion" buyers don't need a replacement story — they need a starting-point story. The angle should be about what's possible, not what was wrong with the old tool.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--green)">YellowfinBI — ZoomInfo Replacement</div>
+            <div class="usecase-desc">BI/analytics SaaS (Australian company). ZoomInfo comparison showed Firmable's ANZ data quality was superior and credit model was fairer. Trial credit gap was also an issue — ZoomInfo's trial didn't let them validate properly before committing.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--green)">dsdassist — Building 4× Pipeline for 2026 Sales Motion</div>
+            <div class="usecase-desc">AI-powered SaaS launching direct-to-customer sales for the first time in 2026. Needed ANZ contact data with high accuracy to build a pipeline 4× their current size. No prior tool, no prior data.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--green)">qbox — Technographic (Apple Product Users)</div>
+            <div class="usecase-desc">Trial re-engagement. Using Firmable to find AU companies that use Apple products as a proxy for their ideal customer profile — a technographic signal for a specific buyer persona.</div>
+            <div class="usecase-edge">Edge case: Technographic targeting for hardware/platform ecosystems (not just software installs) is an underexplored use case — but it's valid wherever product fit correlates with tech stack.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="block full">
+        <div class="block-label">Copy Angles</div>
+        <ul class="angles-list">
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Filter by tech stack, not just industry. Find AU companies already running Shopify, Stripe, or Salesforce — pre-qualified before you send a single email." <em>Works for: SaaS with a tech-stack-correlated ICP</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Apollo has roughly 25% of the AU B2B contacts Firmable carries. You're running your entire outbound motion on a quarter of the market." <em>Works for: any SaaS currently using Apollo for ANZ</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"Your Apollo export might be 3 years old. High bounce rates will tank your sender reputation before your campaign even starts." <em>Works for: teams about to run their first email campaign</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Workfacta went from zero outbound to a full SDR pipeline in one week — using Firmable to build their first ICP list from scratch." <em>Works for: first-outbound-motion buyers</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Don't just filter by industry and headcount. Find the people who already understand your category because they used a tool like yours at their last company." <em>Works for: SaaS in competitive/established categories</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Blinkpay found 9,000 NZ companies running Stripe in one search. That's their entire addressable market — in under a minute." <em>Works for: payments, integration, or infrastructure SaaS</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"For ANZ SaaS teams going outbound for the first time — build your ICP list, get verified contacts, and push to HubSpot in one session." <em>Works for: first-time outbound starters</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"ZoomInfo's trial doesn't let you validate data before you commit. Firmable's trial credits are real — test on your actual ICP before you sign." <em>Works for: ZoomInfo evaluators</em></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════
+       3. IT / MSPs
+  ══════════════════════════════════════════ -->
+  <section class="vertical" id="it-msp">
+    <div class="vertical-header">
+      <div class="vertical-accent" style="background:var(--indigo)"></div>
+      <div>
+        <div class="vertical-title">IT / MSPs</div>
+        <div class="vertical-sub">~7 companies matched · ZoomInfo displacement is the dominant story · Company size mismatch is the single clearest pain point</div>
+      </div>
+    </div>
+
+    <div class="blocks">
+      <div class="block">
+        <div class="block-label">Goal</div>
+        <p class="goal-summary">Find net-new SMB clients in their territory and move from passive (referrals, word-of-mouth) to a predictable outbound pipeline. Most target AU businesses in the 10–200 seat range — companies big enough to need managed IT but small enough that enterprise vendors ignore them.</p>
+        <ul class="goal-list">
+          <li><span class="icon">→</span> Build a repeatable new business pipeline outside of referrals</li>
+          <li><span class="icon">→</span> Reach IT decision-makers (IT Manager, CTO, Head of IT) at ANZ SMBs in specific size brackets</li>
+          <li><span class="icon">→</span> Target companies by tech stack (Microsoft 365, specific cloud platforms) as a qualification signal</li>
+          <li><span class="icon">→</span> Consolidate multiple prospecting tools into one platform to save time and cost</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Problem</div>
+        <ul class="problem-list">
+          <li>
+            <span class="pain-label">ZoomInfo targets the wrong company size.</span> Built for US enterprise (500+ seat), its AU database skews heavily toward large companies. AU MSPs sell to 10–200 seat businesses — a segment ZoomInfo largely ignores.
+            <div class="source">Blackbird IT: "They're targeted more towards your 500, 1,000 seat plus"</div>
+          </li>
+          <li>
+            <span class="pain-label">Apollo coverage gap for AU SMB.</span> Apollo scraped LinkedIn, so AU SMBs that aren't active on LinkedIn — which is most of them — simply don't appear.
+            <div class="source">WorkingMouse (75% gap), Broad Reform</div>
+          </li>
+          <li>
+            <span class="pain-label">Too many tools, too much manual work.</span> Interite was running 3 data tools + a sales assistant building lists in Excel + manual entry into Salesforce. The workflow took longer than the actual calls.
+            <div class="source">Interite (3 tools + Excel + Salesforce manual entry)</div>
+          </li>
+          <li>
+            <span class="pain-label">Entirely referral-dependent with no outbound muscle.</span> DyCom Group (30 years old, 10 people) had been a "farmer" — large recurring clients — and had no process or tools for hunting new business.
+            <div class="source">DyCom Group, Sutton IT Management</div>
+          </li>
+          <li>
+            <span class="pain-label">Niche targeting blocked.</span> Cyberlinx needed council IT departments specifically — a target that requires filtering by organisation type (local government), not just industry.
+            <div class="source">Cyberlinx (council IT + inside sales team of 4)</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="block full">
+        <div class="block-label">Use Cases — How They Actually Use Firmable</div>
+        <ul class="usecase-list">
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--indigo)">Blackbird IT — ZoomInfo Replacement for AU SMB Targeting</div>
+            <div class="usecase-desc">CGO Chris Wagner had been using ZoomInfo but found it returned enterprise contacts (500+ seat) irrelevant to their 50–120 seat target. Switched to Firmable for the Australian founders' credibility, native HubSpot push, and DNC check — all blockers in the regulated AU market.</div>
+            <div class="usecase-edge">Edge case: The "Australian founders" angle was explicitly cited as a trust signal — relevant for MSPs selling into security-conscious or government-adjacent clients who prefer dealing with local vendors.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--indigo)">Interite — Tool Consolidation</div>
+            <div class="usecase-desc">Running 3 separate data platforms + a dedicated sales assistant building lists in Excel + manual entry into Salesforce. Firmable replaced the entire stack: one search, one export, one HubSpot push. Eliminated the sales assistant's list-building role and freed them for actual outreach.</div>
+            <div class="usecase-edge">Edge case: The ROI story here isn't "better data" — it's "the cost of Firmable is less than the time cost of the manual workflow it replaces." Relevant for MSPs with small, overloaded sales teams.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--indigo)">Cyberlinx — Council IT Department Targeting</div>
+            <div class="usecase-desc">4-person inside sales team (2 SDRs, 2 AEs). Needed to filter to local government / council IT departments specifically — not just "IT" as an industry. Outbound (Darcy) sourced this deal. HubSpot-native integration was important for the SDR workflow.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--indigo)">DyCom Group — Hunter Pivot (30yr Old IT Firm)</div>
+            <div class="usecase-desc">Long-established IT company (10 people) with large recurring clients — had never done proactive new business development. Firmable was the first tool to enable a "hunter" motion after three decades of account management.</div>
+            <div class="usecase-edge">Edge case: The "farmer to hunter" pivot is common in established IT firms as founders think about succession or growth. The messaging isn't about replacing a tool — it's about enabling a capability they've never had.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--indigo)">Custom365 — Pivot from Bespoke to Repeatable (Microsoft 365)</div>
+            <div class="usecase-desc">Pivoting from bespoke project work to repeatable Microsoft 365 products for a scalable sales process. Needed prospect data to run outbound for a productised offer — not possible when every engagement was custom.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--indigo)">Sutton IT Management — Outbound as SEO Alternative</div>
+            <div class="usecase-desc">SEO had become too competitive and expensive. Owner Jon Sutton decided to invest in outbound as an alternative acquisition channel. Firmable was the first tool purchased for this motion.</div>
+            <div class="usecase-edge">Edge case: SEO-to-outbound pivots are common in AU IT firms as SEO costs rise and ROI drops. The angle: "While your competitors are bidding on the same SEO keywords, you could be calling the decision-maker directly."</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--indigo)">Employers Comp — AU Regtech Outbound</div>
+            <div class="usecase-desc">Workers' comp compliance SaaS. Outbound SDR (Oscar) sourced this deal — meaning the customer was acquired through Firmable's own outbound before they became a Firmable customer. AU-specific regulatory focus made ANZ-native data essential.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="block full">
+        <div class="block-label">Copy Angles</div>
+        <ul class="angles-list">
+          <li class="angle-item"><span class="angle-tag tag-money">SAVE MONEY</span><div class="angle-text">"ZoomInfo was built for US enterprise — 60%+ of its AU contacts sit at 500-seat+ companies. If you're selling to 10–200 seat AU businesses, you're paying for data you'll never use." <em>Works for: any MSP currently on ZoomInfo</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"Interite was running 3 data tools and a sales assistant building lists in Excel. They replaced the entire stack with Firmable — one search, one HubSpot push." <em>Works for: IT firms with multi-tool, manual list-building workflows</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"You've been farming the same accounts for years. Here's what building a hunter motion looks like for a 10-person IT firm in 2026." <em>Works for: established IT firms pivoting from account management to new business</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Filter by company size, industry, and region — find IT decision-makers at 20–150 seat AU businesses that ZoomInfo's enterprise model skips entirely." <em>Works for: MSPs targeting SMB</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"SEO for IT services is getting more expensive every quarter. Firmable gives you the direct line to the IT manager — no keyword bidding required." <em>Works for: IT firms over-reliant on SEO</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"Push contacts directly to HubSpot with one click — no CSV, no import, no manual clean-up for your SDRs." <em>Works for: IT firms with HubSpot + SDR team</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Need to reach local government IT departments, not generic IT companies? Firmable's filters go down to organisation type, not just industry." <em>Works for: IT/cybersecurity firms targeting public sector</em></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════
+       4. CONSTRUCTION / TRADE
+  ══════════════════════════════════════════ -->
+  <section class="vertical" id="construction">
+    <div class="vertical-header">
+      <div class="vertical-accent" style="background:var(--amber)"></div>
+      <div>
+        <div class="vertical-title">Construction / Trade</div>
+        <div class="vertical-sub">~6 companies matched · Specifier and Tier 2/3 builder targeting is the standout use case · Company age and size filters are critical</div>
+      </div>
+    </div>
+
+    <div class="blocks">
+      <div class="block">
+        <div class="block-label">Goal</div>
+        <p class="goal-summary">Reach the right person before the project is awarded or the buying decision is locked. In construction, timing is everything — specifiers choose products before tenders close, and new companies are forming their supplier relationships in their first 12–24 months. Getting in early is the entire game.</p>
+        <ul class="goal-list">
+          <li><span class="icon">→</span> Find Tier 2/3 builder specifiers (architects, QSs, project managers) who choose products for builds</li>
+          <li><span class="icon">→</span> Reach newly incorporated construction firms before they've locked in suppliers</li>
+          <li><span class="icon">→</span> Find Facilities Managers, COOs, and Operations leads for B2B services/products (cleaning, equipment, tech)</li>
+          <li><span class="icon">→</span> Target construction companies by size (11–250 employees) — mid-tier, not enterprise builders</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Problem</div>
+        <ul class="problem-list">
+          <li>
+            <span class="pain-label">Specifiers aren't on LinkedIn.</span> Quantity surveyors, site managers, and Tier 2/3 project managers are not active LinkedIn users. They don't appear in LinkedIn-scraped databases at the density needed for an outreach campaign.
+            <div class="source">Karabiner (Tier 2/3 specifiers), Spier Services (young construction firms)</div>
+          </li>
+          <li>
+            <span class="pain-label">No company age filter in global tools.</span> Spier Services specifically needed newly registered construction companies — the ones still forming their supply chain and open to new vendors. No global tool surfaces this.
+            <div class="source">Spier Services</div>
+          </li>
+          <li>
+            <span class="pain-label">Switchboard numbers, not direct contacts.</span> The construction industry is gatekept — company numbers go to reception. Field-facing roles (Facilities Manager, Project Manager, Site Supervisor) almost never appear on company websites.
+            <div class="source">SoftBank Robotics (Facilities Mgrs/COOs), Chris Kelly/Fleetwood (national BDM)</div>
+          </li>
+          <li>
+            <span class="pain-label">Sector pivot requires new data.</span> ONTRAC Group pivoted from quarrying to mining — a different buyer persona in a different sector. They needed contact data for an industry they'd never targeted before.
+            <div class="source">ONTRAC Group</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="block full">
+        <div class="block-label">Use Cases — How They Actually Use Firmable</div>
+        <ul class="usecase-list">
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--amber)">Karabiner / Lyft Roller — Tier 2/3 Specifier Targeting</div>
+            <div class="usecase-desc">Building product supplier (rollers, hardware). Needed to reach the people who actually specify products on a build — architects, quantity surveyors, project managers at Tier 2 and Tier 3 builders — not the top-20 enterprise construction companies that global tools heavily index.</div>
+            <div class="usecase-edge">Edge case: Tier 1 builders (Multiplex, Lendlease) are over-contacted by every supplier. The real opportunity is Tier 2/3 — mid-sized builders that are under-served by enterprise sales reps and highly receptive to direct outreach from specialists.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--amber)">Spier Services — Newly Registered Construction Companies</div>
+            <div class="usecase-desc">Targets construction companies registered in the last 12–24 months. These companies are actively forming their supplier and service relationships and are highly receptive. Company age filter is the key — not available in any global tool.</div>
+            <div class="usecase-edge">Edge case: This is a signal-based ICP, not a demographic one. The trigger is "company is new" — which maps to "supplier relationships are still being decided." Firmable's ASIC registration data enables this; LinkedIn doesn't.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--amber)">Koatas — Mid-Tier Construction Firms (11–250 Employees)</div>
+            <div class="usecase-desc">BD targeting at mid-tier AU construction companies. Needs company size filter to exclude both micro firms (1–10) that can't afford them and enterprise builders (250+) that have preferred vendor agreements.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--amber)">SoftBank Robotics† — Facilities Managers and COOs</div>
+            <div class="usecase-desc">Commercial cleaning robot sales. Target buyers are Facilities Managers, Operations leads, and COOs at medium-to-large commercial properties — a role that almost never appears on LinkedIn or in LinkedIn-scraped databases. Needed direct contact data for field-facing decision-makers.</div>
+            <div class="usecase-edge">Edge case: Even though SoftBank Robotics is a non-ANZ HQ company, the sales problem (field-facing buyer, not on LinkedIn) is universal for any company selling to Facilities Management or Operations roles.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--amber)">TGA Cables — Engineering Firms and Mechanical Repair</div>
+            <div class="usecase-desc">Cabling supplier. Targeting engineering firms and mechanical repair/servicing equipment companies. Came through a LeadList referral — existing customer referred Firmable. Needed direct contact data for technical procurement roles.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--amber)">ONTRAC Group — Sector Pivot (Quarrying → Mining)</div>
+            <div class="usecase-desc">Business pivoting from quarrying to mining — completely new buyer persona in a new sector. Needed contact data for ANZ mining and resources decision-makers from scratch. Referred by Lonnie.</div>
+            <div class="usecase-edge">Edge case: Sector pivot is a strong trigger event for buying Firmable — the company already knows how to sell, they just need the right contact data for the new market. Speed matters here.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--amber)">Chris Kelly / Fleetwood — National BDM Bypassing Gatekeepers</div>
+            <div class="usecase-desc">National BDM for a modular housing company. Site visits and company websites only return switchboard numbers. Needed direct mobiles for procurement and project management contacts at builder clients — bypassing the PA and reception layer entirely.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="block full">
+        <div class="block-label">Copy Angles</div>
+        <ul class="angles-list">
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Find the specifier on the project before it goes to tender. By the time the job board lists it, three suppliers have already been specified in." <em>Works for: building product suppliers, trade suppliers</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Filter by company registration date — find newly incorporated construction firms in the first 12 months, while they're still choosing their suppliers." <em>Works for: service providers targeting new entrant builders</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Tier 2 and Tier 3 builders aren't on ZoomInfo. Karabiner found the specifiers they'd been missing for years — architects, QSs, and PMs at mid-tier builders." <em>Works for: building product suppliers targeting mid-tier</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"Stop calling switchboards. Get direct mobiles for Facilities Managers, Project Managers, and Procurement leads — the people who actually make the buying call." <em>Works for: equipment, services, or tech selling to field-based roles</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Pivoting into a new sector? Firmable has ANZ mining, resources, and construction contacts searchable by role, company size, and state — build your new market list today." <em>Works for: companies doing a sector pivot</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Filter by employee count (11–250) to find the mid-tier construction companies that are too big for micro-supplier relationships and too small for enterprise vendors." <em>Works for: suppliers targeting growth-stage builders</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"A national BDM shouldn't be spending 3 hours a day finding phone numbers. Firmable gives you the direct line — spend your time on conversations, not research." <em>Works for: field sales / BDM roles in construction</em></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════
+       5. FINANCE / FINTECH / BROKERS
+  ══════════════════════════════════════════ -->
+  <section class="vertical" id="finance">
+    <div class="vertical-header">
+      <div class="vertical-accent" style="background:var(--teal)"></div>
+      <div>
+        <div class="vertical-title">Finance / Fintech / Brokers</div>
+        <div class="vertical-sub">~8 companies matched · Two distinct sub-groups: financial service providers (finding clients/partners) and fintech/SaaS selling into the vertical</div>
+      </div>
+    </div>
+
+    <div class="blocks">
+      <div class="block">
+        <div class="block-label">Goal</div>
+        <p class="goal-summary">Two different goals depending on the sub-group. Financial service providers (FX, lending, brokerage) want to find businesses or brokers to win as clients or referral partners — more relationships equals more revenue directly. Fintech/SaaS companies selling into the financial vertical want to find the specific professional role (insurance broker, credit manager, finance team) that would buy their product.</p>
+        <ul class="goal-list">
+          <li><span class="icon">→</span> [Service providers] Find AU SME owners or finance brokers as clients or referral sources</li>
+          <li><span class="icon">→</span> [Fintech/SaaS] Find specific financial professional roles (insurance brokers, credit managers) at scale</li>
+          <li><span class="icon">→</span> Enrich large existing contact lists (brokers, brokerages) with verified direct contact data</li>
+          <li><span class="icon">→</span> Use technographic signals (Stripe users, WinCave users) to pre-qualify prospects before outreach</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Problem</div>
+        <ul class="problem-list">
+          <li>
+            <span class="pain-label">No structured way to reach brokers at scale.</span> Lumi needed to enrich 10,000+ brokers and 6,000 brokerages — an enrichment task at a scale that manual research or static lists can't support.
+            <div class="source">Lumi (10k brokers + 6k brokerages)</div>
+          </li>
+          <li>
+            <span class="pain-label">Niche professional roles are thin in generic tools.</span> Insurance brokers, credit managers, and FX-focused finance roles are under-represented in Apollo/ZoomInfo's ANZ data. Global tools don't distinguish by financial licence type or specialisation.
+            <div class="source">Folio.Insure (general insurance brokers), OMPL (credit managers), Tasman FX</div>
+          </li>
+          <li>
+            <span class="pain-label">Entirely inbound/referral — no outbound process.</span> Sunshine Finance Brokers, Pelorus Capital, and Tasman FX had no structured way to find and reach new clients. Growth was word-of-mouth until they hit a ceiling.
+            <div class="source">Sunshine Finance Brokers, Pelorus Capital, Tasman FX</div>
+          </li>
+          <li>
+            <span class="pain-label">Can't qualify by tech stack.</span> Blinkpay's ideal customer is a company already running payments on Stripe — but no standard prospecting tool lets you filter by payment processor.
+            <div class="source">Blinkpay (Stripe technographic)</div>
+          </li>
+          <li>
+            <span class="pain-label">Manual research for shell company contacts.</span> Raizor Insurance needed contacts inside complex corporate structures (shell companies, holding companies) where the decision-maker is buried.
+            <div class="source">Raizor Insurance (NZ, Chrome extension use case)</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="block full">
+        <div class="block-label">Use Cases — How They Actually Use Firmable</div>
+        <ul class="usecase-list">
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--teal)">Lumi — Broker List Enrichment at Scale</div>
+            <div class="usecase-desc">SMB lending fintech enriching a database of 10,000+ individual finance brokers and 6,000 brokerages. Not prospecting from scratch — enriching an existing list with verified direct emails, mobile numbers, and company data. The value is speed and accuracy of enrichment, not list discovery.</div>
+            <div class="usecase-edge">Edge case: Large-scale enrichment (not prospecting) is a distinct use case. The customer already knows who they want to reach — Firmable fills in the contact data they're missing. This is different from building a list from zero.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--teal)">Folio.Insure — Insurance Broker Vertical Coverage</div>
+            <div class="usecase-desc">SaaS that eliminates double-keying for insurance brokers. Building their entire 2026 sales pipeline by finding every general insurance broker in ANZ. Generic tools don't distinguish insurance brokers from financial advisors or mortgage brokers — Firmable's category-level filtering does.</div>
+            <div class="usecase-edge">Edge case: Folio.Insure isn't marketing to "finance" broadly — they need exactly the "general insurance broker" sub-category. This level of role specificity is only possible with a database that indexes contact-level role titles, not just company-level industry codes.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--teal)">Blinkpay — Technographic Filtering (Stripe + WinCave)</div>
+            <div class="usecase-desc">B2B payments platform (NZ). Instead of searching by industry, used Firmable's technographic filter to find the 20 NZ companies using WinCave and 9,000 using Stripe. A company already processing payments on Stripe is pre-qualified — they understand the product category and need an upgrade path. HubSpot native integration was also a key decision factor.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--teal)">Zank & Co. — B2B Broker Referral Network</div>
+            <div class="usecase-desc">Wealth management / mortgage lending firm. Not finding end clients — finding mortgage brokers as B2B referral partners. Direct mobile numbers were essential: they want to call brokers and build relationships, not send InMail to someone's LinkedIn profile who may or may not check it.</div>
+            <div class="usecase-edge">Edge case: The "find referral partners, not end clients" use case is common in financial services. The ICP is a professional (mortgage broker, financial planner) not a consumer — requiring contact-level filtering by role/licence type.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--teal)">Tasman FX — Reviving Direct Marketing for FX Services</div>
+            <div class="usecase-desc">Reviving a direct marketing function for AU SME FX services. Target: importers and exporters who do cross-border transactions and overpay with their bank. Needed direct contact data for SME owners, CFOs, and finance leads at relevant companies.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--teal)">Pelorus Capital — Working Capital Prospects</div>
+            <div class="usecase-desc">Working capital / trade finance lender for AU SMBs. Needed a structured way to find business owners and CFOs at companies that might need short-term finance — a prospect profile defined by company size and growth stage, not by industry.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--teal)">Raizor Insurance — Shell Company Contact Research</div>
+            <div class="usecase-desc">NZ insurance brokerage. Manual process for finding contacts inside complex corporate structures — holding companies, shell companies, trusts — where the insured entity isn't the trading entity. Used Firmable's Chrome extension to surface contacts against specific ABN/NZBN-adjacent structures.</div>
+            <div class="usecase-edge">Edge case: Shell company and corporate structure navigation is an edge case specific to insurance and legal sectors, where the legal entity and the operating entity are often different.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--teal)">OMPL — Credit Manager List</div>
+            <div class="usecase-desc">Needed a targeted list of credit managers at AU companies with direct contact info. A niche professional role that generic tools categorise inconsistently — sometimes under "finance," sometimes under "operations," sometimes missing entirely.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="block full">
+        <div class="block-label">Copy Angles</div>
+        <ul class="angles-list">
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"10,000+ finance brokers and 6,000 brokerages in ANZ — searchable by state, size, and specialisation. Build your entire referral network in one afternoon." <em>Works for: lenders, product providers building broker distribution</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Find every general insurance broker in ANZ with a verified direct email and mobile — not financial advisors, not mortgage brokers, exactly the sub-category you need." <em>Works for: SaaS/services selling specifically to insurance brokers</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Blinkpay found 9,000 NZ companies running Stripe in one search. If your ICP is defined by their tech stack, not their industry — Firmable's technographic filter gets you there." <em>Works for: fintech/payments companies</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Stop waiting for broker referrals to come in. Find the mortgage brokers in your state, get their direct mobile, and call them today." <em>Works for: lenders/wealth managers building referral networks</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"Enriching a broker list of 10,000+ manually takes months. Firmable bulk-enriches it with verified direct contacts in hours." <em>Works for: fintech/lenders with large existing broker databases</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Your referrals will plateau. Every AU SME FX/lending/insurance business that grows past a certain point needs outbound — here's what that motion looks like." <em>Works for: financial service providers currently 100% inbound/referral</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Find CFOs and finance leads at AU SMEs by company size and growth stage — not just by industry. Pelorus Capital built their working capital prospect list in a single session." <em>Works for: lenders / working capital providers</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"The lenders and fintechs that dominate broker desks got there by calling first — not by waiting for an aggregator to route a lead. Brokers remember who reached out before anyone else." <em>Works for: lenders, FX services, and fintechs building broker distribution</em></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ══════════════════════════════════════════
+       6. PROFESSIONAL SERVICES
+  ══════════════════════════════════════════ -->
+  <section class="vertical" id="professional">
+    <div class="vertical-header">
+      <div class="vertical-accent" style="background:var(--purple)"></div>
+      <div>
+        <div class="vertical-title">Professional Services</div>
+        <div class="vertical-sub">~7 companies matched · Almost entirely referral-dependent before Firmable · Two sub-groups: firms winning clients for themselves, and firms building lists for clients</div>
+      </div>
+    </div>
+
+    <div class="blocks">
+      <div class="block">
+        <div class="block-label">Goal</div>
+        <p class="goal-summary">Win new advisory, consulting, or agency clients — and do it without adding headcount. These firms are skilled at the work but have no systematic outbound process. Some are also agencies or fractional sales providers that use Firmable as part of their service delivery — building lists for clients, not just for themselves.</p>
+        <ul class="goal-list">
+          <li><span class="icon">→</span> Add a predictable outbound channel alongside word-of-mouth/referrals</li>
+          <li><span class="icon">→</span> Replace expensive bespoke list orders with a self-serve, refreshable platform</li>
+          <li><span class="icon">→</span> Build prospect lists for client campaigns faster than any list broker can</li>
+          <li><span class="icon">→</span> Launch a first-ever B2B outbound motion (for orgs that have only ever done B2C or inbound)</li>
+        </ul>
+      </div>
+
+      <div class="block">
+        <div class="block-label">Problem</div>
+        <ul class="problem-list">
+          <li>
+            <span class="pain-label">Entirely referral/word-of-mouth dependent.</span> Perth Support, Bentleys, Governance Institute — all had never done proactive outbound. Growth had been entirely passive, with no playbook for active pipeline building.
+            <div class="source">Perth Support, Bentleys, Governance Institute of Australia</div>
+          </li>
+          <li>
+            <span class="pain-label">Bespoke list providers expensive and slow.</span> The Evolved Group paid a list broker for ANZ manufacturing decision-makers on a biannual basis. Price increased sharply, lists weren't self-service, and data wasn't refreshed between orders.
+            <div class="source">The Evolved Group: "Our legacy provider came in with prices quite a bit more than they used to"</div>
+          </li>
+          <li>
+            <span class="pain-label">Static lists from Spirian/other providers.</span> Business Benchmark Group was using a static purchased list — no ability to refresh, segment, or enrich without ordering a new list.
+            <div class="source">Business Benchmark Group (Spirian replacement)</div>
+          </li>
+          <li>
+            <span class="pain-label">B2C org with no B2B motion at all.</span> Governance Institute trained individuals (B2C), but hired a new AE to build a B2B corporate outreach function. They had no data, no process, and no starting point.
+            <div class="source">Governance Institute of Australia</div>
+          </li>
+          <li>
+            <span class="pain-label">Scale constraint for client work.</span> Fractional Growth Engine builds prospect lists for clients — but doing it manually at the quality and speed clients expect is impossible without a data platform.
+            <div class="source">Fractional Growth Engine, RubyOnyx</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="block full">
+        <div class="block-label">Use Cases — How They Actually Use Firmable</div>
+        <ul class="usecase-list">
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--purple)">The Evolved Group — Replace Bespoke List Broker</div>
+            <div class="usecase-desc">Market research firm building AU manufacturing decision-maker lists for client research studies (biannual survey waves). Legacy list provider raised prices sharply — triggered a competitive review. Firmable won on: price (much cheaper), self-service (no need to brief a list vendor), and weekly data refresh (lists stay current between waves).</div>
+            <div class="usecase-edge">Edge case: The "market research list building" use case is distinct from sales prospecting. The end user isn't selling — they're running surveys. The data quality requirement is the same (valid email + correct role), but the quantity and refresh model matters more.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--purple)">Fractional Growth Engine — Client List-Building as a Service</div>
+            <div class="usecase-desc">Fractional sales leadership business. Builds large prospect lists for clients as part of the engagement — Firmable is a core tool in their service delivery, not just their own prospecting. Speed and breadth of list-building directly impacts the value they deliver to clients.</div>
+            <div class="usecase-edge">Edge case: "List-building for clients" is an underserved use case — these buyers need to be able to build across many different ICPs quickly. Firmable's flexible filters and credits model supports this better than per-seat tools with a fixed ICP.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--purple)">Bentleys — Partner BD at an Accounting Firm</div>
+            <div class="usecase-desc">National accounting firm. Partners doing BD to win new advisory clients — a motion that had previously been entirely relationship-driven. Firmable used to find AU businesses at the right stage (size, sector, growth indicators) for advisory/tax/CFO services.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--purple)">Governance Institute of Australia — First B2B Motion (B2C Org)</div>
+            <div class="usecase-desc">Training organisation (B2C) hiring their first AE (Brendan) to build a B2B corporate training outreach function. Target: board members, company secretaries, and governance professionals at AU companies — a specific professional role that requires contact-level filtering. The first Fathom recording was from Oct 2025, months before the Jan 2026 close.</div>
+            <div class="usecase-edge">Edge case: B2C → B2B pivot is a strong trigger event. These buyers have brand awareness and training content but zero B2B prospect data or outbound infrastructure. Firmable is literally the starting point for their entire new revenue line.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--purple)">Business Benchmark Group — Replacing Static Spirian Lists</div>
+            <div class="usecase-desc">B2B benchmarking company replacing purchased static lists from Spirian. Key differentiator: Firmable is self-serve (build lists on demand, no vendor brief required) and data refreshes weekly (vs. a static snapshot that ages from day one).</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--purple)">Veitch Lister Consulting — Validating Data for New SaaS Outbound</div>
+            <div class="usecase-desc">Consulting firm launching outbound for their Plan Wisely SaaS product. First validated Firmable data accuracy on a known set of contacts before committing to the platform. Data accuracy was the primary purchase criterion — they'd been burned by stale data in previous tools.</div>
+            <div class="usecase-edge">Edge case: Data validation before purchase is common among professional services firms that have been burned before. A trial-first motion (let them verify on their own ICP) is more compelling than any feature list.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--purple)">Perth Support — First Proactive Lead Sourcing Tool</div>
+            <div class="usecase-desc">Technical services firm, historically 100% word-of-mouth and referral. No prior marketing or lead sourcing tool at all. Firmable was their first structured approach to finding new clients beyond their existing network.</div>
+          </li>
+          <li class="usecase-item">
+            <div class="usecase-company" style="color:var(--purple)">OMPL — Niche Role List (Credit Managers)</div>
+            <div class="usecase-desc">Needed a targeted list of credit managers at AU companies — a role that generic tools categorise inconsistently. Firmable's contact-level role filtering surfaced this niche professional segment cleanly.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="block full">
+        <div class="block-label">Copy Angles</div>
+        <ul class="angles-list">
+          <li class="angle-item"><span class="angle-tag tag-money">SAVE MONEY</span><div class="angle-text">"Replace your bespoke list order with a platform you control. Build AU manufacturing decision-maker lists yourself — refreshed weekly, no vendor brief, no 3-week wait." <em>Works for: firms currently paying list brokers (Spirian, D&B, bespoke)</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Your referrals will only take you so far. Here's what adding outbound looks like for an accounting/consulting firm without adding a sales team." <em>Works for: professional services firms with no outbound history</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"If you're building prospect lists for clients, Firmable should be in your stack. Fractional Growth Engine delivers better lists faster — without a list broker in the loop." <em>Works for: fractional sales, agencies, BDaaS providers</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Find board members, company secretaries, and governance professionals at AU companies — a niche role that requires contact-level filtering, not just company-level industry codes." <em>Works for: professional bodies, governance/compliance services</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Walk into the pitch already knowing who's on the board. Your prospects notice when you've done the research — it's how you win the engagement before the meeting starts." <em>Works for: consulting firms, accounting partners, professional advisors</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"Static lists from Spirian or D&B are stale from day one. Firmable refreshes data weekly — your list is as accurate on week 12 as it was on week 1." <em>Works for: firms on static purchased lists</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Governance Institute went from B2C training to B2B corporate outreach in one quarter — with Firmable as the only data platform in their new revenue line." <em>Works for: training/certification orgs building first B2B motion</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-save">SAVE TIME</span><div class="angle-text">"Verify data accuracy on your own ICP before you sign — Veitch Lister tested on a known contact list first. Trial credits are real contacts, not demos." <em>Works for: data-cautious buyers who've been burned before</em></div></li>
+          <li class="angle-item"><span class="angle-tag tag-earn">EARN REVENUE</span><div class="angle-text">"Word-of-mouth built your first 50 clients. Firmable builds the next 50 — and the 50 after that." <em>Works for: any professional services firm that's hit a referral ceiling</em></div></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    Source: 102 closed-won Fathom recordings, Jan–May 2026 · Firmable GTM Engineering · Generated May 2026<br>
+    Companion file: <a href="anz-smb-closedwon-analysis.html" style="color:var(--blue)">anz-smb-closedwon-analysis.html</a> — full dashboard with charts and company list
+  </footer>
+
+</div>
+
+<script>
+  // Highlight active nav item on scroll
+  const sections = document.querySelectorAll('.vertical');
+  const navLinks = document.querySelectorAll('.nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const id = entry.target.id;
+        const active = document.querySelector(`.nav a[href="#${id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
