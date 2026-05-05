@@ -229,6 +229,7 @@ def build_row(
     firmable: dict,
     input_name: str,
     raw_url: str,
+    bare_domain: str,
     portal_id: str,
     owner_map: dict,
 ) -> dict:
@@ -239,7 +240,7 @@ def build_row(
         "exists_in_hubspot": "YES" if in_hs else "NO",
         "found_in_firmable": firmable["found_in_firmable"],
         "company_name": props.get("name") or input_name,
-        "company_website": props.get("domain") or raw_url,
+        "company_website": props.get("domain") or bare_domain or raw_url,
         "company_hubspot_url": hs_url(portal_id, hs_record["id"]) if in_hs else "",
         "company_owner": owner_map.get(oid, "") if in_hs else "",
         "sdr_au": props.get("sdr__new_") or "",
@@ -288,7 +289,7 @@ def main():
         bare = extract_bare_domain(raw_url)
         if not bare:
             print("SKIP (no domain)")
-            out_rows.append(build_row(None, {"found_in_firmable": "NO", "sales_team_au": "", "sales_team_nz": "", "sales_team_sea": ""}, input_name, raw_url, portal_id, owner_map))
+            out_rows.append(build_row(None, {"found_in_firmable": "NO", "sales_team_au": "", "sales_team_nz": "", "sales_team_sea": ""}, input_name, raw_url, bare, portal_id, owner_map))
             continue
 
         hs_record = find_hs_company(hs, bare)
@@ -299,7 +300,7 @@ def main():
         name_found = hs_record["properties"].get("name") if hs_record else ""
         print(f"{hs_status} {fm_status}" + (f" → {name_found}" if name_found else ""))
 
-        out_rows.append(build_row(hs_record, firmable, input_name, raw_url, portal_id, owner_map))
+        out_rows.append(build_row(hs_record, firmable, input_name, raw_url, bare, portal_id, owner_map))
         time.sleep(REQUEST_DELAY)
 
     os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
