@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outbound GTM Dashboard — Firmable</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f4f5f7;
+      color: #1a1d23;
+      min-height: 100vh;
+      padding: 40px 32px 64px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 36px;
+    }
+    .header-left h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #0f1117;
+    }
+    .header-left p {
+      margin-top: 4px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .header-right {
+      text-align: right;
+    }
+    .badge {
+      display: inline-block;
+      background: #eef2ff;
+      color: #4f46e5;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+    }
+    .date-label {
+      margin-top: 6px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+
+    /* ── Section titles ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 14px;
+    }
+
+    /* ── Metric cards ── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .metric-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px 22px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+      border: 1px solid #e8eaed;
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 14px 14px 0 0;
+    }
+    .metric-card.blue::before   { background: #4f46e5; }
+    .metric-card.teal::before   { background: #0ea5e9; }
+    .metric-card.green::before  { background: #10b981; }
+    .metric-card.amber::before  { background: #f59e0b; }
+
+    .metric-icon {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .metric-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #9ca3af;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1;
+      color: #0f1117;
+    }
+    .metric-value span {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .metric-sub {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    .metric-sub strong {
+      color: #6b7280;
+    }
+
+    /* ── Process flow ── */
+    .process-section {
+      background: #fff;
+      border-radius: 18px;
+      padding: 36px 36px 40px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+      border: 1px solid #e8eaed;
+    }
+
+    .process-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .process-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: #0f1117;
+    }
+    .always-on-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+    .pulse {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    /* ── Steps ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      position: relative;
+    }
+
+    /* connector line between steps */
+    .steps::after {
+      content: "";
+      position: absolute;
+      top: 22px;
+      left: calc(12.5% + 2px);
+      right: calc(12.5% + 2px);
+      height: 2px;
+      background: linear-gradient(90deg, #c7d2fe, #a5f3fc, #6ee7b7, #fde68a);
+      z-index: 0;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      padding: 0 10px;
+    }
+
+    .step-num {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      flex-shrink: 0;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px currentColor;
+      margin-bottom: 16px;
+    }
+    .step.s1 .step-num { background: #eef2ff; color: #4f46e5; }
+    .step.s2 .step-num { background: #e0f2fe; color: #0284c7; }
+    .step.s3 .step-num { background: #d1fae5; color: #059669; }
+    .step.s4 .step-num { background: #fef3c7; color: #d97706; }
+
+    .step-card {
+      background: #fafafa;
+      border: 1px solid #e8eaed;
+      border-radius: 12px;
+      padding: 18px 16px;
+      width: 100%;
+      text-align: left;
+    }
+    .step.s1 .step-card { border-top: 3px solid #4f46e5; }
+    .step.s2 .step-card { border-top: 3px solid #0284c7; }
+    .step.s3 .step-card { border-top: 3px solid #059669; }
+    .step.s4 .step-card { border-top: 3px solid #d97706; }
+
+    .step-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0f1117;
+      margin-bottom: 12px;
+      letter-spacing: -0.2px;
+    }
+
+    .step-items {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .step-items li {
+      font-size: 12px;
+      color: #4b5563;
+      line-height: 1.45;
+      padding-left: 16px;
+      position: relative;
+    }
+    .step-items li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: #9ca3af;
+      font-size: 11px;
+    }
+
+    /* ── Industry pills ── */
+    .industry-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    .chip {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: #eef2ff;
+      color: #4f46e5;
+      letter-spacing: 0.2px;
+    }
+
+    /* ── Mailbox infrastructure ── */
+    .mailbox-section {
+      margin-bottom: 48px;
+    }
+    .mailbox-hero {
+      background: linear-gradient(135deg, #0f1117 0%, #1e2130 100%);
+      border-radius: 14px 14px 0 0;
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .mailbox-hero-num {
+      font-size: 48px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -2px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .mailbox-hero-text h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 3px;
+    }
+    .mailbox-hero-text p {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .mailbox-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #fff;
+      border-left: 1px solid #e8eaed;
+      border-right: 1px solid #e8eaed;
+    }
+    .mailbox-stat {
+      padding: 18px 24px;
+      border-right: 1px solid #e8eaed;
+    }
+    .mailbox-stat:last-child { border-right: none; }
+    .mailbox-stat-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+    .mailbox-stat-value {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: #0f1117;
+      line-height: 1;
+    }
+    .mailbox-stat-sub {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 3px;
+    }
+
+    .mailbox-body {
+      background: #fff;
+      border: 1px solid #e8eaed;
+      border-top: none;
+    }
+
+    .mailbox-deployment {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .mailbox-deploy-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #9ca3af;
+      margin-bottom: 14px;
+    }
+    .deploy-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .deploy-row:last-child { margin-bottom: 0; }
+    .deploy-label {
+      font-size: 13px;
+      color: #374151;
+      width: 200px;
+      flex-shrink: 0;
+    }
+    .deploy-label a {
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .deploy-label a:hover { text-decoration: underline; }
+    .deploy-bar-track {
+      flex: 1;
+      height: 10px;
+      background: #f1f5f9;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .deploy-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+    }
+    .deploy-bar-fill.us     { background: #4f46e5; }
+    .deploy-bar-fill.apac   { background: #059669; }
+    .deploy-bar-fill.warm   { background: #d1d5db; }
+    .deploy-count {
+      font-size: 12px;
+      color: #9ca3af;
+      width: 52px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .mailbox-timeline {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .mailbox-timeline-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #9ca3af;
+      margin-bottom: 16px;
+    }
+    .tl-item {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .tl-item:last-child { margin-bottom: 0; }
+    .tl-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .tl-dot.now      { background: #9ca3af; }
+    .tl-dot.may4     { background: #22c55e; }
+    .tl-dot.may11    { background: #a855f7; }
+    .tl-content {}
+    .tl-heading {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+    .tl-desc {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .tl-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tl-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .tl-pill.us   { background: #eef2ff; color: #4f46e5; }
+    .tl-pill.sea  { background: #fff7ed; color: #c2410c; }
+    .tl-pill.anz  { background: #f0fdf4; color: #166534; }
+
+    .mailbox-perf {
+      padding: 20px 24px;
+      border-radius: 0 0 14px 14px;
+    }
+    .mailbox-perf-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+    .mailbox-perf-desc {
+      font-size: 13px;
+      color: #4b5563;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .mailbox-perf-desc strong { color: #0f1117; }
+    .mailbox-perf-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .mp-card {
+      background: #f8f9fb;
+      border: 1px solid #e8eaed;
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .mp-card-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+    .mp-card-value {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      color: #0f1117;
+    }
+    .mp-card-sub {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    /* ── Pipeline section ── */
+    .pipeline-section {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+      border: 1px solid #e8eaed;
+      margin-bottom: 48px;
+    }
+    .pipeline-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .pipeline-top h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0f1117;
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+    .pipeline-top p {
+      font-size: 13px;
+      color: #6b7280;
+      max-width: 480px;
+      line-height: 1.5;
+    }
+    .hs-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ff7a59;
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+    .hs-link:hover { opacity: 0.88; }
+    .hs-link svg { flex-shrink: 0; }
+
+    .pipeline-body {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .pipe-stat {
+      background: #f8f9fb;
+      border: 1px solid #e8eaed;
+      border-radius: 10px;
+      padding: 16px 16px 14px;
+    }
+    .pipe-stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
+    }
+    .pipe-stat-value {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+      color: #0f1117;
+    }
+    .pipe-stat-value.accent { color: #059669; }
+    .pipe-stat-value.muted  { color: #4f46e5; }
+    .pipe-stat-sub {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #9ca3af;
+      line-height: 1.4;
+    }
+    .pipe-stat-sub .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-top: 4px;
+    }
+    .tag.pending  { background: #fef3c7; color: #d97706; }
+    .tag.direct   { background: #d1fae5; color: #059669; }
+
+    /* ── Reply breakdown ── */
+    .breakdown-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .breakdown-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px 24px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+      border: 1px solid #e8eaed;
+    }
+    .breakdown-card.campaign { border-top: 3px solid #4f46e5; }
+    .breakdown-card.conference { border-top: 3px solid #0ea5e9; }
+
+    .breakdown-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .breakdown-tag {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .breakdown-tag.campaign  { background: #eef2ff; color: #4f46e5; }
+    .breakdown-tag.conference { background: #e0f2fe; color: #0284c7; }
+
+    .share-pill {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .share-pill.campaign   { color: #4f46e5; }
+    .share-pill.conference { color: #0284c7; }
+    .share-pill sup { font-size: 12px; font-weight: 600; }
+
+    .breakdown-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .bd-stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #9ca3af;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .bd-stat-value {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      color: #0f1117;
+    }
+    .bd-stat-value.highlight.campaign   { color: #4f46e5; }
+    .bd-stat-value.highlight.conference { color: #0284c7; }
+    .bd-stat-sub {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+
+    /* share bar */
+    .share-bar-wrap {
+      margin-top: 4px;
+    }
+    .share-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 5px;
+    }
+    .share-bar-track {
+      height: 7px;
+      background: #f1f5f9;
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .share-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+    }
+    .share-bar-fill.campaign   { background: #4f46e5; }
+    .share-bar-fill.conference { background: #0ea5e9; }
+
+    /* ── Projection section ── */
+    .projection {
+      margin-top: 32px;
+      background: linear-gradient(135deg, #0f1117 0%, #1e2130 100%);
+      border-radius: 12px;
+      padding: 24px 24px 20px;
+    }
+    .projection-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .projection-header h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 3px;
+    }
+    .projection-header p {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .capacity-pills {
+      display: flex;
+      gap: 8px;
+    }
+    .cap-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.08);
+      color: #d1d5db;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    /* funnel chain */
+    .funnel-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 10px;
+    }
+    .funnel-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #4b5563;
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .funnel-steps {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      gap: 0;
+    }
+    .funnel-step {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 10px 12px 8px;
+      text-align: center;
+    }
+    .funnel-step-val {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+      line-height: 1;
+    }
+    .funnel-step-val.green  { color: #34d399; }
+    .funnel-step-val.blue   { color: #60a5fa; }
+    .funnel-step-val.amber  { color: #fbbf24; }
+    .funnel-step-val.purple { color: #c084fc; }
+    .funnel-step-label {
+      font-size: 10px;
+      color: #6b7280;
+      margin-top: 3px;
+    }
+    .funnel-step-rate {
+      font-size: 9px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+    .funnel-arrow {
+      color: #374151;
+      font-size: 14px;
+      padding: 0 6px;
+      flex-shrink: 0;
+    }
+
+    .projection-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 14px 0;
+    }
+
+    .monthly-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .monthly-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #4b5563;
+      width: 80px;
+      flex-shrink: 0;
+    }
+    .monthly-stats {
+      display: flex;
+      gap: 24px;
+      flex: 1;
+    }
+    .m-stat { }
+    .m-stat-val {
+      font-size: 16px;
+      font-weight: 800;
+      color: #d1d5db;
+      letter-spacing: -0.4px;
+    }
+    .m-stat-val.revenue { color: #34d399; }
+    .m-stat-label {
+      font-size: 10px;
+      color: #4b5563;
+      margin-top: 1px;
+    }
+    .m-divider {
+      width: 1px;
+      background: rgba(255,255,255,0.06);
+      align-self: stretch;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Outbound GTM Dashboard</h1>
+      <p>Cold email performance &amp; execution playbook</p>
+    </div>
+    <div class="header-right">
+      <div class="badge">Firmable</div>
+      <div class="date-label">As of 11 May 2026</div>
+    </div>
+  </div>
+
+  <!-- Section 1: Metrics -->
+  <div class="section-label">Campaign Performance — 11 Active Campaigns</div>
+  <div class="metrics-grid">
+
+    <div class="metric-card blue">
+      <div class="metric-icon">👥</div>
+      <div class="metric-label">Leads Contacted</div>
+      <div class="metric-value">2,556</div>
+      <div class="metric-sub">of <strong>5,337</strong> total in pipeline</div>
+    </div>
+
+    <div class="metric-card teal">
+      <div class="metric-icon">📧</div>
+      <div class="metric-label">Emails Sent</div>
+      <div class="metric-value">3,550</div>
+      <div class="metric-sub">across all sequences</div>
+    </div>
+
+    <div class="metric-card green">
+      <div class="metric-icon">✅</div>
+      <div class="metric-label">Positive Replies</div>
+      <div class="metric-value">13</div>
+      <div class="metric-sub">manually marked <strong>Interested</strong></div>
+    </div>
+
+    <div class="metric-card amber">
+      <div class="metric-icon">🎯</div>
+      <div class="metric-label">Conversion Rate</div>
+      <div class="metric-value"><span>1 in</span> 197</div>
+      <div class="metric-sub">leads contacted per reply</div>
+    </div>
+
+  </div>
+
+  <!-- Reply Breakdown -->
+  <div class="section-label">Positive Reply Breakdown — by Campaign Type</div>
+  <div class="breakdown-grid">
+
+    <!-- [Campaign] -->
+    <div class="breakdown-card campaign">
+      <div class="breakdown-header">
+        <div class="breakdown-tag campaign">[Campaign]</div>
+        <div class="share-pill campaign">38<sup>%</sup> of replies</div>
+      </div>
+      <div class="breakdown-stats">
+        <div>
+          <div class="bd-stat-label">Contacted</div>
+          <div class="bd-stat-value">1,892</div>
+          <div class="bd-stat-sub">unique leads</div>
+        </div>
+        <div>
+          <div class="bd-stat-label">Positive Replies</div>
+          <div class="bd-stat-value highlight campaign">5</div>
+          <div class="bd-stat-sub">out of 13 total</div>
+        </div>
+        <div>
+          <div class="bd-stat-label">Reply Rate</div>
+          <div class="bd-stat-value">1:378</div>
+          <div class="bd-stat-sub">leads per reply</div>
+        </div>
+      </div>
+      <div class="share-bar-wrap">
+        <div class="share-bar-label"><span>Share of total replies</span><span>38%</span></div>
+        <div class="share-bar-track"><div class="share-bar-fill campaign" style="width:38%"></div></div>
+      </div>
+    </div>
+
+    <!-- [Conference] -->
+    <div class="breakdown-card conference">
+      <div class="breakdown-header">
+        <div class="breakdown-tag conference">[Conference]</div>
+        <div class="share-pill conference">62<sup>%</sup> of replies</div>
+      </div>
+      <div class="breakdown-stats">
+        <div>
+          <div class="bd-stat-label">Contacted</div>
+          <div class="bd-stat-value">664</div>
+          <div class="bd-stat-sub">unique leads</div>
+        </div>
+        <div>
+          <div class="bd-stat-label">Positive Replies</div>
+          <div class="bd-stat-value highlight conference">8</div>
+          <div class="bd-stat-sub">out of 13 total</div>
+        </div>
+        <div>
+          <div class="bd-stat-label">Reply Rate</div>
+          <div class="bd-stat-value">1:83</div>
+          <div class="bd-stat-sub">leads per reply</div>
+        </div>
+      </div>
+      <div class="share-bar-wrap">
+        <div class="share-bar-label"><span>Share of total replies</span><span>62%</span></div>
+        <div class="share-bar-track"><div class="share-bar-fill conference" style="width:62%"></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Pipeline / Meetings -->
+  <div class="section-label">Pipeline Generated — As of 12 May 2026</div>
+  <div class="pipeline-section">
+
+    <div class="pipeline-top">
+      <div>
+        <h2>Meetings &amp; Deals from Outbound</h2>
+        <p>Tracking meetings and deals generated directly from cold outreach. Live data in HubSpot — open the dashboard to see the latest.</p>
+      </div>
+      <a class="hs-link" href="https://app-ap1.hubspot.com/reports-dashboard/24160926/view/153618931" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="white" fill-opacity="0.25"/><path d="M6 4.5C6 3.67 6.67 3 7.5 3h1C9.33 3 10 3.67 10 4.5v.75a1 1 0 0 1-.6.92V7.5l1.8 1.8A3 3 0 1 1 5.5 11a3 3 0 0 1 1.3-2.47V6.17a1 1 0 0 1-.8-.97V4.5Z" fill="white"/></svg>
+        View HubSpot Dashboard
+      </a>
+    </div>
+
+    <div class="pipeline-body">
+
+      <div class="pipe-stat">
+        <div class="pipe-stat-label">Total Meetings</div>
+        <div class="pipe-stat-value accent">4</div>
+        <div class="pipe-stat-sub">generated from outbound replies</div>
+      </div>
+
+      <div class="pipe-stat">
+        <div class="pipe-stat-label">Direct Responses</div>
+        <div class="pipe-stat-value">3</div>
+        <div class="pipe-stat-sub">person reached out to booked directly</div>
+      </div>
+
+      <div class="pipe-stat">
+        <div class="pipe-stat-label">Indirect / Referred</div>
+        <div class="pipe-stat-value">1</div>
+        <div class="pipe-stat-sub">via colleague or not with the person we contacted</div>
+      </div>
+
+      <div class="pipe-stat">
+        <div class="pipe-stat-label">Leads per Meeting</div>
+        <div class="pipe-stat-value muted">639</div>
+        <div class="pipe-stat-sub">leads contacted to generate 1 meeting<br>(2,556 ÷ 4)</div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Section 2: Process -->
+  <div class="section-label">Execution Playbook — Volume + Industry Targeting</div>
+  <div class="process-section">
+
+    <div class="process-header">
+      <h2>The GTM Engine</h2>
+      <div class="always-on-badge">
+        <div class="pulse"></div>
+        Always Running
+      </div>
+    </div>
+
+    <div class="steps">
+
+      <!-- Step 1: Analyze -->
+      <div class="step s1">
+        <div class="step-num">1</div>
+        <div class="step-card">
+          <div class="step-title">Analyze</div>
+          <ul class="step-items">
+            <li>Pull all SMB closed-won deals YTD</li>
+            <li>Surface deals with Fathom call recordings</li>
+            <li>Run Claude Code to identify top 6 industries</li>
+            <li>Map goals, use cases &amp; pain points per vertical</li>
+          </ul>
+          <div class="industry-chips">
+            <span class="chip">Top 6 Industries</span>
+            <span class="chip">Use Cases</span>
+            <span class="chip">Pain Points</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Extract -->
+      <div class="step s2">
+        <div class="step-num">2</div>
+        <div class="step-card">
+          <div class="step-title">Extract</div>
+          <ul class="step-items">
+            <li>Pull SMB companies from Snowflake</li>
+            <li>Filter: sales team size ≤ 4</li>
+            <li>Segment by top industry verticals</li>
+            <li>Export one list per vertical</li>
+          </ul>
+          <div class="industry-chips">
+            <span class="chip" style="background:#e0f2fe;color:#0284c7;">Snowflake</span>
+            <span class="chip" style="background:#e0f2fe;color:#0284c7;">SMB Filter</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Enrich -->
+      <div class="step s3">
+        <div class="step-num">3</div>
+        <div class="step-card">
+          <div class="step-title">Enrich &amp; Find</div>
+          <ul class="step-items">
+            <li>Run Clay enrichment to validate persona fit</li>
+            <li>Find contacts by target title within each company</li>
+            <li>Generate 3 copy angles per vertical</li>
+            <li>Industry-specific personalisation hooks</li>
+          </ul>
+          <div class="industry-chips">
+            <span class="chip" style="background:#d1fae5;color:#059669;">Clay</span>
+            <span class="chip" style="background:#d1fae5;color:#059669;">3 Copy Angles</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Launch -->
+      <div class="step s4">
+        <div class="step-num">4</div>
+        <div class="step-card">
+          <div class="step-title">Launch &amp; Scale</div>
+          <ul class="step-items">
+            <li>Upload to SmartLead campaign per vertical</li>
+            <li>Send ~800 emails per day</li>
+            <li>Replies routed to master inbox</li>
+            <li>Runs continuously — no manual intervention</li>
+          </ul>
+          <div class="industry-chips">
+            <span class="chip" style="background:#fef3c7;color:#d97706;">SmartLead</span>
+            <span class="chip" style="background:#fef3c7;color:#d97706;">Automated</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Projection -->
+    <div class="projection">
+      <div class="projection-header">
+        <div>
+          <h3>Target Throughput &amp; Revenue Projection <span style="font-size:11px;font-weight:500;color:#6b7280;margin-left:8px;">[Campaign] only — excludes Conference</span></h3>
+          <p>5,000 leads/week · 1:378 reply rate · 60% reply→meeting · 95% meeting→deal created · 20% close · $2,500 ACV</p>
+        </div>
+        <div class="capacity-pills">
+          <span class="cap-pill">~1,600 emails/day — APAC</span>
+          <span class="cap-pill">~1,000 leads/day</span>
+          <span class="cap-pill">24/7 Always On</span>
+        </div>
+      </div>
+
+      <!-- Monthly funnel -->
+      <div class="funnel-row">
+        <div class="funnel-label">Monthly</div>
+        <div class="funnel-steps">
+          <div class="funnel-step">
+            <div class="funnel-step-val">20,000</div>
+            <div class="funnel-step-label">Leads Contacted</div>
+            <div class="funnel-step-rate">per month</div>
+          </div>
+          <div class="funnel-arrow">›</div>
+          <div class="funnel-step">
+            <div class="funnel-step-val blue">~53</div>
+            <div class="funnel-step-label">Positive Replies</div>
+            <div class="funnel-step-rate">1 in 378</div>
+          </div>
+          <div class="funnel-arrow">›</div>
+          <div class="funnel-step">
+            <div class="funnel-step-val amber">~32</div>
+            <div class="funnel-step-label">Meetings Booked</div>
+            <div class="funnel-step-rate">60% of replies</div>
+          </div>
+          <div class="funnel-arrow">›</div>
+          <div class="funnel-step">
+            <div class="funnel-step-val" style="color:#f472b6;">~30</div>
+            <div class="funnel-step-label">Deals Created</div>
+            <div class="funnel-step-rate">95% of meetings</div>
+          </div>
+          <div class="funnel-arrow">›</div>
+          <div class="funnel-step">
+            <div class="funnel-step-val purple">~6</div>
+            <div class="funnel-step-label">Closed Won</div>
+            <div class="funnel-step-rate">20% close rate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="projection-divider"></div>
+
+      <!-- Key output callouts -->
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px 18px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:#6b7280;margin-bottom:4px;">Pipeline Generated / Month</div>
+          <div style="font-size:26px;font-weight:800;color:#60a5fa;letter-spacing:-0.8px;">~$75,000</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:2px;">~30 deals × $2,500</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px 18px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:#6b7280;margin-bottom:4px;">Potential Revenue / Month</div>
+          <div style="font-size:26px;font-weight:800;color:#34d399;letter-spacing:-0.8px;">~$15,000</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:2px;">~6 closed won × $2,500</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(96,165,250,0.15);border-radius:8px;padding:14px 18px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:#6b7280;margin-bottom:4px;">Pipeline Generated / Quarter</div>
+          <div style="font-size:26px;font-weight:800;color:#60a5fa;letter-spacing:-0.8px;">~$225,000</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:2px;">~90 deals × $2,500</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(52,211,153,0.15);border-radius:8px;padding:14px 18px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:#6b7280;margin-bottom:4px;">Potential Revenue / Quarter</div>
+          <div style="font-size:26px;font-weight:800;color:#34d399;letter-spacing:-0.8px;">~$45,000</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:2px;">~18 closed won × $2,500</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Next Steps -->
+  <div class="section-label" style="margin-top:48px;">Next Steps</div>
+  <div class="process-section">
+
+    <div class="process-header">
+      <div>
+        <h2>Launch Campaigns Across Top Industries</h2>
+        <p style="font-size:13px;color:#6b7280;margin-top:4px;">Always-on outbound — one campaign per vertical, running continuously</p>
+      </div>
+      <a class="hs-link" href="https://asher-firmable.github.io/firmable-analysis/" target="_blank" style="background:#4f46e5;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 2l5 5-5 5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        View Vertical Analysis
+      </a>
+    </div>
+
+    <!-- Industry targets -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px;">
+      <div style="background:#f8f9fb;border:1px solid #e8eaed;border-left:3px solid #4f46e5;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:#0f1117;margin-bottom:2px;">Recruitment SaaS / Software</div>
+        <div style="font-size:11px;color:#9ca3af;">HR tech, ATS, staffing platforms</div>
+      </div>
+      <div style="background:#f8f9fb;border:1px solid #e8eaed;border-left:3px solid #0284c7;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:#0f1117;margin-bottom:2px;">IT / MSPs</div>
+        <div style="font-size:11px;color:#9ca3af;">Managed service providers, IT resellers</div>
+      </div>
+      <div style="background:#f8f9fb;border:1px solid #e8eaed;border-left:3px solid #d97706;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:#0f1117;margin-bottom:2px;">Construction</div>
+        <div style="font-size:11px;color:#9ca3af;">Builders, contractors, project managers</div>
+      </div>
+      <div style="background:#f8f9fb;border:1px solid #e8eaed;border-left:3px solid #059669;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:#0f1117;margin-bottom:2px;">Trade / Trade Finance</div>
+        <div style="font-size:11px;color:#9ca3af;">Import/export, trade lending, logistics</div>
+      </div>
+      <div style="background:#f8f9fb;border:1px solid #e8eaed;border-left:3px solid #7c3aed;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:#0f1117;margin-bottom:2px;">Fintech / Brokers</div>
+        <div style="font-size:11px;color:#9ca3af;">Lenders, mortgage brokers, payments</div>
+      </div>
+      <div style="background:#f8f9fb;border:1px solid #e8eaed;border-left:3px solid #db2777;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:#0f1117;margin-bottom:2px;">Professional Services</div>
+        <div style="font-size:11px;color:#9ca3af;">Accounting, legal, consulting firms</div>
+      </div>
+      <div style="background:#f8f9fb;border:1px solid #e8eaed;border-left:3px solid #0891b2;border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:#0f1117;margin-bottom:2px;">B2B Services</div>
+        <div style="font-size:11px;color:#9ca3af;">Agency, outsourcing, business services</div>
+      </div>
+      <div style="background:#f8f9fb;border:1px solid #e8eaed;border-left:3px solid #e8eaed;border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:center;">
+        <div style="font-size:12px;color:#d1d5db;font-weight:600;">+ more verticals over time</div>
+      </div>
+    </div>
+
+    <!-- Challenges -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:12px;">Key Challenges</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:18px 18px 16px;">
+        <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:8px;">Enrichment Layer Overhead</div>
+        <div style="font-size:12px;color:#78350f;line-height:1.6;">
+          Every list requires a full enrichment pass before sending. After extracting from Snowflake, companies must be validated through Clay, pushed back into Firmable, then downloaded before outreach begins. Copywriting per vertical adds further lead time — the ramp-up phase is the hardest part.
+        </div>
+      </div>
+
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:18px 18px 16px;">
+        <div style="font-size:13px;font-weight:700;color:#991b1b;margin-bottom:8px;">Q3 Capacity Pressure</div>
+        <div style="font-size:12px;color:#7f1d1d;line-height:1.6;">
+          Running industry campaigns in parallel with a heavy Q3 events calendar creates real bandwidth risk. Conference prep, exhibitor outreach, and event follow-up all compete for the same resources — this needs to be sequenced carefully to avoid dropping either workstream.
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>
