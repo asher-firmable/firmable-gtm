@@ -42,6 +42,7 @@ HS_PROPERTIES = [
     "hubspot_owner_id",
     "sdr__new_", "sdr_nz", "sdr_sea",
     "outreach_engagement_status", "outreach_engagement_statussea",
+    "customer_status",
     "notes_last_contacted",
 ]
 
@@ -57,6 +58,7 @@ OUTPUT_COLUMNS = [
     "sdr_sea",
     "outreach_engagement_status",
     "outreach_engagement_status_sea",
+    "customer_status",
     "sales_team_au",
     "sales_team_nz",
     "sales_team_sea",
@@ -248,6 +250,7 @@ def build_row(
         "sdr_sea": props.get("sdr_sea") or "",
         "outreach_engagement_status": props.get("outreach_engagement_status") or "",
         "outreach_engagement_status_sea": props.get("outreach_engagement_statussea") or "",
+        "customer_status": props.get("customer_status") or "",
         "sales_team_au": firmable["sales_team_au"],
         "sales_team_nz": firmable["sales_team_nz"],
         "sales_team_sea": firmable["sales_team_sea"],

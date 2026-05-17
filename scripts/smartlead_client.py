@@ -46,3 +46,21 @@ class SmartLeadClient:
         """
         payload = {"sequences": steps}
         return self._post(f"/campaigns/{campaign_id}/sequences", payload)
+
+    def get_campaign_leads(self, campaign_id: str, status: str = None, limit: int = 100, offset: int = 0) -> dict:
+        params = {"limit": limit, "offset": offset}
+        if status:
+            params["status"] = status
+        return self._get(f"/campaigns/{campaign_id}/leads", params=params)
+
+    def get_lead_message_history(self, campaign_id: str, lead_id: int) -> dict:
+        return self._get(f"/campaigns/{campaign_id}/leads/{lead_id}/message-history")
+
+    def get_untracked_replies(self, limit: int = 100, offset: int = 0) -> dict:
+        return self._get("/master-inbox/untracked-replies", params={"limit": limit, "offset": offset})
+
+    def get_campaign_sequences(self, campaign_id: str) -> list:
+        return self._get(f"/campaigns/{campaign_id}/sequences")
+
+    def get_campaign_analytics(self, campaign_id: str) -> dict:
+        return self._get(f"/campaigns/{campaign_id}/analytics")

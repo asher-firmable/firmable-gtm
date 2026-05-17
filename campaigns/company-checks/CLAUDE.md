@@ -36,3 +36,9 @@ Domains with ccTLDs (e.g. `shopify.com.au`) are reduced to their root domain (`s
 - `input/*.csv` is gitignored — never commit input data
 - Required env var: `HUBSPOT_ACCESS_TOKEN` in `.env`
 - Run from repo root with `PYTHONPATH=.`
+
+## Subfolders
+
+| Subfolder | Purpose | Command |
+|---|---|---|
+| `description-check/` | AI yes/no question evaluated against company descriptions — no API key required | `/description-check` |

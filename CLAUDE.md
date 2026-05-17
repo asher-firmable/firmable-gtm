@@ -66,6 +66,10 @@ firmable-gtm-engineering/
 │   │   ├── run_pipeline.py          ← Full ANZ pipeline: eligibility → size filter → normalise → persona → final
 │   │   ├── ANZ_SMB_SaaS/
 │   │   │   └── Software_General_Outreach/ ← ANZ SMB SaaS/Software general outreach (sales team ≤4)
+│   │   ├── bdo-deal-advisory/       ← BDO Australia Deal Advisory people scrape → contact list
+│   │   │   ├── CLAUDE.md            ← Sub-agent: scrape BDO Our People (Deal Advisory)
+│   │   │   ├── scrape_people.py     ← Playwright scraper → output/people.csv
+│   │   │   └── output/              ← Scraped CSVs (gitignored)
 │   │   └── events-outbound/         ← ANZ event/expo exhibitor outreach campaigns
 │   │       ├── CLAUDE.md            ← Events outbound conventions
 │   │       └── sydney-build-expo-2026/
@@ -85,10 +89,16 @@ firmable-gtm-engineering/
 │   │       ├── scrape_exhibitors.py ← requests+BS4 scraper → output/exhibitors.csv
 │   │       ├── run_pipeline.py      ← Full pipeline: scrape → copy → enrich (sales team sizes)
 │   │       └── output/              ← Scraped CSVs (gitignored)
-│   ├── company-checks/              ← Pre-campaign HubSpot eligibility gate (any region)
+│   ├── company-checks/              ← Pre-campaign eligibility gates (any region)
 │   │   ├── CLAUDE.md                ← Sub-agent: filter logic, input/output conventions
 │   │   ├── input/                   ← Drop company CSV here before running /smartlead-pre-campaign-check
-│   │   └── output/                  ← Eligible company CSVs (gitignored)
+│   │   ├── output/                  ← Eligible company CSVs (gitignored)
+│   │   └── description-check/       ← AI yes/no question evaluated against company descriptions
+│   │       ├── CLAUDE.md            ← Sub-agent: input/output conventions, how to run
+│   │       ├── input/               ← Drop CSV or Excel here before running /description-check
+│   │       ├── output/              ← Checked CSVs (gitignored)
+│   │       └── scripts/
+│   │           └── description_check.py ← Extract batch for Claude to evaluate; write results to CSV
 │   └── quick-sales-team-size-check/ ← Ad-hoc enrichment: ANZ/SEA/US sales team size from domain or Firmable ID
 │       ├── CLAUDE.md                ← Sub-agent: input/output conventions, how to run
 │       ├── input/                   ← Drop CSV or Excel here before running
@@ -138,13 +148,15 @@ firmable-gtm-engineering/
     │   ├── firmable-api/            ← FirmableClient patterns
     │   ├── smartlead-push/          ← SmartLead campaign upload (confirm before activating)
     │   ├── hubspot-sync/            ← CRM create/update (dedup on email/domain)
-    │   └── n8n-export/              ← Convert pipelines to n8n JSON
+    │   ├── n8n-export/              ← Convert pipelines to n8n JSON
+    │   └── creative-ideas-campaign/ ← Full Clay table design + all AI column prompts for wide APAC SMB outbound
     └── commands/                    ← Slash commands
         ├── new-campaign.md                    ← /new-campaign — campaign setup wizard
         ├── qualify-list.md                    ← /qualify-list — run classifier on CSV
         ├── generate-copy.md                   ← /generate-copy — generate email copy
         ├── smartlead-pre-campaign-check.md    ← /smartlead-pre-campaign-check — company eligibility gate
-        └── event-exhibitor-check.md           ← /event-exhibitor-check — HubSpot + Firmable enrichment for event exhibitor lists
+        ├── event-exhibitor-check.md           ← /event-exhibitor-check — HubSpot + Firmable enrichment for event exhibitor lists
+        └── description-check.md               ← /description-check — AI yes/no question against company descriptions
 ```
 
 ---
@@ -153,7 +165,9 @@ firmable-gtm-engineering/
 
 | Task | Go to |
 |---|---|
+| Build or modify the wide APAC SMB creative ideas campaign (Clay table + AI column prompts) | `.claude/skills/creative-ideas-campaign/SKILL.md` |
 | SmartLead pre-campaign eligibility gate (any region — filter trial/comms/tasks) | `campaigns/company-checks/` + `/smartlead-pre-campaign-check` |
+| Check company descriptions against a yes/no question (e.g. "Is this a staffing agency?") | `campaigns/company-checks/description-check/` + `/description-check` |
 | Check company list against HubSpot before upload (SEA or any region) | `projects/sea-company-upload/` |
 | Enrich accounts with regional headcount + AI notes + HubSpot sync (SEA) | `projects/account-level-enrichment-sea/` |
 | Classify new-role contacts against ICP (job-change signal activation) | `projects/signal-contact-activation/` |
@@ -161,6 +175,7 @@ firmable-gtm-engineering/
 | Find contacts at specific companies | `projects/slack-bots/find-contacts/` |
 | Manage campaign data | `campaigns/` |
 | ANZ SMB SaaS/Software general outreach (sales team ≤4) | `campaigns/anz/ANZ_SMB_SaaS/Software_General_Outreach/` |
+| Scrape BDO Australia Deal Advisory people into a contact list | `campaigns/anz/bdo-deal-advisory/` |
 | Scrape ANZ event/expo exhibitor lists | `campaigns/anz/events-outbound/` |
 | Enrich event exhibitor list with HubSpot + Firmable data | `/event-exhibitor-check` |
 | Scrape SEA conference/expo exhibitor lists | `campaigns/sea-conferences/` |

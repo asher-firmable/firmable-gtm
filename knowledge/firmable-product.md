@@ -21,12 +21,31 @@ Firmable operates across three layers:
 - Verified local mobile numbers (22% connect rate vs ~5% industry avg, 95%+ mobile accuracy)
 - Firmographics: industry, revenue, employee count, location, ABN/NZBN identifiers
 - Contact data: verified mobiles, work emails, LinkedIn profiles, job titles, seniority
-- Technographics: tech stack adoption and changes
+- Technographics: tech stack detection via dual-source — WebAlyzer (website analysis) + job description analysis. Stronger than single-source competitors.
+- Additional filters: multi-location/franchise count, employee count, social media following, Google reviews/rating
 - Australian Do Not Call Register — built-in, no global competitor has this
 - Entity resolution: connects parent companies, subsidiaries, franchises (critical for ANZ franchise-heavy economy)
 
 ### 2. Buying Signals Engine
-AI agents continuously monitor for: leadership changes, funding rounds, hiring surges, company expansions, technology adoption changes, search intent (as of January 2026 — shows which companies are actively researching relevant topics). Signals surface as daily alerts tied to CRM accounts.
+AI agents continuously monitor and surface daily alerts tied to CRM accounts. Filterable by recency and country.
+
+**People signals** (filterable by department, seniority, recency, job title, country):
+- New joiner / new in role — first 90 days = peak vendor evaluation window
+- Leaver — person who just left a role may be open to new opportunities
+- Role change — shift in mandate, open to new tools
+
+**Company signals** (filterable by key topics, summary, recency, country):
+- New c-suite appointment / leadership change / new joiner / leaver
+- Mergers and acquisitions / reorganisation and restructuring
+- New product and service launch / product and business expansion
+- Recruitment and hiring / new job posted
+- Partnership announcement / strategy updates
+- Certifications and accreditations / awards and recognitions
+- Market trends and insights / thought leadership content / competitive intelligence
+- Compliance updates / modern slavery statements
+- Also tracked (use with caution): litigation/regulatory issues, service disruptions, bankruptcy
+
+Search intent signals (Enterprise add-on, Jan 2026): shows which companies are actively researching relevant topics.
 
 ### 3. AI-Powered Workflows
 - Natural-language ICP definition (describe ICP in plain English → auto-generate prospect lists)
@@ -34,6 +53,16 @@ AI agents continuously monitor for: leadership changes, funding rounds, hiring s
 - CRM enrichment agents (keep HubSpot, Salesforce, Pipedrive, MS Dynamics fresh automatically)
 - Chrome/Edge browser extension (surfaces contact details while browsing LinkedIn or any site)
 - API access for custom automation workflows
+
+---
+
+## AU Registers
+
+Firmable has access to official Australian government and industry registries — not scraped lists. Strong credibility claim for niche verticals.
+
+**Company registers (AU):** ACECQA child care providers, AFS license holders, Allied health providers, ASIAL security providers, ASX listed companies, Australian disability enterprises, B corp certified, Biotech, Catholic/independent/public schools (by state), Child care / family child care / kindergarten providers, Civil & infrastructure, Commercial/residential builders, Construction (design, engineering, management, consulting, materials, energy/oil/gas), Dentists, Aged care / elderly healthcare / mental health / health support / emergency health / paediatric / pathology / radiology / general practices / medical specialists / physiotherapy / NDIS providers / registered hospitals, Electrical / mechanical / plumbing / HVAC contractors, Federal/state/local government organisations, Finance brokers / mortgage brokers / registered banks / financial corporations / general & health & life insurers, Fintech Australia, Food processing suppliers, Franchise operators, Indigenous business directory, IATA, Institute of chartered accountants, Media/TV/radio stations, Mergers and acquisitions, Motor dealers, NDIS providers, Pharmacies / pharmaceuticals, Pubs and hotels / restaurants / casinos, Real estate agencies, Registered charities / training organisations / universities, R&D tax incentive entities, Startups / VC funded companies / VCs & investors / start-up funding register, Transport companies, Worksafe prosecutions, and more.
+
+**People registers (AU):** Angel investors, ASX directors, Chartered accountants, Conference speakers, Finance brokers, Mortgage brokers, Real estate agents.
 
 ---
 
@@ -119,4 +148,4 @@ AI agents continuously monitor for: leadership changes, funding rounds, hiring s
 
 ---
 
-*Last updated: March 2026. Update this file when product changes, pricing changes, or new features launch.*
+*Last updated: May 2026. Update this file when product changes, pricing changes, or new features launch.*
