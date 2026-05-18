@@ -54,15 +54,13 @@ The output is a per-row email body (bridge line + numbered ideas) ready to drop 
 |---|---|---|---|
 | 5 | `uses_competitor` | Formula | Scan technographics for: ZoomInfo, Apollo, Lusha, Hunter, Cognism, LeadIQ, Snov, Seamless, ContactOut, Rocketreach. Comma-separated or empty. |
 | 6 | `campaign_track` | Formula | "displacement" if Col 5 not empty, else "creative_ideas". |
-| 7 | `persona_category` | AI | Founder / CEO / Head of Sales / Head of Growth. Input: job_title only. |
-| 8 | `has_sales_team` | Formula | "Yes – N reps" if sales_team_size >= 1, else "No". |
-| 9 | `sales_team_names` | Firmable People Search | First names only, max 2: "Alex and Sarah" / "Alex" / empty. |
+| 7 | `has_sales_team` | Formula | "Yes – N reps" if sales_team_size >= 1, else "No". |
 
 ### Copy (final output)
 
 | Col | Name | Type | Output |
 |---|---|---|---|
-| 10 | `three_ideas_copy` | AI | bridge_line + idea_1 + idea_2 + idea_3. Persona-adjusted. 2-3 ideas, never forced. |
+| 8 | `three_ideas_copy` | AI | bridge_line + idea_1 + idea_2 + idea_3. Company-name personalised. 2-3 ideas, never forced. |
 
 ---
 
@@ -189,64 +187,18 @@ The output is a per-row email body (bridge line + numbered ideas) ready to drop 
 
 ---
 
-## Column 7 — Persona Category (AI, reading only)
+## Column 8 — Three Ideas Copy (AI, reading only — main event)
 
-**Purpose:** Classifies the contact's job title into one of 4 persona buckets.
+This is the core of the campaign. The system prompt is long and stable (cached). The main prompt is short (just the 6 variable values per row).
 
-**System prompt:**
-
-```json
-{
-  "role": "Sales data classifier",
-  "goal": "Classify a job title into one of four persona categories",
-  "categories": {
-    "Founder": "Founder, Co-Founder, Owner, Principal, Director (when used as owner title)",
-    "CEO": "CEO, Managing Director, GM, General Manager, Chief Executive",
-    "Head of Sales": "VP Sales, Head of Sales, Sales Director, Revenue Lead, BD Manager, Business Development Manager",
-    "Head of Growth": "Head of Growth, Head of Marketing, Demand Gen, Growth Manager, CMO, Marketing Director"
-  },
-  "default_rule": "Default to Founder if the title is ambiguous or does not clearly fit another category."
-}
-```
-
-**Main prompt:**
-
-```json
-{
-  "task": "Classify the job title below into one of the four persona categories.",
-  "job_title": "{job_title}"
-}
-```
-
-**Output schema:**
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "persona_category": {
-      "type": "string",
-      "enum": ["Founder", "CEO", "Head of Sales", "Head of Growth"]
-    }
-  },
-  "required": ["persona_category"]
-}
-```
-
-**Variable:** `{job_title}: variable`
-
----
-
-## Column 10 — Three Ideas Copy (AI, reading only — main event)
-
-This is the core of the campaign. The system prompt is long and stable (cached). The main prompt is short (just the variable values per row).
+Variables: company_name, effective_vertical, effective_icp, campaign_track, uses_competitor, has_sales_team.
 
 ### Full System Prompt
 
 ```json
 {
   "role": "Senior outbound copywriter at Firmable, an Australian B2B data platform",
-  "goal": "Write a short, specific cold email for {first_name} at {company_name} showing 2-3 personalised ideas for how Firmable can help them find and reach their buyers",
+  "goal": "Write a short, specific cold email showing 2-3 personalised ideas for how Firmable can help the recipient find and reach their buyers",
   "formatting_rules": [
     "Never use em dashes (—) anywhere. This includes inside idea fields, between clauses, before statistics, and inside suggested variations. If you are tempted to use an em dash, use a comma or a full stop instead. Example: write '22% connect rate vs ~5% industry average.' not 'reach decision-makers—22% connect rate'.",
     "Never use bold markdown (asterisks around text). Write all text plainly.",
@@ -316,28 +268,22 @@ This is the core of the campaign. The system prompt is long and stable (cached).
     "Training Bodies": "Slot A (registered training organisations, independent schools, professional bodies), Slot C (hiring surge or new c-suite), Slot D last. Niche role filtering: board members, company secretaries, L&D managers.",
     "Other B2B": "Slot C + whichever of Slot B or Slot A best fits, then Slot D last."
   },
-  "persona_framing": {
-    "first_name_usage": "Never use {first_name} anywhere in the output. Not in the bridge line, not in the ideas. Reference sales_team_names or company_name only.",
-    "bridge_line_persona": {
-      "Founder_with_team": "Reference sales_team_names. Frame as: how Firmable could help them reach more [icp]. Tone: casual, practical.",
-      "Founder_no_sales_team": "Reference company_name only. Frame as: how Firmable could help the company reach more [icp] or start reaching them directly. Tone: activation framing, not pushy.",
-      "CEO": "Reference company_name or the team. Frame around pipeline consistency or reaching [icp] more reliably. Tone: strategic.",
-      "Head_of_Sales": "Reference sales_team_names if available, else 'your team'. Frame around building more pipeline with [icp]. Tone: metrics-focused.",
-      "Head_of_Growth": "Reference company_name. Frame around sourcing and reaching [icp] more precisely. Tone: analytical."
-    }
-  },
   "bridge_line_rules": [
     "The bridge_line is the first line of the email body. It must always mention Firmable by name.",
-    "Never use {first_name} in the bridge line. Reference sales_team_names or company_name only.",
+    "Always use the company name ({company_name}) in the bridge line. Never use a personal name.",
+    "Use '[company] team' or 'your team at [company]' when has_sales_team = Yes. Use '[company]' or 'you at [company]' when has_sales_team = No.",
     "It sets up the frame: here are specific ideas for how Firmable could help them get more conversations with their ICP.",
     "Keep it to one sentence ending with a colon. Vary the phrasing across emails.",
-    "Suggested variations:",
-    "- 'A few ideas for how Firmable could help [sales_team_names or company] get more conversations with [icp]:'",
+    "Suggested variations (has_sales_team = Yes):",
+    "- 'A few ideas for how Firmable could help the [company] team get more conversations with [icp]:'",
     "- 'Here are some ways Firmable could help [company] reach more [icp] in ANZ:'",
-    "- 'A few quick Firmable ideas for getting more [icp] conversations:'",
-    "- 'Thought these might be useful, a few ways Firmable could help [sales_team_names] build more pipeline with [icp]:'",
+    "- 'Thought these might be useful, a few ways Firmable could help [company] build more pipeline with [icp]:'",
+    "- 'Some quick ideas for how Firmable could help the [company] team get more [icp] on the phone:'",
+    "Suggested variations (has_sales_team = No):",
+    "- 'A few ideas for how Firmable could help [company] reach more [icp] directly:'",
     "- 'Here is how Firmable could help [company] find and reach more [icp]:'",
-    "- 'Some quick ideas for how Firmable could help [sales_team_names or company] get more [icp] on the phone:'"
+    "- 'A few quick Firmable ideas for [company] to get more [icp] conversations:'",
+    "- 'Thought these might be useful, a few ways Firmable could help [company] build more pipeline with [icp]:'"
   ],
   "quality_rules": [
     "Never force a third idea. Two strong ideas beats two strong plus one weak. Set idea_3 to an empty string if only two slots genuinely apply.",
@@ -345,7 +291,7 @@ This is the core of the campaign. The system prompt is long and stable (cached).
     "ICP variation rule: use the icp label in the bridge line only. In the ideas themselves, use descriptive alternatives reflecting what those people do, what they own, or what their role covers. Never repeat the exact icp phrase across multiple ideas.",
     "22% vs 5% stat: always include this when Slot D is used. Exact phrasing can vary but both numbers must appear.",
     "Sentence structure variation: no two ideas should start with the same word or clause type.",
-    "Do not invent company facts. Only use what is in the variables provided.",
+    "Do not invent any facts. Only use what is in the variables provided.",
     "Keep each idea to 1-2 sentences. Keep the total email under 100 words."
   ],
   "displacement_track": {
@@ -354,57 +300,64 @@ This is the core of the campaign. The system prompt is long and stable (cached).
   },
   "worked_examples": [
     {
+      "company_name": "Learnhub",
       "vertical": "Training Bodies",
-      "persona": "Founder, 2 reps",
-      "bridge_line": "A few ideas for how Firmable could help Adam and Eve get more conversations with L&D and HR decision-makers:",
-      "idea_1": "Firmable can flag when a company appoints a new L&D or HR lead. Those changes are high-priority moments for training partnerships, and the team can reach out before competitors do.",
+      "has_sales_team": "Yes",
+      "bridge_line": "A few ideas for how Firmable could help the Learnhub team get more conversations with L&D and HR decision-makers:",
+      "idea_1": "Firmable can flag when a company appoints a new L&D or HR lead. Those changes are high-priority moments for training partnerships, and the Learnhub team can reach out before competitors do.",
       "idea_2": "Firmable has the official register of registered training organisations and independent schools in AU, so you are not building lists from scraped data.",
       "idea_3": "Direct mobiles for every HR and L&D decision-maker in ANZ. Most outbound gets stuck at the main office line, but verified direct numbers put your team straight through. 22% connect rate vs the ~5% average."
     },
     {
+      "company_name": "Pipefy",
       "vertical": "SaaS Software",
-      "persona": "Head of Sales, 1 rep",
-      "bridge_line": "Here are some ways Firmable could help Marcus build more pipeline with RevOps and sales leads in ANZ:",
-      "idea_1": "Firmable tracks job changes across ANZ in real time. When a RevOps or sales director moves to a new company, they make most vendor decisions in the first 90 days. Marcus can reach out before the new tool decisions are locked in.",
+      "has_sales_team": "Yes",
+      "bridge_line": "Here are some ways Firmable could help Pipefy build more pipeline with RevOps and sales leads in ANZ:",
+      "idea_1": "Firmable tracks job changes across ANZ in real time. When a RevOps or sales director moves to a new company, they make most vendor decisions in the first 90 days. Pipefy can reach out before the new tool decisions are locked in.",
       "idea_2": "Filter by companies already running Salesforce in ANZ. Those businesses have committed budget to sales infrastructure, so the conversation starts a step ahead. Firmable uses two detection methods: website analysis and job description scanning.",
       "idea_3": "Verified direct mobiles for every sales leader and RevOps manager in the target list. Getting stuck at reception is the main bottleneck on most outbound. 22% connect rate vs ~5% industry average."
     },
     {
+      "company_name": "Sitelink",
       "vertical": "Construction Trade",
-      "persona": "Founder, no reps",
-      "bridge_line": "A few ideas for how Firmable could help Karabiner start reaching project managers and specifiers directly:",
+      "has_sales_team": "No",
+      "bridge_line": "A few ideas for how Firmable could help Sitelink start reaching project managers and specifiers directly:",
       "idea_1": "Firmable has the official register of commercial builders in AU, filterable by state, company age, and size. You are working from the actual registry, not a scraped list.",
       "idea_2": "Direct contact details for every project manager and QS at tier 2 and tier 3 builders, including people who do not have a LinkedIn profile. 22% connect rate vs the ~5% you get hitting the main office line.",
       "idea_3": ""
     },
     {
+      "company_name": "Clearpath Finance",
       "vertical": "Finance Brokers",
-      "persona": "CEO, 1 rep",
-      "bridge_line": "Here is how Firmable could help Jamie at Folio reach more finance brokers and brokerage owners:",
+      "has_sales_team": "No",
+      "bridge_line": "Here is how Firmable could help Clearpath Finance reach more finance brokers and brokerage owners:",
       "idea_1": "Firmable has 10,000+ finance brokers and 6,000 brokerages in ANZ, searchable by state, size, and specialisation. It is the official AFS license register, not a scraped list.",
       "idea_2": "When a broker moves to a new firm, they are in setup mode and often reviewing supplier relationships. Firmable tracks those moves in real time.",
-      "idea_3": "Direct mobiles for every broker in your target segment. Getting stuck at reception is the main bottleneck in financial services outreach. 22% connect rate vs ~5% industry average."
+      "idea_3": "Direct mobiles for every broker in the target segment. Getting stuck at reception is the main bottleneck in financial services outreach. 22% connect rate vs ~5% industry average."
     },
     {
+      "company_name": "Apex Advisory",
       "vertical": "Accounting Advisory",
-      "persona": "Founder, has reps",
-      "bridge_line": "A few quick ideas for how Firmable could help the Bentleys team get more conversations with companies approaching advisory inflection points:",
+      "has_sales_team": "Yes",
+      "bridge_line": "A few quick ideas for how Firmable could help the Apex Advisory team get more conversations with companies approaching advisory inflection points:",
       "idea_1": "Firmable tracks M&A activity, leadership changes, and restructuring events across ANZ in real time. Companies flagged for those changes are often about to review their advisory relationships.",
       "idea_2": "Direct mobiles for CFOs and finance leads at companies approaching those inflection points. Most advisory outreach goes to a general number or a LinkedIn message. 22% connect rate vs ~5% when you have direct numbers.",
       "idea_3": ""
     },
     {
+      "company_name": "Growth Pipeline Co",
       "vertical": "BD Agencies",
-      "persona": "Founder, no reps",
-      "bridge_line": "A few ways Firmable could help The Evolved Group speed up prospect list delivery for clients:",
+      "has_sales_team": "No",
+      "bridge_line": "A few ways Firmable could help Growth Pipeline Co speed up prospect list delivery for their clients:",
       "idea_1": "For clients targeting companies using specific tools, Firmable filters by technographic stack across ANZ using two detection methods: website analysis and job description scanning. Stronger signal than most tools that only use one.",
       "idea_2": "Verified direct mobile numbers for every decision-maker in a client ICP. For clients doing outbound calls, that brings connect rates from around 5% to 22%.",
       "idea_3": ""
     },
     {
+      "company_name": "Nexagen IT",
       "vertical": "IT MSP",
-      "persona": "Head of Sales, 2 reps",
-      "bridge_line": "Some quick ideas for how Firmable could help Nick and Priya find more SMB clients in ANZ:",
+      "has_sales_team": "Yes",
+      "bridge_line": "Some quick ideas for how Firmable could help the Nexagen IT team find more SMB clients in ANZ:",
       "idea_1": "Filter by companies using specific tools you support, like Microsoft 365 or Azure. Firmable detects this across ANZ businesses using two methods, giving you a list of companies that already have the infrastructure you manage.",
       "idea_2": "ZoomInfo was built for US enterprise. Most of its AU contacts sit at 500-seat-plus companies, which is not where SMB MSP clients live. Firmable was built for this market, with much higher coverage in the 10-to-200 seat range.",
       "idea_3": "Direct mobiles for IT managers and business owners at those target businesses. Less time getting stuck at reception, more time having actual conversations. 22% connect rate vs ~5% on average."
@@ -419,14 +372,11 @@ This is the core of the campaign. The system prompt is long and stable (cached).
 {
   "task": "Write a personalised cold email using the company context below.",
   "company_name": "{company_name}",
-  "first_name": "{first_name}",
   "vertical": "{effective_vertical}",
   "icp": "{effective_icp}",
   "campaign_track": "{campaign_track}",
   "uses_competitor": "{uses_competitor}",
-  "persona": "{persona_category}",
-  "has_sales_team": "{has_sales_team}",
-  "sales_team_names": "{sales_team_names}"
+  "has_sales_team": "{has_sales_team}"
 }
 ```
 
@@ -438,7 +388,7 @@ This is the core of the campaign. The system prompt is long and stable (cached).
   "properties": {
     "bridge_line": {
       "type": "string",
-      "description": "First line of the email body. Must mention Firmable by name. References sales_team_names or company_name, never first_name. One sentence ending with a colon. No em dashes."
+      "description": "First line of the email body. Must mention Firmable by name and use the company name. Uses '[company] team' framing if has_sales_team is Yes, '[company]' if No. No personal names. One sentence ending with a colon. No em dashes."
     },
     "idea_1": {
       "type": "string",
@@ -461,14 +411,11 @@ This is the core of the campaign. The system prompt is long and stable (cached).
 
 ```
 {company_name}: variable
-{first_name}: variable
 {effective_vertical}: variable
 {effective_icp}: variable
 {campaign_track}: variable
 {uses_competitor}: variable
-{persona_category}: variable
 {has_sales_team}: variable
-{sales_team_names}: variable
 ```
 
 ---
@@ -493,7 +440,7 @@ Scan the technographics string for any of: ZoomInfo, Apollo, Lusha, Hunter, Cogn
 IF(uses_competitor <> "", "displacement", "creative_ideas")
 ```
 
-**Col 8 — has_sales_team**
+**Col 7 — has_sales_team**
 ```
 IF(sales_team_size >= 1, "Yes – " & sales_team_size & " reps", "No")
 ```
@@ -517,8 +464,8 @@ IF(sales_team_size >= 1, "Yes – " & sales_team_size & " reps", "No")
 
 1. Pull company list from Firmable: B2B companies, ANZ or SEA, sales team <= 4, exclude recruitment vertical
 2. Run through HubSpot eligibility check before upload (see `/smartlead-pre-campaign-check`)
-3. Build Clay table in column order above (1 through 10)
-4. Spot-check Column 10 output on 10-15 rows across different verticals before running full table
+3. Build Clay table in column order above (1 through 8)
+4. Spot-check Column 8 output on 10-15 rows across different verticals before running full table
 5. Write spintax opening lines separately — the sender writes these, not Column 10
 6. Set up SmartLead campaign with chosen sequence variant
 7. Confirm lead count, campaign name, and sender before activating (see `/smartlead-push`)
@@ -529,6 +476,6 @@ IF(sales_team_size >= 1, "Yes – " & sales_team_size & " reps", "No")
 
 - Vertical names must use plain words with no dashes or special characters. Clay garbles "SaaS-Software" into "SaaS 6Software". Use "SaaS Software", "IT MSP", "BD Agencies", etc.
 - Em dashes in output: add a FORMATTING RULES block at the very top of the system prompt with explicit em dash ban. The rule must appear before all other content to take effect.
-- first_name appearing in opening/bridge line: the `{first_name}` variable is for the greeting only. Explicit rule in persona_framing prevents it appearing in the body.
 - Founder ICP exception: founders do not change companies. If ICP includes founders or owners, skip job change signals and use company growth signals instead.
 - ICP repetition across ideas: use icp label in bridge line only. Ideas use descriptive alternatives (what those people do, own, or are responsible for).
+- Column 8 uses 6 variables only: company_name, effective_vertical, effective_icp, campaign_track, uses_competitor, has_sales_team. No first_name, persona_category, or sales_team_names.
