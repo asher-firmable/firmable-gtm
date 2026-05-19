@@ -149,7 +149,8 @@ firmable-gtm-engineering/
     │   ├── smartlead-push/          ← SmartLead campaign upload (confirm before activating)
     │   ├── hubspot-sync/            ← CRM create/update (dedup on email/domain)
     │   ├── n8n-export/              ← Convert pipelines to n8n JSON
-    │   └── creative-ideas-campaign/ ← Full Clay table design + all AI column prompts for wide APAC SMB outbound
+    │   ├── creative-ideas-campaign-anz/ ← Clay table + AI column prompts for wide ANZ SMB outbound (AU registers, 22% stat)
+    │   └── creative-ideas-campaign-sea/ ← Clay table + AI column prompts for wide SEA SMB outbound (coverage + AU/SG HQ angle)
     └── commands/                    ← Slash commands
         ├── new-campaign.md                    ← /new-campaign — campaign setup wizard
         ├── qualify-list.md                    ← /qualify-list — run classifier on CSV
@@ -165,7 +166,8 @@ firmable-gtm-engineering/
 
 | Task | Go to |
 |---|---|
-| Build or modify the wide APAC SMB creative ideas campaign (Clay table + AI column prompts) | `.claude/skills/creative-ideas-campaign/SKILL.md` |
+| Build or modify the ANZ creative ideas campaign (Clay table + AI column prompts) | `.claude/skills/creative-ideas-campaign-anz/SKILL.md` |
+| Build or modify the SEA creative ideas campaign (Clay table + AI column prompts) | `.claude/skills/creative-ideas-campaign-sea/SKILL.md` |
 | SmartLead pre-campaign eligibility gate (any region — filter trial/comms/tasks) | `campaigns/company-checks/` + `/smartlead-pre-campaign-check` |
 | Check company descriptions against a yes/no question (e.g. "Is this a staffing agency?") | `campaigns/company-checks/description-check/` + `/description-check` |
 | Check company list against HubSpot before upload (SEA or any region) | `projects/sea-company-upload/` |
