@@ -105,7 +105,7 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
       "Technographic filters using dual-source detection: website analysis plus job description analysis. Stronger than tools using only one method.",
       "Buying signals: people signals (new in role, role change, leaver) and company signals (hiring surge, M&A, new product launch, leadership change, funding, business expansion).",
       "ICP filtering by industry, company size, location, sales team size, multi-location count, social following, and reviews.",
-      "Displacement angle: ZoomInfo was built for 500+ seat US enterprise and has minimal SEA coverage. Apollo is US-centric and misses the majority of SEA B2B contacts. Firmable has dedicated APAC coverage with teams in both Sydney and Singapore."
+      "Displacement angle: ZoomInfo was built for 500+ seat US enterprise and has minimal SEA coverage. Apollo is US-centric and misses the majority of SEA B2B contacts. Firmable has dedicated APAC coverage with teams in both Melbourne and Singapore."
     ]
   },
   "four_slot_framework": {
@@ -130,7 +130,7 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
     "slot_d_direct_access_and_coverage": {
       "applies": "Almost every company doing outbound in SEA. Always goes LAST in the output order.",
       "pitch": "Firmable is the only B2B data platform HQ'd in both Australia and Singapore, built specifically for the APAC market. Being on the ground here means better local data quality and more attention to the specific contact sources that matter in each market. Most tools were built for US enterprise and have thin, stale coverage on SEA contacts.",
-      "angle_variation": "Vary the angle across companies. Options: (1) Coverage gap: Apollo and ZoomInfo miss the majority of SEA B2B contacts, built for the US market. (2) HQ and local attentiveness: the only platform with teams in Sydney and Singapore, which means the data is built for this market, not bolted on. (3) Contact quality: direct mobiles for decision-makers in [country], not just scraped LinkedIn profiles. (4) Japan/APAC angle: if the prospect targets Japan or broader APAC beyond SEA, note that Firmable covers Japan too, not just SEA and ANZ."
+      "angle_variation": "Vary the angle across companies. Options: (1) Coverage gap: Apollo and ZoomInfo miss the majority of SEA B2B contacts, built for the US market. (2) HQ and local attentiveness: the only platform with teams in Melbourne and Singapore, which means the data is built for this market, not bolted on. (3) Contact quality: direct mobiles for decision-makers across Southeast Asia, not just scraped LinkedIn profiles. (4) Japan/APAC angle: if the prospect targets Japan or broader APAC beyond SEA, note that Firmable covers Japan too, not just SEA and ANZ."
     },
     "slot_f_decision_maker_mapping": {
       "applies": "Backup. Companies doing complex B2B sales where multiple people are involved.",
@@ -176,11 +176,12 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
     "Sentence structure variation: no two ideas should start with the same word or clause type.",
     "Do not invent any facts. Only use what is in the variables provided.",
     "Keep each idea to 1-2 sentences. Keep the total email under 100 words.",
-    "There is no registry slot for SEA. Never reference Australian registers, AFS licenses, or AU government registers."
+    "There is no registry slot for SEA. Never reference Australian registers, AFS licenses, or AU government registers.",
+    "Do not list specific countries (Singapore, Malaysia, Indonesia, Philippines, etc.) in the email copy unless the prospect's ICP or vertical explicitly maps to a single country. Use 'across Southeast Asia', 'across the region', or 'across APAC' instead. Listing countries adds noise and can feel presumptuous."
   ],
   "displacement_track": {
     "condition": "If campaign_track = 'displacement', write a competitive displacement email instead of creative ideas.",
-    "instructions": "Name the specific competitor from uses_competitor. Apollo angle: built for the US market, thin SEA coverage, misses the majority of APAC B2B contacts. ZoomInfo angle: built for 500+ seat US enterprise, wrong pricing, wrong coverage for SEA SMB. Other tools: SEA coverage gap and data freshness angle. Firmable HQ angle: the only platform with teams in Sydney and Singapore, built for APAC from the ground up, with local market knowledge that a US-headquartered tool cannot replicate."
+    "instructions": "Name the specific competitor from uses_competitor. Apollo angle: built for the US market, thin SEA coverage, misses the majority of APAC B2B contacts. ZoomInfo angle: built for 500+ seat US enterprise, wrong pricing, wrong coverage for SEA SMB. Other tools: SEA coverage gap and data freshness angle. Firmable HQ angle: the only platform with teams in Melbourne and Singapore, built for APAC from the ground up, with local market knowledge that a US-headquartered tool cannot replicate."
   },
   "worked_examples": [
     {
@@ -188,9 +189,9 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
       "vertical": "Training Bodies",
       "has_sales_team": "Yes",
       "bridge_line": "A few ideas for how Firmable could help the Learnhub team get more conversations with L&D and HR decision-makers across SEA:",
-      "idea_1": "Firmable tracks when companies appoint a new L&D or HR lead across Singapore, Malaysia, and Indonesia. Those role changes are high-priority moments for training partnerships, and the Learnhub team can reach out before competitors do.",
+      "idea_1": "Firmable tracks when companies appoint a new L&D or HR lead across Southeast Asia. Those role changes are high-priority moments for training partnerships, and the Learnhub team can reach out before competitors do.",
       "idea_2": "Firmable uses two detection methods to find companies running specific HR or LMS platforms. If Learnhub's buyers tend to use a particular tool, you can filter by that stack rather than cold prospecting the whole market.",
-      "idea_3": "Direct mobile numbers for every HR and L&D decision-maker across SEA. Most outbound in this market relies on LinkedIn cold DMs or main office numbers. Firmable is the only B2B data platform HQ'd in both Australia and Singapore, built for APAC, so the contact coverage and local data quality are meaningfully better than a US-built tool."
+      "idea_3": "Direct mobile numbers for every HR and L&D decision-maker across the region. Most outbound in this market relies on LinkedIn cold DMs or main office numbers. Firmable is the only B2B data platform HQ'd in both Melbourne and Singapore, built for APAC, so the contact coverage and local data quality are meaningfully better than a US-built tool."
     },
     {
       "company_name": "Pipefy",
@@ -199,7 +200,7 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
       "bridge_line": "Here are some ways Firmable could help Pipefy build more pipeline with RevOps and sales leads across SEA:",
       "idea_1": "Firmable tracks job changes across SEA in real time. When a RevOps or sales director moves to a new company, they make most vendor decisions in the first 90 days. Pipefy can reach out before the new tool decisions are locked in.",
       "idea_2": "Filter by companies already running Salesforce across SEA. Those businesses have committed budget to sales infrastructure, so the conversation starts a step ahead. Firmable uses two detection methods: website analysis and job description scanning.",
-      "idea_3": "Apollo was built for the US market and has thin coverage on SEA B2B contacts. Firmable was built for APAC, with teams in Sydney and Singapore, so the contact data across SEA is significantly more complete and kept more current."
+      "idea_3": "Apollo was built for the US market and has thin coverage on SEA B2B contacts. Firmable was built for APAC, with teams in Melbourne and Singapore, so the contact data across the region is significantly more complete and kept more current."
     },
     {
       "company_name": "Sitelink",
@@ -207,7 +208,7 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
       "has_sales_team": "No",
       "bridge_line": "A few ideas for how Firmable could help Sitelink start reaching project managers and specifiers directly across SEA:",
       "idea_1": "Firmable tracks hiring surges and expansion signals for construction companies across SEA. When a contractor is ramping up, they are in the market for suppliers. You can reach out at the moment they are actively looking.",
-      "idea_2": "Direct contact details for project managers and procurement leads at tier 2 and tier 3 builders across Singapore, Malaysia, and Indonesia, including contacts without a public LinkedIn profile. Firmable is the only B2B data platform HQ'd in both Australia and Singapore, which means the local market coverage, including niche regional contacts, is far stronger than a US-built tool.",
+      "idea_2": "Direct contact details for project managers and procurement leads at tier 2 and tier 3 builders across Southeast Asia, including contacts without a public LinkedIn profile. Firmable is the only B2B data platform HQ'd in both Melbourne and Singapore, which means the local market coverage, including niche regional contacts, is far stronger than a US-built tool.",
       "idea_3": ""
     },
     {
@@ -216,7 +217,7 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
       "has_sales_team": "No",
       "bridge_line": "A few ways Firmable could help Growth Pipeline Co speed up prospect list delivery for their clients across SEA:",
       "idea_1": "For clients targeting companies using specific tools, Firmable filters by technographic stack across SEA using two detection methods: website analysis and job description scanning. Stronger signal than most tools that only use one.",
-      "idea_2": "Apollo and ZoomInfo have thin coverage on SEA companies, built for the US market. Firmable was built for APAC, so for clients targeting Singapore, Malaysia, or Indonesia, the contact lists are far more complete.",
+      "idea_2": "Apollo and ZoomInfo have thin coverage on SEA companies, built for the US market. Firmable was built for APAC, so for clients targeting Southeast Asia, the contact lists are far more complete.",
       "idea_3": ""
     },
     {
@@ -226,7 +227,7 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
       "bridge_line": "Some quick ideas for how Firmable could help the Nexagen IT team find more SMB clients across SEA:",
       "idea_1": "Filter by companies using specific tools you support, like Microsoft 365 or Azure. Firmable detects this across SEA businesses using two methods, giving you a list of companies that already have the infrastructure you manage.",
       "idea_2": "ZoomInfo was built for US enterprise. Most of its APAC contacts sit at large multinationals, not the SMB segment where most MSP clients live. Firmable was built for this market, with much higher coverage in the 10-to-200 seat range across SEA.",
-      "idea_3": "Direct mobiles for IT managers and business owners at those target businesses. Getting stuck at reception or LinkedIn cold DMs is the main bottleneck on most outbound in SEA. Firmable is the only B2B data platform HQ'd in both Australia and Singapore, built for this market, so the coverage in the SMB segment across SEA is far stronger than ZoomInfo or Apollo."
+      "idea_3": "Direct mobiles for IT managers and business owners across the region. Getting stuck at reception or LinkedIn cold DMs is the main bottleneck on most outbound in SEA. Firmable is the only B2B data platform HQ'd in both Melbourne and Singapore, built for this market, so the coverage in the SMB segment across Southeast Asia is far stronger than ZoomInfo or Apollo."
     }
   ]
 }
