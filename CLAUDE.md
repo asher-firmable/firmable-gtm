@@ -72,9 +72,13 @@ firmable-gtm-engineering/
 │   │   │   └── output/              ← Scraped CSVs (gitignored)
 │   │   └── events-outbound/         ← ANZ event/expo exhibitor outreach campaigns
 │   │       ├── CLAUDE.md            ← Events outbound conventions
-│   │       └── sydney-build-expo-2026/
-│   │           ├── CLAUDE.md        ← Sub-agent: scrape exhibitors from Sydney Build Expo 2026
-│   │           ├── scrape_exhibitors.py ← Playwright scraper → output/exhibitors.csv
+│   │       ├── sydney-build-expo-2026/
+│   │       │   ├── CLAUDE.md        ← Sub-agent: scrape exhibitors from Sydney Build Expo 2026
+│   │       │   ├── scrape_exhibitors.py ← Playwright scraper → output/exhibitors.csv
+│   │       │   └── output/          ← Scraped CSVs (gitignored)
+│   │       └── fhweek-2026/
+│   │           ├── CLAUDE.md        ← Sub-agent: scrape exhibitors from FH Week 2026
+│   │           ├── scrape_exhibitors.py ← Playwright + BS4 scraper → output/exhibitors.csv
 │   │           └── output/          ← Scraped CSVs (gitignored)
 │   ├── us/                          ← US campaigns
 │   ├── sea/                         ← South-East Asia campaigns
@@ -134,10 +138,18 @@ firmable-gtm-engineering/
 │   │       ├── output/                  ← Classified CSVs (gitignored)
 │   │       └── scripts/                 ← classify_new_roles.py
 │   │
-│   └── sea-company-upload/             ← Pre-upload HubSpot audit for company lists
-│       ├── CLAUDE.md                    ← Sub-agent: drop CSV in input/, run check, read terminal summary
-│       ├── input/                       ← Drop company CSV here before running
-│       └── output/                      ← Reserved for future CSV export (gitignored)
+│   ├── sea-company-upload/             ← Pre-upload HubSpot audit for company lists
+│   │   ├── CLAUDE.md                    ← Sub-agent: drop CSV in input/, run check, read terminal summary
+│   │   ├── input/                       ← Drop company CSV here before running
+│   │   └── output/                      ← Reserved for future CSV export (gitignored)
+│   │
+│   └── creative-ideas-webapp/          ← Vercel web app: enter domain + region → 3 Firmable ideas
+│       ├── CLAUDE.md                    ← Sub-agent: deployment, env vars, function logic
+│       ├── index.html                   ← Password gate + form + results (single-page, no framework)
+│       ├── api/generate.js              ← Vercel Edge Function: Firmable lookup + Claude generation
+│       ├── vercel.json                  ← Edge runtime config
+│       ├── package.json                 ← Minimal (no dependencies)
+│       └── .env.example                 ← Required env vars
 │
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
@@ -184,6 +196,7 @@ firmable-gtm-engineering/
 | AsiaTechX Singapore 2025 exhibitor scrape | `campaigns/sea-conferences/asiatechx-sg-2025/` |
 | HR Tech Festival Asia 2026 exhibitor scrape | `campaigns/sea-conferences/hr-tech-festival-asia-2026/` |
 | Sydney Build Expo 2026 exhibitor scrape | `campaigns/anz/events-outbound/sydney-build-expo-2026/` |
+| FH Week 2026 exhibitor scrape | `campaigns/anz/events-outbound/fhweek-2026/` |
 | Run full ANZ pre-outreach pipeline (any ANZ campaign) | `campaigns/anz/run_pipeline.py` |
 | Run pre-campaign eligibility check + Firmable enrichment | `scripts/hubspot_eligibility.py` |
 | Normalise company names in a campaign CSV | `scripts/normalize_company_names.py` |
@@ -195,6 +208,7 @@ firmable-gtm-engineering/
 | Firmable product context + competitive positioning | `knowledge/firmable-product.md` |
 | Email framework selection | `knowledge/messaging-frameworks.md` |
 | Enrich company list with ANZ/SEA/US sales team size (from domain or Firmable ID) | `campaigns/quick-sales-team-size-check/` |
+| Generate 3 Firmable ideas for a company via web UI (live Vercel app) | `projects/creative-ideas-webapp/` |
 
 ---
 

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firmable Ideas</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #1d4ed8;
+      --blue-dark: #1e40af;
+      --blue-light: rgba(29, 78, 216, 0.08);
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --error-bg: #fef2f2;
+      --error: #dc2626;
+      --badge-bg: #fef3c7;
+      --badge-text: #92400e;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 16px 64px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    @media (max-width: 540px) {
+      .card { padding: 28px 24px; }
+      body { padding: 24px 12px 48px; }
+    }
+
+    /* Logo */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 28px;
+    }
+    .logo-mark {
+      width: 30px;
+      height: 30px;
+      background: var(--blue);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-mark svg { display: block; }
+    .logo-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .logo-tag {
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    /* Headings */
+    h2 {
+      font-size: 21px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 5px;
+      letter-spacing: -0.01em;
+    }
+    .subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 26px;
+    }
+
+    /* Form elements */
+    .field { margin-bottom: 18px; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    input[type="text"],
+    input[type="password"],
+    select {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text);
+      background: white;
+      outline: none;
+      transition: border-color 0.12s, box-shadow 0.12s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.1);
+    }
+    .select-wrap {
+      position: relative;
+    }
+    .select-wrap::after {
+      content: '';
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid var(--muted);
+      pointer-events: none;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      padding: 11px 20px;
+      background: var(--blue);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.12s;
+      margin-top: 4px;
+    }
+    .btn-primary:hover { background: var(--blue-dark); }
+    .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .btn-ghost {
+      background: none;
+      border: none;
+      color: var(--blue);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 10px 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.12s;
+      margin-top: 12px;
+    }
+    .btn-ghost:hover { color: var(--blue-dark); }
+
+    /* Error */
+    .error-msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--error-bg);
+      border: 1px solid #fecaca;
+      border-radius: 7px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--error);
+      line-height: 1.4;
+      margin-top: 12px;
+    }
+    .error-msg.hidden { display: none; }
+
+    /* Spinner */
+    .loading-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 0 16px;
+    }
+    .spinner-ring {
+      width: 38px;
+      height: 38px;
+      border: 3px solid var(--border);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-label {
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* Results */
+    .result-company {
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .result-domain {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .result-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 12px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+    .tag-vertical {
+      background: var(--blue-light);
+      color: var(--blue);
+    }
+    .tag-icp {
+      background: #f0fdf4;
+      color: #15803d;
+    }
+    .tag-displacement {
+      background: var(--badge-bg);
+      color: var(--badge-text);
+    }
+
+    .bridge-line {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 18px;
+      font-style: italic;
+    }
+
+    .ideas-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .idea-card {
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      padding: 15px 16px;
+    }
+    .idea-number {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 5px;
+    }
+    .idea-text {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0 4px;
+    }
+
+    /* State control */
+    .state { display: none; }
+    .state.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+
+    <div class="logo">
+      <div class="logo-mark">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="5" stroke="white" stroke-width="2"/>
+          <circle cx="8" cy="8" r="2" fill="white"/>
+        </svg>
+      </div>
+      <span class="logo-name">Firmable <span class="logo-tag">Ideas</span></span>
+    </div>
+
+    <!-- State: Password -->
+    <div id="state-password" class="state active">
+      <h2>Team access</h2>
+      <p class="subtitle">Enter the password to continue.</p>
+
+      <div class="field">
+        <label for="password-input">Password</label>
+        <input type="password" id="password-input" placeholder="Enter password" autocomplete="off">
+      </div>
+
+      <button class="btn-primary" id="password-btn">Continue</button>
+      <div id="password-error" class="error-msg hidden">Incorrect password. Try again.</div>
+    </div>
+
+    <!-- State: Form -->
+    <div id="state-form" class="state">
+      <h2>Generate ideas</h2>
+      <p class="subtitle">Enter a company domain to see personalised ideas for how Firmable can help them.</p>
+
+      <div class="field">
+        <label for="domain-input">Company domain</label>
+        <input type="text" id="domain-input" placeholder="e.g. atlassian.com" autocomplete="off" spellcheck="false" inputmode="url">
+      </div>
+
+      <div class="field">
+        <label for="region-select">Region</label>
+        <div class="select-wrap">
+          <select id="region-select">
+            <option value="ANZ">ANZ (Australia &amp; New Zealand)</option>
+            <option value="SEA">Southeast Asia</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="generate-btn">Generate ideas</button>
+      <div id="form-error" class="error-msg hidden"></div>
+    </div>
+
+    <!-- State: Loading -->
+    <div id="state-loading" class="state">
+      <div class="loading-wrap">
+        <div class="spinner-ring"></div>
+        <span class="loading-label">Looking up company and generating ideas...</span>
+      </div>
+    </div>
+
+    <!-- State: Results -->
+    <div id="state-results" class="state">
+      <div id="result-company" class="result-company"></div>
+      <div id="result-domain" class="result-domain"></div>
+      <div class="result-tags">
+        <span id="tag-vertical" class="tag tag-vertical"></span>
+        <span id="tag-icp" class="tag tag-icp"></span>
+        <span id="tag-displacement" class="tag tag-displacement" style="display:none"></span>
+      </div>
+
+      <div id="result-bridge" class="bridge-line"></div>
+      <div id="result-ideas" class="ideas-list"></div>
+
+      <div class="divider"></div>
+      <button class="btn-ghost" id="back-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Try another domain
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const PW_KEY = 'firmable_ideas_pw';
+
+    function showState(name) {
+      document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
+      document.getElementById('state-' + name).classList.add('active');
+    }
+
+    function showError(elId, msg) {
+      const el = document.getElementById(elId);
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+
+    function hideError(elId) {
+      document.getElementById(elId).classList.add('hidden');
+    }
+
+    // Restore session
+    if (sessionStorage.getItem(PW_KEY)) {
+      showState('form');
+    }
+
+    // --- Password gate ---
+    const passwordInput = document.getElementById('password-input');
+    const passwordBtn = document.getElementById('password-btn');
+
+    async function submitPassword() {
+      const pw = passwordInput.value.trim();
+      if (!pw) return;
+      hideError('password-error');
+      passwordBtn.disabled = true;
+      passwordBtn.textContent = 'Checking...';
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw, _check: true }),
+        });
+
+        if (res.status === 401) {
+          showError('password-error', 'Incorrect password. Try again.');
+        } else {
+          sessionStorage.setItem(PW_KEY, pw);
+          showState('form');
+        }
+      } catch {
+        showError('password-error', 'Connection error. Try again.');
+      } finally {
+        passwordBtn.disabled = false;
+        passwordBtn.textContent = 'Continue';
+      }
+    }
+
+    passwordBtn.addEventListener('click', submitPassword);
+    passwordInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitPassword(); });
+
+    // --- Generate ideas ---
+    const domainInput = document.getElementById('domain-input');
+    const regionSelect = document.getElementById('region-select');
+    const generateBtn = document.getElementById('generate-btn');
+
+    async function generateIdeas() {
+      const domain = domainInput.value.trim();
+      const region = regionSelect.value;
+      const password = sessionStorage.getItem(PW_KEY);
+
+      if (!domain) {
+        showError('form-error', 'Please enter a company domain.');
+        return;
+      }
+      hideError('form-error');
+      showState('loading');
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ domain, region, password }),
+        });
+
+        const data = await res.json();
+
+        if (res.status === 401) {
+          sessionStorage.removeItem(PW_KEY);
+          showState('password');
+          return;
+        }
+
+        if (!res.ok) {
+          showState('form');
+          showError('form-error', data.error || 'Something went wrong. Try again.');
+          return;
+        }
+
+        renderResults(data);
+        showState('results');
+      } catch {
+        showState('form');
+        showError('form-error', 'Connection error. Try again.');
+      }
+    }
+
+    function renderResults(data) {
+      document.getElementById('result-company').textContent = data.company_name;
+      document.getElementById('result-domain').textContent = data.domain;
+
+      document.getElementById('tag-vertical').textContent = data.vertical || '';
+      document.getElementById('tag-icp').textContent = data.icp_target || '';
+
+      const dispTag = document.getElementById('tag-displacement');
+      if (data.uses_competitor) {
+        dispTag.textContent = 'Displacement: ' + data.uses_competitor;
+        dispTag.style.display = 'inline-block';
+      } else {
+        dispTag.style.display = 'none';
+      }
+
+      document.getElementById('result-bridge').textContent = data.bridge_line || '';
+
+      const ideasEl = document.getElementById('result-ideas');
+      ideasEl.innerHTML = '';
+      (data.ideas || []).filter(Boolean).forEach((idea, i) => {
+        const card = document.createElement('div');
+        card.className = 'idea-card';
+        card.innerHTML =
+          '<div class="idea-number">Idea ' + (i + 1) + '</div>' +
+          '<div class="idea-text">' + escHtml(idea) + '</div>';
+        ideasEl.appendChild(card);
+      });
+    }
+
+    function escHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    generateBtn.addEventListener('click', generateIdeas);
+    domainInput.addEventListener('keydown', e => { if (e.key === 'Enter') generateIdeas(); });
+
+    document.getElementById('back-btn').addEventListener('click', () => {
+      domainInput.value = '';
+      hideError('form-error');
+      showState('form');
+      domainInput.focus();
+    });
+  </script>
+</body>
+</html>

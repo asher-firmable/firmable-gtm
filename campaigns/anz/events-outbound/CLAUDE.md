@@ -13,7 +13,11 @@ Outbound campaigns targeting exhibitors and attendees at ANZ trade events and ex
 Each event gets its own sub-folder named `{event-name}-{year}/`:
 ```
 events-outbound/
-└── sydney-build-expo-2026/
+├── sydney-build-expo-2026/
+│   ├── scrape_exhibitors.py
+│   └── output/
+│       └── exhibitors.csv
+└── fhweek-2026/
     ├── scrape_exhibitors.py
     └── output/
         └── exhibitors.csv
