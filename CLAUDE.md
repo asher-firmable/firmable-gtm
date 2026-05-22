@@ -143,13 +143,21 @@ firmable-gtm-engineering/
 │   │   ├── input/                       ← Drop company CSV here before running
 │   │   └── output/                      ← Reserved for future CSV export (gitignored)
 │   │
-│   └── creative-ideas-webapp/          ← Vercel web app: enter domain + region → 3 Firmable ideas
-│       ├── CLAUDE.md                    ← Sub-agent: deployment, env vars, function logic
-│       ├── index.html                   ← Password gate + form + results (single-page, no framework)
-│       ├── api/generate.js              ← Vercel Edge Function: Firmable lookup + Claude generation
-│       ├── vercel.json                  ← Edge runtime config
-│       ├── package.json                 ← Minimal (no dependencies)
-│       └── .env.example                 ← Required env vars
+│   ├── creative-ideas-webapp/          ← Vercel web app: enter domain + region → 3 Firmable ideas
+│   │   ├── CLAUDE.md                    ← Sub-agent: deployment, env vars, function logic
+│   │   ├── index.html                   ← Password gate + form + results (single-page, no framework)
+│   │   ├── api/generate.js              ← Vercel Edge Function: Firmable lookup + Claude generation
+│   │   ├── vercel.json                  ← Edge runtime config
+│   │   ├── package.json                 ← Minimal (no dependencies)
+│   │   └── .env.example                 ← Required env vars
+│   │
+│   └── us-influencer-outreach/         ← US market expansion: classify influencers + generate personalised copy
+│       ├── CLAUDE.md                    ← Sub-agent: buckets, input/output conventions, how to run
+│       ├── input/                       ← Drop influencer CSV here
+│       ├── output/                      ← classified.csv, with_copy.csv (gitignored)
+│       └── scripts/
+│           ├── enrich_and_classify.py   ← Claude multi-label classifier (product_feedback / warm_intro / influencer)
+│           └── generate_copy.py         ← Personalised first-draft copy per bucket
 │
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
@@ -162,6 +170,7 @@ firmable-gtm-engineering/
     │   ├── hubspot-sync/            ← CRM create/update (dedup on email/domain)
     │   ├── n8n-export/              ← Convert pipelines to n8n JSON
     │   ├── creative-ideas-campaign-anz/ ← Clay table + AI column prompts for wide ANZ SMB outbound (AU registers, 22% stat)
+    │   ├── creative-ideas-campaign-anz-short/ ← Short form A/B variant: same slots, ideas as 15-25 word phrases, curiosity bridge line
     │   └── creative-ideas-campaign-sea/ ← Clay table + AI column prompts for wide SEA SMB outbound (coverage + AU/SG HQ angle)
     └── commands/                    ← Slash commands
         ├── new-campaign.md                    ← /new-campaign — campaign setup wizard
@@ -179,6 +188,7 @@ firmable-gtm-engineering/
 | Task | Go to |
 |---|---|
 | Build or modify the ANZ creative ideas campaign (Clay table + AI column prompts) | `.claude/skills/creative-ideas-campaign-anz/SKILL.md` |
+| Build or modify the ANZ short form A/B variant (compact bullet phrases, curiosity bridge line) | `.claude/skills/creative-ideas-campaign-anz-short/SKILL.md` |
 | Build or modify the SEA creative ideas campaign (Clay table + AI column prompts) | `.claude/skills/creative-ideas-campaign-sea/SKILL.md` |
 | SmartLead pre-campaign eligibility gate (any region — filter trial/comms/tasks) | `campaigns/company-checks/` + `/smartlead-pre-campaign-check` |
 | Check company descriptions against a yes/no question (e.g. "Is this a staffing agency?") | `campaigns/company-checks/description-check/` + `/description-check` |
@@ -209,6 +219,7 @@ firmable-gtm-engineering/
 | Email framework selection | `knowledge/messaging-frameworks.md` |
 | Enrich company list with ANZ/SEA/US sales team size (from domain or Firmable ID) | `campaigns/quick-sales-team-size-check/` |
 | Generate 3 Firmable ideas for a company via web UI (live Vercel app) | `projects/creative-ideas-webapp/` |
+| Classify US sales influencers and generate personalised outreach copy | `projects/us-influencer-outreach/` |
 
 ---
 
