@@ -59,7 +59,7 @@ Use this to test whether shorter, punchier copy improves deliverability and resp
 
 | Col | Name | Type | Output |
 |---|---|---|---|
-| 8 | `three_ideas_copy` | AI | bridge_line + idea_1 + idea_2 + idea_3. Short, punchy phrases. 2-3 ideas, never forced. |
+| 8 | `body` | AI | Full email body as a single string. Bridge line + 2-3 ideas in a randomly chosen format (bullets, plain lines, or compact prose). Never forced to 3. |
 
 ---
 
@@ -186,7 +186,7 @@ Use this to test whether shorter, punchier copy improves deliverability and resp
 
 ---
 
-## Column 8 — Three Ideas Copy, Short Form (AI, reading only — main event)
+## Column 8 — Body Copy, Short Form (AI, reading only — main event)
 
 This is the core of the campaign. The system prompt is long and stable (cached). The main prompt is short (just the 6 variable values per row).
 
@@ -197,7 +197,7 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
 ```json
 {
   "role": "Senior outbound copywriter at Firmable, an Australian B2B data platform",
-  "goal": "Write a short, punchy cold email body showing 2-3 personalised ideas for how Firmable can help the recipient find and reach their buyers. Ideas must be compact bullet phrases, not explanatory sentences.",
+  "goal": "Write a short, punchy cold email body showing 2-3 personalised ideas for how Firmable can help the recipient find and reach their buyers. Ideas must be compact phrases, not explanatory sentences. Vary the visual format (bullets, plain lines, or compact prose) so each email looks structurally different.",
   "formatting_rules": [
     "Never use em dashes (—) anywhere. Use a comma or a full stop instead.",
     "Never use bold markdown (asterisks around text). Write all text plainly.",
@@ -220,6 +220,28 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
     "LONG: 'Verified direct mobiles for every sales leader and RevOps manager in the target list. Getting stuck at reception is the main bottleneck on most outbound. 22% connect rate vs ~5% industry average.'",
     "SHORT: 'Verified direct mobiles for every sales leader and RevOps manager in ANZ, 22% connect rate vs ~5% average.'"
   ],
+  "format_variation_rules": {
+    "purpose": "Vary the visual structure of each email to avoid content fingerprinting. Every row should look slightly different. Pick one format variant per row, distributed across the three options.",
+    "variants": {
+      "bullets": "Bridge line ending with colon, then each idea on its own line prefixed with '- '. Most compact. Use for 2-3 tight phrases.",
+      "plain_lines": "Bridge line ending with colon, then each idea as a short sentence on its own line with no prefix. Reads clean. Use when ideas are written as complete sentences.",
+      "compact_prose": "Bridge line ending with colon, then all ideas written as consecutive sentences on a single line with no line breaks. Reads like a quick message. Best for 2 ideas."
+    },
+    "variation_examples": {
+      "bullets_3_ideas": "If Pipefy is going after RevOps and sales leads in ANZ, there are faster ways in:\n- Job change alerts when a RevOps lead starts somewhere new, 90-day buying window.\n- Filter targets already running Salesforce in ANZ, dual-source detection.\n- Direct mobiles for every sales leader in ANZ, 22% connect rate vs ~5%.",
+      "plain_lines_2_ideas": "Quick ways to find more finance brokers that most teams targeting brokers overlook:\nOfficial AFS register of 10,000+ AU finance brokers, filterable by state and specialisation.\nDirect mobiles for every broker in the segment, 22% connect rate vs ~5% in financial services.",
+      "compact_prose_2_ideas": "A few IT decision-maker signals in ANZ that most MSP teams are not picking up on:\nFind companies already running M365 or Azure across ANZ using dual-source detection from website plus job ads. Direct mobiles for IT managers and business owners across ANZ, 22% connect rate vs ~5%.",
+      "bullets_2_ideas": "Quick ways Sitelink could be finding more project managers and specifiers right now:\n- Official AU register of commercial builders, filterable by state, company age, and size.\n- Direct contact details for every PM and QS at tier 2 and tier 3 builders, 22% connect rate vs ~5%.",
+      "plain_lines_3_ideas": "If Learnhub is going after L&D and HR leads in ANZ, there are faster ways in:\nReal-time alerts when a company appoints a new L&D or HR lead, reach them before competitors do.\nOfficial AU register of RTOs and independent schools, not a scraped list.\nVerified direct mobiles for every HR and L&D decision-maker in ANZ, 22% connect rate vs ~5%."
+    },
+    "rules": [
+      "Choose the format that best fits the number and style of ideas for that row. Do not always pick bullets.",
+      "2 ideas: compact_prose or plain_lines both work well.",
+      "3 ideas: bullets or plain_lines both work well. Avoid compact_prose for 3 ideas as it becomes hard to read.",
+      "The total body (bridge line + all ideas) must remain under 70 words regardless of format.",
+      "Do not mix formats within a single row (e.g., one bullet and one plain line). Pick one format and apply it consistently to all ideas in that row."
+    ]
+  },
   "what_firmable_does": {
     "summary": "Firmable is an APAC-focused B2B data platform built for the Australian and New Zealand market.",
     "capabilities": [
@@ -301,7 +323,7 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
     "22% vs 5% stat: always include when Slot D is used, appended compactly at idea end.",
     "Sentence structure variation: no two ideas start with the same word or clause type.",
     "Do not invent any facts. Only use what is in the variables.",
-    "Each idea: 15-25 words maximum. Total email under 60 words (body only, excluding bridge line).",
+    "Each idea: 15-25 words maximum. Total body (bridge line + all ideas) under 70 words.",
     "No explanatory clauses. No 'so that', 'which means', 'because', 'this means'. State the point and stop."
   ],
   "displacement_track": {
@@ -313,64 +335,50 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
       "company_name": "Learnhub",
       "vertical": "Training Bodies",
       "has_sales_team": "Yes",
-      "bridge_line": "If Learnhub is going after L&D and HR leads in ANZ, there are faster ways in:",
-      "idea_1": "Real-time alerts when a company appoints a new L&D or HR lead, reach them before competitors do.",
-      "idea_2": "Official AU register of RTOs and independent schools, not a scraped list.",
-      "idea_3": "Verified direct mobiles for every HR and L&D decision-maker in ANZ, 22% connect rate vs ~5% average."
+      "format": "bullets",
+      "body": "If Learnhub is going after L&D and HR leads in ANZ, there are faster ways in:\n- Real-time alerts when a company appoints a new L&D or HR lead, reach them before competitors do.\n- Official AU register of RTOs and independent schools, not a scraped list.\n- Verified direct mobiles for every HR and L&D decision-maker in ANZ, 22% connect rate vs ~5%."
     },
     {
       "company_name": "Pipefy",
       "vertical": "SaaS Software",
       "has_sales_team": "Yes",
-      "bridge_line": "If Pipefy is going after RevOps and sales leads in ANZ, there are faster ways in:",
-      "idea_1": "Real-time job change alerts when a RevOps or sales lead starts somewhere new, first 90-day buying window.",
-      "idea_2": "Filter by companies already running Salesforce in ANZ, dual-source detection from website signals plus job ads.",
-      "idea_3": "Verified direct mobiles for every sales leader and RevOps manager in ANZ, 22% connect rate vs ~5% average."
+      "format": "plain_lines",
+      "body": "If Pipefy is going after RevOps and sales leads in ANZ, there are faster ways in:\nJob change alerts when a RevOps or sales lead starts somewhere new, first 90-day buying window.\nFilter targets already running Salesforce in ANZ, dual-source detection from website plus job ads.\nVerified direct mobiles for every sales leader and RevOps manager in ANZ, 22% connect rate vs ~5%."
     },
     {
       "company_name": "Sitelink",
       "vertical": "Construction Trade",
       "has_sales_team": "No",
-      "bridge_line": "Quick ways Sitelink could be finding more project managers and specifiers right now:",
-      "idea_1": "Official AU register of commercial builders, filterable by state, company age, and size.",
-      "idea_2": "Direct contact details for every PM and QS at tier 2 and tier 3 builders in ANZ, 22% connect rate vs ~5%.",
-      "idea_3": ""
+      "format": "compact_prose",
+      "body": "Quick ways Sitelink could be finding more project managers and specifiers right now:\nOfficial AU register of commercial builders, filterable by state, company age, and size. Direct contact details for every PM and QS at tier 2 and tier 3 builders in ANZ, 22% connect rate vs ~5%."
     },
     {
       "company_name": "Clearpath Finance",
       "vertical": "Finance Brokers",
       "has_sales_team": "No",
-      "bridge_line": "Quick ways to find more finance brokers that most teams targeting brokers overlook:",
-      "idea_1": "10,000+ AU finance brokers on the official AFS register, filterable by state, size, and specialisation.",
-      "idea_2": "Real-time alerts when a broker moves to a new firm, reach them while they are in setup mode.",
-      "idea_3": "Direct mobiles for every broker in the target segment, 22% connect rate vs ~5% in financial services outreach."
+      "format": "plain_lines",
+      "body": "Quick ways to find more finance brokers that most teams targeting brokers overlook:\nOfficial AFS register of 10,000+ AU finance brokers, filterable by state, size, and specialisation.\nAlerts when a broker moves to a new firm, reach them while they are in setup mode.\nDirect mobiles for every broker in the segment, 22% connect rate vs ~5% in financial services."
     },
     {
       "company_name": "Apex Advisory",
       "vertical": "Accounting Advisory",
       "has_sales_team": "Yes",
-      "bridge_line": "A few CFO and finance lead signals most accounting advisory teams are not picking up on:",
-      "idea_1": "Real-time signals for M&A activity, leadership changes, and restructuring events across ANZ.",
-      "idea_2": "Direct mobiles for CFOs and finance leads at flagged companies, 22% connect rate vs ~5% average.",
-      "idea_3": ""
+      "format": "compact_prose",
+      "body": "A few CFO and finance lead signals most accounting advisory teams are not picking up on:\nReal-time signals for M&A activity, leadership changes, and restructuring events across ANZ. Direct mobiles for CFOs and finance leads at flagged companies, 22% connect rate vs ~5%."
     },
     {
       "company_name": "Growth Pipeline Co",
       "vertical": "BD Agencies",
       "has_sales_team": "No",
-      "bridge_line": "Quick ways Growth Pipeline Co could speed up list delivery for clients right now:",
-      "idea_1": "Filter any client ICP by technographic stack across ANZ, dual-source detection from website plus job ad signals.",
-      "idea_2": "Verified direct mobiles for every decision-maker in a client ICP, 22% connect rate vs ~5% for clients doing calls.",
-      "idea_3": ""
+      "format": "compact_prose",
+      "body": "Quick ways Growth Pipeline Co could speed up list delivery for clients right now:\nFilter any client ICP by technographic stack across ANZ, dual-source detection from website plus job ads. Verified direct mobiles for every decision-maker in a client ICP, 22% connect rate vs ~5%."
     },
     {
       "company_name": "Nexagen IT",
       "vertical": "IT MSP",
       "has_sales_team": "Yes",
-      "bridge_line": "A few IT decision-maker signals in ANZ that most MSP teams are not picking up on:",
-      "idea_1": "Find companies already running M365 or Azure across ANZ, dual-source detection from website plus job ad signals.",
-      "idea_2": "ZoomInfo covers 500+ seat US enterprise. Firmable covers ANZ SMB in the 10-200 seat range.",
-      "idea_3": "Direct mobiles for IT managers and business owners across ANZ, 22% connect rate vs ~5% average."
+      "format": "bullets",
+      "body": "A few IT decision-maker signals in ANZ that most MSP teams are not picking up on:\n- Find companies already running M365 or Azure across ANZ, dual-source detection from website plus job ads.\n- ZoomInfo covers 500+ seat US enterprise. Firmable covers ANZ SMB in the 10-200 seat range.\n- Direct mobiles for IT managers and business owners across ANZ, 22% connect rate vs ~5%."
     }
   ]
 }
@@ -396,24 +404,12 @@ Variables: company_name, effective_vertical, effective_icp, campaign_track, uses
 {
   "type": "object",
   "properties": {
-    "bridge_line": {
+    "body": {
       "type": "string",
-      "description": "First line of the email body. 8-15 words. References the ICP. Does NOT mention Firmable. Curiosity or loss framing. Ends with a colon. No em dashes."
-    },
-    "idea_1": {
-      "type": "string",
-      "description": "Most contextual idea (Slot C or A or B). One compact phrase, 15-25 words max. No explanatory sentences."
-    },
-    "idea_2": {
-      "type": "string",
-      "description": "Second idea. One compact phrase, 15-25 words max."
-    },
-    "idea_3": {
-      "type": "string",
-      "description": "Slot D (direct mobiles + 22% stat) if it applies. One compact phrase. Empty string if only two ideas apply."
+      "description": "Full email body as a single string. Bridge line (8-15 words, no Firmable mention, curiosity framing, ends with colon) followed by 2-3 compact ideas in one of three formats: bullets (each idea on its own line prefixed with '- '), plain_lines (each idea as a sentence on its own line, no prefix), or compact_prose (all ideas as consecutive sentences on a single line). Format is chosen per row to vary structure. Total body under 70 words."
     }
   },
-  "required": ["bridge_line", "idea_1", "idea_2", "idea_3"]
+  "required": ["body"]
 }
 ```
 
@@ -459,14 +455,11 @@ IF(sales_team_size >= 1, "Yes – " & sales_team_size & " reps", "No")
 
 ## Email Sequence Structure
 
-**Variant A — 3-email sequence, one idea per email**
-- Email 1: bridge_line + idea_1
-- Email 2: bridge_line + idea_2 (reframed as a follow-on)
-- Email 3: bridge_line + idea_3 (or direct short follow-up)
-
-**Variant B — single email, all ideas + short follow-up**
-- Email 1: bridge_line + idea_1 + idea_2 + idea_3
+**Single email + short follow-up**
+- Email 1: `{body}` (the full assembled output from Column 8)
 - Email 2 (3-4 days later): "Any thoughts on those?"
+
+Column 8 outputs a single `body` string. Use it directly in SmartLead — no formula assembly needed.
 
 ---
 
@@ -477,7 +470,7 @@ IF(sales_team_size >= 1, "Yes – " & sales_team_size & " reps", "No")
 3. Build Clay table in column order above (1 through 8)
 4. Spot-check Column 8 output on 10-15 rows across different verticals before running full table
 5. Write spintax opening lines separately — the sender writes these, not Column 8
-6. Set up SmartLead campaign with chosen sequence variant
+6. Set up SmartLead campaign: Email 1 uses `{body}`, Email 2 is a short follow-up
 7. Confirm lead count, campaign name, and sender before activating (see `/smartlead-push`)
 
 ---
@@ -490,3 +483,5 @@ IF(sales_team_size >= 1, "Yes – " & sales_team_size & " reps", "No")
 - ICP repetition across ideas: use icp label in bridge line only. Ideas use descriptive alternatives.
 - Column 8 uses 6 variables only: company_name, effective_vertical, effective_icp, campaign_track, uses_competitor, has_sales_team.
 - Short form only: bridge line must NOT mention Firmable. If Firmable appears in the bridge line, the curiosity framing is broken.
+- Format fingerprinting: the AI picks one of three formats (bullets, plain_lines, compact_prose) per row. If spot-check shows all rows in the same format, add an explicit instruction in the main prompt for that row to use a different format variant.
+- Single body field: Column 8 outputs `body` only. No formula assembly in Clay — use `{body}` directly in SmartLead.
