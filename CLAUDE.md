@@ -81,6 +81,16 @@ firmable-gtm-engineering/
 │   │           ├── scrape_exhibitors.py ← Playwright + BS4 scraper → output/exhibitors.csv
 │   │           └── output/          ← Scraped CSVs (gitignored)
 │   ├── us/                          ← US campaigns
+│   │   ├── CLAUDE.md                ← US region sub-agent
+│   │   └── msp-it-services/         ← US MSP & IT services campaigns
+│   │       ├── CLAUDE.md            ← Vertical sub-agent
+│   │       └── founding-100/        ← US Founding 100: ~8k company enrichment
+│   │           ├── CLAUDE.md        ← Sub-agent: cache check → enrich → sync
+│   │           ├── input/           ← Drop CSV here (gitignored)
+│   │           ├── output/          ← Results (gitignored)
+│   │           └── scripts/
+│   │               ├── upload.py    ← Smart upload: checks master_companies, pre-fills cache hits
+│   │               └── sync.py      ← Copy enrichment from master_companies → us_founding_100
 │   ├── sea/                         ← South-East Asia campaigns
 │   ├── sea-conferences/             ← SEA conference/expo exhibitor scraping campaigns
 │   │   ├── CLAUDE.md                ← Index of SEA conference campaigns
@@ -235,6 +245,7 @@ firmable-gtm-engineering/
 | Generate 3 Firmable ideas for a company via web UI (live Vercel app) | `projects/creative-ideas-webapp/` |
 | Classify US sales influencers and generate personalised outreach copy | `projects/us-influencer-outreach/` |
 | Parallel company enrichment pipeline (company type + persona, Trigger.dev + Supabase) | `projects/supabase-enrichment/` + `.claude/skills/supabase-enrichment/SKILL.md` |
+| US MSP/IT services campaign enrichment (US Founding 100, ~8k companies) | `campaigns/us/msp-it-services/founding-100/` |
 
 ---
 
