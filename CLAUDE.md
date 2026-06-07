@@ -151,13 +151,27 @@ firmable-gtm-engineering/
 │   │   ├── package.json                 ← Minimal (no dependencies)
 │   │   └── .env.example                 ← Required env vars
 │   │
-│   └── us-influencer-outreach/         ← US market expansion: classify influencers + generate personalised copy
-│       ├── CLAUDE.md                    ← Sub-agent: buckets, input/output conventions, how to run
-│       ├── input/                       ← Drop influencer CSV here
-│       ├── output/                      ← classified.csv, with_copy.csv (gitignored)
-│       └── scripts/
-│           ├── enrich_and_classify.py   ← Claude multi-label classifier (product_feedback / warm_intro / influencer)
-│           └── generate_copy.py         ← Personalised first-draft copy per bucket
+│   ├── us-influencer-outreach/         ← US market expansion: classify influencers + generate personalised copy
+│   │   ├── CLAUDE.md                    ← Sub-agent: buckets, input/output conventions, how to run
+│   │   ├── input/                       ← Drop influencer CSV here
+│   │   ├── output/                      ← classified.csv, with_copy.csv (gitignored)
+│   │   └── scripts/
+│   │       ├── enrich_and_classify.py   ← Claude multi-label classifier (product_feedback / warm_intro / influencer)
+│   │       └── generate_copy.py         ← Personalised first-draft copy per bucket
+│   │
+│   └── supabase-enrichment/            ← Parallel company enrichment pipeline: CSV → Supabase → Trigger.dev agents → results
+│       ├── CLAUDE.md                    ← Sub-agent: upload, trigger, monitor conventions
+│       ├── scripts/
+│       │   └── upload.py               ← CSV → Supabase upsert (sets status='pending')
+│       ├── supabase/migrations/
+│       │   └── 001_create_companies.sql ← Master companies table schema
+│       └── trigger/                     ← Trigger.dev TypeScript tasks
+│           ├── trigger.config.ts
+│           ├── package.json
+│           └── src/tasks/
+│               ├── enrichBatch.ts       ← Entry point: fan-out via batchTrigger
+│               ├── classifyCompany.ts   ← Agent 1: SaaS/MSP/IT Services/Other B2B
+│               └── classifyPersona.ts   ← Agent 2: target persona (who they sell to)
 │
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
@@ -220,6 +234,7 @@ firmable-gtm-engineering/
 | Enrich company list with ANZ/SEA/US sales team size (from domain or Firmable ID) | `campaigns/quick-sales-team-size-check/` |
 | Generate 3 Firmable ideas for a company via web UI (live Vercel app) | `projects/creative-ideas-webapp/` |
 | Classify US sales influencers and generate personalised outreach copy | `projects/us-influencer-outreach/` |
+| Parallel company enrichment pipeline (company type + persona, Trigger.dev + Supabase) | `projects/supabase-enrichment/` + `.claude/skills/supabase-enrichment/SKILL.md` |
 
 ---
 
