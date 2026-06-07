@@ -6,6 +6,10 @@ data/output/
 projects/*/output/
 projects/*/*/output/
 
+# Projects input data
+projects/*/input/
+projects/*/*/input/
+
 # Campaign outputs (scraped/processed data)
 campaigns/**/output/
 
