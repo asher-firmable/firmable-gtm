@@ -82,10 +82,10 @@ firmable-gtm-engineering/
 │   │           └── output/          ← Scraped CSVs (gitignored)
 │   ├── us/                          ← US campaigns
 │   │   ├── CLAUDE.md                ← US region sub-agent
-│   │   └── msp-it-services/         ← US MSP & IT services campaigns
-│   │       ├── CLAUDE.md            ← Vertical sub-agent
-│   │       └── founding-100/        ← US Founding 100: ~8k company enrichment
-│   │           ├── CLAUDE.md        ← Sub-agent: cache check → enrich → sync
+│   │   └── founding-100/            ← US Founding 100 project (~8k company enrichment)
+│   │       ├── CLAUDE.md            ← Sub-agent: project overview + segment index
+│   │       └── msp-it-services/     ← Segment: MSPs and IT services firms
+│   │           ├── CLAUDE.md        ← Sub-agent: run commands for this segment
 │   │           ├── input/           ← Drop CSV here (gitignored)
 │   │           ├── output/          ← Results (gitignored)
 │   │           └── scripts/
@@ -245,7 +245,7 @@ firmable-gtm-engineering/
 | Generate 3 Firmable ideas for a company via web UI (live Vercel app) | `projects/creative-ideas-webapp/` |
 | Classify US sales influencers and generate personalised outreach copy | `projects/us-influencer-outreach/` |
 | Parallel company enrichment pipeline (company type + persona, Trigger.dev + Supabase) | `projects/supabase-enrichment/` + `.claude/skills/supabase-enrichment/SKILL.md` |
-| US MSP/IT services campaign enrichment (US Founding 100, ~8k companies) | `campaigns/us/msp-it-services/founding-100/` |
+| US Founding 100 campaign enrichment (~8k companies, MSP/IT services segment) | `campaigns/us/founding-100/msp-it-services/` |
 
 ---
 
