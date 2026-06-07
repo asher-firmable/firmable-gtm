@@ -25,7 +25,7 @@ export interface Company {
 
 export async function getCompany(id: string): Promise<Company> {
   const { data, error } = await supabase
-    .from("companies")
+    .from("master_companies")
     .select("*")
     .eq("id", id)
     .single();

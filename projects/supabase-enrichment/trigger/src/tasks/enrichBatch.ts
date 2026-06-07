@@ -10,7 +10,7 @@ export const enrichBatch = task({
     const limit = payload?.limit ?? 1000;
 
     const { data: rows, error } = await supabase
-      .from("companies")
+      .from("master_companies")
       .select("id, domain, firmable_id")
       .eq("status", "pending")
       .limit(limit);
@@ -22,7 +22,7 @@ export const enrichBatch = task({
 
     // Mark all as 'processing' before dispatching to prevent double-processing
     const ids = rows.map((r) => r.id);
-    await supabase.from("companies").update({ status: "processing" }).in("id", ids);
+    await supabase.from("master_companies").update({ status: "processing" }).in("id", ids);
 
     // Fan out — Trigger.dev handles concurrency limits
     await classifyCompany.batchTrigger(

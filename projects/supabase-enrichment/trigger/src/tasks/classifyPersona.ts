@@ -54,7 +54,7 @@ export const classifyPersona = task({
 
       // Master table cache check
       if (company.target_persona) {
-        await supabase.from("companies").update({ status: "done" }).eq("id", companyId);
+        await supabase.from("master_companies").update({ status: "done" }).eq("id", companyId);
         return { skipped: true, reason: "already classified" };
       }
 
@@ -69,14 +69,14 @@ export const classifyPersona = task({
           context = scraped;
           result = await classify(context, company.domain);
           await supabase
-            .from("companies")
+            .from("master_companies")
             .update({ website_summary: scraped })
             .eq("id", companyId);
         }
       }
 
       await supabase
-        .from("companies")
+        .from("master_companies")
         .update({
           target_persona: result.label,
           persona_reasoning: result.reasoning,
@@ -87,7 +87,7 @@ export const classifyPersona = task({
       return { label: result.label, confidence: result.confidence };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      await supabase.from("companies").update({ status: "error", error_msg: msg }).eq("id", companyId);
+      await supabase.from("master_companies").update({ status: "error", error_msg: msg }).eq("id", companyId);
       throw err;
     }
   },

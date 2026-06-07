@@ -52,7 +52,7 @@ export const classifyCompany = task({
         const firmableDesc = await fetchFirmableDescription(firmableId);
         if (firmableDesc) {
           context = firmableDesc;
-          await supabase.from("companies").update({ description: firmableDesc }).eq("id", companyId);
+          await supabase.from("master_companies").update({ description: firmableDesc }).eq("id", companyId);
         }
       }
 
@@ -70,12 +70,12 @@ export const classifyCompany = task({
         if (scraped) {
           context = scraped;
           result = await classify(context, company.domain);
-          await supabase.from("companies").update({ website_summary: scraped }).eq("id", companyId);
+          await supabase.from("master_companies").update({ website_summary: scraped }).eq("id", companyId);
         }
       }
 
       await supabase
-        .from("companies")
+        .from("master_companies")
         .update({
           company_type: result.label,
           company_type_reasoning: result.reasoning,
@@ -88,7 +88,7 @@ export const classifyCompany = task({
       return { label: result.label, confidence: result.confidence };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      await supabase.from("companies").update({ status: "error", error_msg: msg }).eq("id", companyId);
+      await supabase.from("master_companies").update({ status: "error", error_msg: msg }).eq("id", companyId);
       throw err;
     }
   },

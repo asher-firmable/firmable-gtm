@@ -122,7 +122,7 @@ def main():
     inserted = 0
     for i in range(0, len(rows), batch_size):
         batch = rows[i : i + batch_size]
-        client.table("companies").upsert(
+        client.table("master_companies").upsert(
             batch,
             on_conflict="domain",
             returning="minimal",
