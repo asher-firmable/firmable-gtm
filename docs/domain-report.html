@@ -134,6 +134,15 @@
   .vendor-scaledmail { background:#E0F2FE; color:#075985; }
   .vendor-unknown   { background:var(--surface-2); color:var(--text-3); }
 
+  /* Filter bars */
+  .filter-bar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px; }
+  .filter-btn { font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+    text-transform:uppercase; padding:5px 12px; background:var(--surface);
+    border:1px solid var(--border); border-radius:3px; color:var(--text-3);
+    cursor:pointer; transition:all .15s; }
+  .filter-btn:hover { background:var(--surface-2); color:var(--text-2); }
+  .filter-btn.active { background:var(--text); color:var(--surface); border-color:var(--text); }
+
   /* Mailbox inner table */
   .mailbox-table { width:100%; border-collapse:collapse; font-size:12px;
     font-variant-numeric:tabular-nums; }
@@ -197,6 +206,11 @@
       All 47 sending domains across 186 mailboxes,
       sorted by reply rate. Domains below 1% are candidates for rotation or warm-up.
     </p>
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterDomains('all', this)">All</button>
+      <button class="filter-btn" onclick="filterDomains('Google', this)">Google</button>
+      <button class="filter-btn" onclick="filterDomains('Microsoft', this)">Microsoft</button>
+    </div>
     <div class="scroll-wrap">
       <table class="domain-table">
         <thead>
@@ -204,13 +218,13 @@
             <th>Domain</th>
             <th>ESP</th>
             <th class="num">Mailboxes</th>
-            <th class="num">Sent</th>
+            <th class="num">Sent (all-time)</th>
             <th class="num">Replies (14d)</th>
             <th>Reply Rate</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td class="mono col-domain">firmableoutreach.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">14</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:63%"></div>    <span class="rate-label mono">3.19%</span>  </div></td></tr><tr><td class="mono col-domain">firmablescale.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">11</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:50%"></div>    <span class="rate-label mono">2.51%</span>  </div></td></tr><tr><td class="mono col-domain">firmablelabs.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">10</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:45%"></div>    <span class="rate-label mono">2.28%</span>  </div></td></tr><tr><td class="mono col-domain">firmableconnect.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">10</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:45%"></div>    <span class="rate-label mono">2.28%</span>  </div></td></tr><tr><td class="mono col-domain">readyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">9</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:41%"></div>    <span class="rate-label mono">2.05%</span>  </div></td></tr><tr><td class="mono col-domain">firmablegrowth.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">8</td><td class="rate-cell rate-mid">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:36%"></div>    <span class="rate-label mono">1.82%</span>  </div></td></tr><tr><td class="mono col-domain">byfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">8</td><td class="rate-cell rate-mid">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:36%"></div>    <span class="rate-label mono">1.82%</span>  </div></td></tr><tr><td class="mono col-domain">withfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">8</td><td class="rate-cell rate-mid">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:36%"></div>    <span class="rate-label mono">1.82%</span>  </div></td></tr><tr><td class="mono col-domain">firmablepartner.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">4</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:18%"></div>    <span class="rate-label mono">0.91%</span>  </div></td></tr><tr><td class="mono col-domain">firmablegroup.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">582</td><td class="mono num">5</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:17%"></div>    <span class="rate-label mono">0.86%</span>  </div></td></tr><tr><td class="mono col-domain">openfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">582</td><td class="mono num">4</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:13%"></div>    <span class="rate-label mono">0.69%</span>  </div></td></tr><tr><td class="mono col-domain">discoverfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">582</td><td class="mono num">4</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:13%"></div>    <span class="rate-label mono">0.69%</span>  </div></td></tr><tr><td class="mono col-domain">firmablemail.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">3</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:13%"></div>    <span class="rate-label mono">0.68%</span>  </div></td></tr><tr><td class="mono col-domain">viafirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">3</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:13%"></div>    <span class="rate-label mono">0.68%</span>  </div></td></tr><tr><td class="mono col-domain">firmablecore.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">582</td><td class="mono num">3</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:10%"></div>    <span class="rate-label mono">0.51%</span>  </div></td></tr><tr><td class="mono col-domain">activatefirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">506</td><td class="mono num">2</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:7%"></div>    <span class="rate-label mono">0.39%</span>  </div></td></tr><tr><td class="mono col-domain">firmableteam.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">479</td><td class="mono num">1</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:4%"></div>    <span class="rate-label mono">0.21%</span>  </div></td></tr><tr><td class="mono col-domain">firmableportal.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">506</td><td class="mono num">1</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:3%"></div>    <span class="rate-label mono">0.20%</span>  </div></td></tr><tr><td class="mono col-domain">firmableedge.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">5,268</td><td class="mono num">2</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.04%</span>  </div></td></tr><tr><td class="mono col-domain">firmablezone.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">5,513</td><td class="mono num">2</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.04%</span>  </div></td></tr><tr><td class="mono col-domain">hellofirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">92</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmableenrich.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">1,335</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">accessfirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">1,335</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmableinc.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">253</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmablereach.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmablestudio.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">linkfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">meetfirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">487</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmablecloud.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">523</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmablebase.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">523</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmablehub.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">523</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">buildwithfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">runfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmabletrial.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmableorg.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmablepro.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">launchfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">poweredbyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmablesite.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">479</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">usefirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">479</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmableleads.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">myfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmablehq.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmableapi.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">buyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">heyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr><td class="mono col-domain">firmableplatform.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">2,194</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr>
+          <tr data-esp="Google"><td class="mono col-domain">firmableoutreach.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">14</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:63%"></div>    <span class="rate-label mono">3.19%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablescale.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">11</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:50%"></div>    <span class="rate-label mono">2.51%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablelabs.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">10</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:45%"></div>    <span class="rate-label mono">2.28%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmableconnect.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">10</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:45%"></div>    <span class="rate-label mono">2.28%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">readyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">9</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:41%"></div>    <span class="rate-label mono">2.05%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablegrowth.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">8</td><td class="rate-cell rate-mid">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:36%"></div>    <span class="rate-label mono">1.82%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">byfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">8</td><td class="rate-cell rate-mid">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:36%"></div>    <span class="rate-label mono">1.82%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">withfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">8</td><td class="rate-cell rate-mid">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:36%"></div>    <span class="rate-label mono">1.82%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablepartner.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">4</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:18%"></div>    <span class="rate-label mono">0.91%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablegroup.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">582</td><td class="mono num">5</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:17%"></div>    <span class="rate-label mono">0.86%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">openfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">582</td><td class="mono num">4</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:13%"></div>    <span class="rate-label mono">0.69%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">discoverfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">582</td><td class="mono num">4</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:13%"></div>    <span class="rate-label mono">0.69%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablemail.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">3</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:13%"></div>    <span class="rate-label mono">0.68%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">viafirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">3</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:13%"></div>    <span class="rate-label mono">0.68%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablecore.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">582</td><td class="mono num">3</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:10%"></div>    <span class="rate-label mono">0.51%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">activatefirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">506</td><td class="mono num">2</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:7%"></div>    <span class="rate-label mono">0.39%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmableteam.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">479</td><td class="mono num">1</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:4%"></div>    <span class="rate-label mono">0.21%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">firmableportal.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">506</td><td class="mono num">1</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:3%"></div>    <span class="rate-label mono">0.20%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">firmableedge.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">5,270</td><td class="mono num">2</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.04%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">firmablezone.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">5,515</td><td class="mono num">2</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.04%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">hellofirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">92</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">firmableenrich.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">1,335</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">accessfirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">1,335</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">firmableinc.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">253</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablereach.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablestudio.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">linkfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">438</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">meetfirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">487</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">firmablecloud.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">523</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">firmablebase.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">523</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Microsoft"><td class="mono col-domain">firmablehub.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">523</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">buildwithfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">runfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmabletrial.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmableorg.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablepro.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">launchfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">poweredbyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,012</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablesite.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">479</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">usefirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">479</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmableleads.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">myfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmablehq.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmableapi.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">buyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">heyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1,072</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr><tr data-esp="Google"><td class="mono col-domain">firmableplatform.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">2,194</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td></tr>
         </tbody>
       </table>
     </div>
@@ -225,8 +239,12 @@
       </div>
       <button class="expand-btn" id="expandAllBtn" onclick="toggleAll()">Expand all</button>
     </div>
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterMailboxes('all', this)">All</button>
+      <button class="filter-btn" onclick="filterMailboxes('inboxkit', this)">InboxKit</button><button class="filter-btn" onclick="filterMailboxes('scaledmail', this)">ScaledMail</button>
+    </div>
     
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableoutreach.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -239,19 +257,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@firmableoutreach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">12</td><td class="mono num rate-cell rate-good">6.32%</td></tr>
-<tr><td class="mono col-email">growth@firmableoutreach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.81%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmableoutreach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">12</td><td class="mono num rate-cell rate-good">6.32%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableoutreach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.81%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablescale.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -264,19 +282,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@firmablescale.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">9</td><td class="mono num rate-cell rate-good">4.74%</td></tr>
-<tr><td class="mono col-email">growth@firmablescale.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.81%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablescale.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">9</td><td class="mono num rate-cell rate-good">4.74%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablescale.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.81%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablelabs.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -289,19 +307,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@firmablelabs.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">6</td><td class="mono num rate-cell rate-good">3.16%</td></tr>
-<tr><td class="mono col-email">growth@firmablelabs.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">4</td><td class="mono num rate-cell rate-mid">1.62%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablelabs.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">6</td><td class="mono num rate-cell rate-good">3.16%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablelabs.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">4</td><td class="mono num rate-cell rate-mid">1.61%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableconnect.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -314,19 +332,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@firmableconnect.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">3.68%</td></tr>
-<tr><td class="mono col-email">growth@firmableconnect.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">3</td><td class="mono num rate-cell rate-mid">1.21%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmableconnect.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">3.68%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableconnect.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">3</td><td class="mono num rate-cell rate-mid">1.21%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">readyfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -339,19 +357,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@readyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">3.68%</td></tr>
-<tr><td class="mono col-email">growth@readyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.81%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@readyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">3.68%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@readyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.81%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablegrowth.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -364,19 +382,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@firmablegrowth.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">6</td><td class="mono num rate-cell rate-good">3.16%</td></tr>
-<tr><td class="mono col-email">growth@firmablegrowth.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.81%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablegrowth.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">6</td><td class="mono num rate-cell rate-good">3.16%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablegrowth.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.81%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">byfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -389,19 +407,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@byfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">3.68%</td></tr>
-<tr><td class="mono col-email">growth@byfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@byfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">3.68%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@byfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">withfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -414,19 +432,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@withfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">3.68%</td></tr>
-<tr><td class="mono col-email">growth@withfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@withfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">3.68%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@withfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablepartner.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -439,19 +457,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@firmablepartner.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">3</td><td class="mono num rate-cell rate-mid">1.58%</td></tr>
-<tr><td class="mono col-email">growth@firmablepartner.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablepartner.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">3</td><td class="mono num rate-cell rate-mid">1.58%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablepartner.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablegroup.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -464,19 +482,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@firmablegroup.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">3</td><td class="mono num rate-cell rate-mid">1.03%</td></tr>
-<tr><td class="mono col-email">data@firmablegroup.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.69%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablegroup.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">3</td><td class="mono num rate-cell rate-mid">1.03%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@firmablegroup.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.69%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">openfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -489,19 +507,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@openfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.69%</td></tr>
-<tr><td class="mono col-email">data@openfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.69%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@openfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.69%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@openfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.69%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">discoverfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -514,19 +532,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@discoverfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">4</td><td class="mono num rate-cell rate-mid">1.37%</td></tr>
-<tr><td class="mono col-email">data@discoverfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@discoverfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">4</td><td class="mono num rate-cell rate-mid">1.37%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@discoverfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablemail.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -539,19 +557,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@firmablemail.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.81%</td></tr>
-<tr><td class="mono col-email">data@firmablemail.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.53%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablemail.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.81%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablemail.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.53%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">viafirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -564,19 +582,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@viafirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">3</td><td class="mono num rate-cell rate-mid">1.58%</td></tr>
-<tr><td class="mono col-email">growth@viafirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@viafirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">3</td><td class="mono num rate-cell rate-mid">1.58%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@viafirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablecore.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -589,19 +607,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@firmablecore.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.69%</td></tr>
-<tr><td class="mono col-email">data@firmablecore.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.34%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablecore.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.69%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@firmablecore.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">291</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.34%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">activatefirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -614,19 +632,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@activatefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">253</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.79%</td></tr>
-<tr><td class="mono col-email">data@activatefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">253</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@activatefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">253</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.79%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@activatefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">253</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableteam.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -639,19 +657,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">sales@firmableteam.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">386</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.26%</td></tr>
-<tr><td class="mono col-email">asher@firmableteam.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">92</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">sales@firmableteam.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">386</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.26%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">asher@firmableteam.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">92</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableportal.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -664,19 +682,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@firmableportal.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">253</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
-<tr><td class="mono col-email">growth@firmableportal.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">253</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">data@firmableportal.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">253</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">growth@firmableportal.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">253</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableedge.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -689,42 +707,42 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">connect@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.53%</td></tr>
-<tr><td class="mono col-email">create@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
-<tr><td class="mono col-email">build@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">target@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">impact@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">motion@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">outreach@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">expand@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">marketing@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">meet@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">engage@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">explore@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">growth@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">data@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">discover@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">campaigns@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">align@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">partner@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">elevate@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">network@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">launch@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">scale@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">amplify@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">reach@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">grow@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.53%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">create@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">build@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">target@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">impact@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">motion@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">marketing@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">discover@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">align@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">partner@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">elevate@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">network@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">launch@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">scale@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">amplify@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">grow@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablezone.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -737,42 +755,42 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
-<tr><td class="mono col-email">motion@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
-<tr><td class="mono col-email">campaigns@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">launch@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">data@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">discover@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">connect@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">grow@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">meet@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">explore@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">amplify@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">marketing@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">build@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">create@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">impact@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">engage@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">align@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">outreach@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">partner@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">expand@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">scale@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">reach@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">network@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">target@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">elevate@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">motion@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.40%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">launch@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">discover@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">grow@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">amplify@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">marketing@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">build@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">create@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">impact@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">align@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">partner@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">scale@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">reach@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">network@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">target@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">elevate@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">hellofirmable.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -785,19 +803,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">asher@hellofirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">92</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">sales@hellofirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">n/a</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">asher@hellofirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">92</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">sales@hellofirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">n/a</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableenrich.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -810,42 +828,42 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">grow@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">network@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">partner@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">marketing@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">connect@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">amplify@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">target@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">create@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">reach@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">outreach@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">impact@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">motion@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">align@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">elevate@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">build@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">scale@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">expand@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">engage@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">accelerate@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">meet@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">growth@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">explore@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">campaigns@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">discover@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">launch@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">grow@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">network@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">partner@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">marketing@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">amplify@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">target@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">create@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">impact@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">motion@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">align@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">elevate@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">build@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">scale@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">accelerate@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">discover@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">launch@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">accessfirmable.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -858,42 +876,42 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">motion@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">impact@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">discover@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">partner@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">network@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">growth@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">meet@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">explore@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">campaigns@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">align@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">amplify@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">build@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">create@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">grow@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">scale@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">elevate@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">expand@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">accelerate@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">target@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">marketing@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">engage@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">reach@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">connect@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">outreach@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">launch@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">motion@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">impact@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">discover@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">partner@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">network@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">align@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">amplify@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">build@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">create@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">grow@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">scale@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">elevate@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">accelerate@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">target@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">marketing@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">reach@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">launch@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">53</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableinc.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -906,19 +924,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@firmableinc.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">253</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">data@firmableinc.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">n/a</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmableinc.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">253</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@firmableinc.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">n/a</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablereach.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -931,19 +949,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@firmablereach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">data@firmablereach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablereach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablereach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablestudio.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -956,19 +974,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@firmablestudio.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">data@firmablestudio.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablestudio.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablestudio.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">linkfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -981,19 +999,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@linkfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">247</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">data@linkfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@linkfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">248</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@linkfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">190</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">meetfirmable.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -1006,19 +1024,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">asher@meetfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">92</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">sales@meetfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">395</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">asher@meetfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">92</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">sales@meetfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">395</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablecloud.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -1031,19 +1049,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@firmablecloud.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">data@firmablecloud.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablecloud.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@firmablecloud.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablebase.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -1056,19 +1074,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@firmablebase.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">growth@firmablebase.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">data@firmablebase.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablebase.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablehub.com</span>
             <span class="esp-badge esp-microsoft">Microsoft</span>
@@ -1081,19 +1099,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">data@firmablehub.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">growth@firmablehub.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">data@firmablehub.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablehub.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">261</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">buildwithfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1106,19 +1124,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">scale@buildwithfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">expand@buildwithfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">scale@buildwithfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@buildwithfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">runfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1131,19 +1149,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">accelerate@runfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">meet@runfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">accelerate@runfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@runfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmabletrial.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1156,19 +1174,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@firmabletrial.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">outreach@firmabletrial.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmabletrial.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmabletrial.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableorg.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1181,19 +1199,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">discover@firmableorg.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">explore@firmableorg.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">discover@firmableorg.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmableorg.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablepro.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1206,19 +1224,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">launch@firmablepro.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">campaigns@firmablepro.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">launch@firmablepro.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmablepro.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">launchfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1231,19 +1249,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">launch@launchfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">campaigns@launchfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">launch@launchfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@launchfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">poweredbyfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1256,19 +1274,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">discover@poweredbyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">explore@poweredbyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">discover@poweredbyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@poweredbyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">506</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablesite.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1281,19 +1299,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">asher@firmablesite.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">92</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">sales@firmablesite.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">386</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">asher@firmablesite.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">92</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">sales@firmablesite.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">386</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="inboxkit">
           <summary class="domain-group-header">
             <span class="mono dg-domain">usefirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1306,19 +1324,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">asher@usefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">92</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">sales@usefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">386</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">asher@usefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">92</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">sales@usefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">386</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableleads.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1331,19 +1349,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">accelerate@firmableleads.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">meet@firmableleads.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">accelerate@firmableleads.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmableleads.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">myfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1356,19 +1374,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">marketing@myfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">engage@myfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">marketing@myfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@myfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmablehq.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1381,19 +1399,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">growth@firmablehq.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">outreach@firmablehq.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablehq.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmablehq.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableapi.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1406,19 +1424,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">reach@firmableapi.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">connect@firmableapi.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableapi.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableapi.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">buyfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1431,19 +1449,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">scale@buyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">expand@buyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">scale@buyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@buyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">heyfirmable.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1456,19 +1474,19 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">marketing@heyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">engage@heyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">marketing@heyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@heyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group">
+        <details class="domain-group" data-vendors="scaledmail">
           <summary class="domain-group-header">
             <span class="mono dg-domain">firmableplatform.com</span>
             <span class="esp-badge esp-google">Google</span>
@@ -1481,14 +1499,14 @@
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Sent</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><td class="mono col-email">reach@firmableplatform.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
-<tr><td class="mono col-email">connect@firmableplatform.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">1,658</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableplatform.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">536</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableplatform.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">1,658</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td></tr>
               </tbody>
             </table>
           </div>
@@ -1503,10 +1521,40 @@
 <script>
   function toggleAll() {
     var btn = document.getElementById('expandAllBtn');
-    var details = document.querySelectorAll('.domain-group');
+    var details = document.querySelectorAll('.domain-group:not([style*="display: none"])');
     var anyOpen = Array.from(details).some(function(d) { return d.open; });
     details.forEach(function(d) { d.open = !anyOpen; });
     btn.textContent = anyOpen ? 'Expand all' : 'Collapse all';
+  }
+
+  function filterDomains(esp, btn) {
+    document.querySelectorAll('.filter-bar .filter-btn').forEach(function(b) {
+      if (b.closest('.filter-bar') === btn.closest('.filter-bar')) b.classList.remove('active');
+    });
+    btn.classList.add('active');
+    document.querySelectorAll('.domain-table tbody tr').forEach(function(row) {
+      row.style.display = (esp === 'all' || row.dataset.esp === esp) ? '' : 'none';
+    });
+  }
+
+  function filterMailboxes(vendor, btn) {
+    document.querySelectorAll('.filter-bar .filter-btn').forEach(function(b) {
+      if (b.closest('.filter-bar') === btn.closest('.filter-bar')) b.classList.remove('active');
+    });
+    btn.classList.add('active');
+    document.querySelectorAll('.domain-group').forEach(function(group) {
+      var rows = group.querySelectorAll('.mailbox-table tbody tr');
+      var visible = 0;
+      rows.forEach(function(row) {
+        var show = vendor === 'all' || row.dataset.vendor === vendor;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      group.style.display = visible > 0 ? '' : 'none';
+    });
+    // Reset expand button label
+    var expandBtn = document.getElementById('expandAllBtn');
+    if (expandBtn) expandBtn.textContent = 'Expand all';
   }
 </script>
 </body>
