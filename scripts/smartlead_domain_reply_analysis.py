@@ -568,6 +568,125 @@ def write_html_report(
           </div>
         </details>""")
 
+    # ---- Recommendations ----
+    rec_zero    = [r for r in rows if r["is_active"] and r["replies_14d"] == 0]
+    rec_low     = [r for r in rows if r["is_active"] and r["reply_rate"] is not None and 0 < r["reply_rate"] < 1.0]
+    rec_healthy = [r for r in rows if r["is_active"] and r["reply_rate"] is not None and r["reply_rate"] >= 1.0]
+    rec_reserve = [r for r in rows if not r["is_active"]]
+
+    def _vendor_for_domain(domain):
+        acc_ids = domain_to_acc_ids.get(domain, [])
+        vs = [id_to_vendor.get(a, "") for a in acc_ids if id_to_vendor.get(a)]
+        if not vs:
+            return ""
+        counts = {}
+        for v in vs:
+            counts[v] = counts.get(v, 0) + 1
+        return max(counts, key=counts.get)
+
+    def _chip(text, cls):
+        return f'<span class="rec-chip rec-chip-{cls}">{text}</span>'
+
+    # Card 1: rotate immediately (zero replies)
+    if rec_zero:
+        zero_chips = "".join(_chip(r["domain"], "alert") for r in rec_zero)
+        zero_vendor_note = ""
+        zero_vendors = [v for v in (_vendor_for_domain(r["domain"]) for r in rec_zero) if v]
+        if zero_vendors:
+            from collections import Counter
+            top = Counter(zero_vendors).most_common()
+            vendor_str = ", ".join(f"{v} ({c})" for v, c in top)
+            zero_vendor_note = f'<p class="rec-vendor-note">Vendor breakdown for these domains: {vendor_str}. If one vendor dominates, raise it with them.</p>'
+        card_rotate_zero = f"""
+        <div class="rec-card rec-card-danger">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-danger">Action required</span>
+            <h3>Pull these domains from active campaigns now</h3>
+          </div>
+          <p>{len(rec_zero)} domain{"s" if len(rec_zero) != 1 else ""} {"are" if len(rec_zero) != 1 else "is"} currently sending but received zero replies in the past {lookback_days} days. Zero replies while active is the clearest signal a domain is burned or being silently filtered. Remove them from your campaigns immediately and replace with fresh domains from the reserve pool.</p>
+          <div class="rec-chips">{zero_chips}</div>
+          {zero_vendor_note}
+        </div>"""
+    else:
+        card_rotate_zero = ""
+
+    # Card 2: low reply rate (0 < rate < 1%)
+    if rec_low:
+        low_chips = "".join(_chip(f'{r["domain"]} ({r["reply_rate"]:.2f}%)', "warn") for r in rec_low)
+        card_rotate_low = f"""
+        <div class="rec-card rec-card-warn">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-warn">Watch closely</span>
+            <h3>Below 1% reply rate — prepare to rotate out</h3>
+          </div>
+          <p>{len(rec_low)} domain{"s" if len(rec_low) != 1 else ""} {"are" if len(rec_low) != 1 else "is"} active with a reply rate under 1%. This is below the threshold for a healthy sending domain. If the rate does not improve in the next 7 days, pull these from campaigns and bring in reserve domains.</p>
+          <div class="rec-chips">{low_chips}</div>
+        </div>"""
+    else:
+        card_rotate_low = ""
+
+    # Card 3: healthy — reassurance
+    if rec_healthy:
+        healthy_chips = "".join(_chip(f'{r["domain"]} ({r["reply_rate"]:.2f}%)', "ok") for r in rec_healthy)
+        card_healthy = f"""
+        <div class="rec-card rec-card-ok">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-ok">Healthy</span>
+            <h3>Keep running — these domains are working</h3>
+          </div>
+          <p>{len(rec_healthy)} domain{"s" if len(rec_healthy) != 1 else ""} {"are" if len(rec_healthy) != 1 else "is"} active with reply rates above 1%. No action needed. Continue monitoring weekly and rotate out if rate drops.</p>
+          <div class="rec-chips">{healthy_chips}</div>
+        </div>"""
+    else:
+        card_healthy = ""
+
+    # Card 4: reserve pool
+    reserve_display = rec_reserve[:12]
+    reserve_more = len(rec_reserve) - 12
+    reserve_chips = "".join(_chip(r["domain"], "neutral") for r in reserve_display)
+    if reserve_more > 0:
+        reserve_chips += f'<span class="rec-chip rec-chip-neutral">+{reserve_more} more</span>'
+    card_reserve = f"""
+        <div class="rec-card rec-card-info">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-info">Reserve pool</span>
+            <h3>{len(rec_reserve)} inactive domain{"s" if len(rec_reserve) != 1 else ""} available to rotate in</h3>
+          </div>
+          <p>These domains are not assigned to any active campaign. When you pull a burned domain, replace it with one of these. Before adding a reserve domain to a campaign, confirm it has been warmed up — check SmartLead's warm-up status and ensure it has been running warm-up emails for at least 2 to 3 weeks.</p>
+          <div class="rec-chips">{reserve_chips}</div>
+        </div>"""
+
+    # Card 5: rotation process
+    card_process = """
+        <div class="rec-card rec-card-neutral">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-neutral">How to rotate</span>
+            <h3>Rotation process</h3>
+          </div>
+          <ol class="rec-steps">
+            <li>Remove the burned domain from the campaign in SmartLead (swap out the email accounts assigned to it).</li>
+            <li>Let the burned domain rest for at least 4 to 6 weeks before attempting to re-use it. Do not send cold email from it during this time.</li>
+            <li>Pick a reserve domain that has completed warm-up. Add its mailboxes to the campaign in SmartLead.</li>
+            <li>Check this report again in 7 days to confirm the replacement domain is getting replies.</li>
+            <li>If a vendor is consistently supplying burned domains, flag it with them and ask for replacements.</li>
+          </ol>
+        </div>"""
+
+    rec_html = f"""
+  <div class="section">
+    <div class="section-eyebrow">Action plan</div>
+    <h2>Recommendations</h2>
+    <p class="section-desc">
+      Based on activity in the past {lookback_days} days across {total_active_campaigns} active campaigns.
+      Threshold: reply rate below 1% while active = rotate out.
+    </p>
+    {card_rotate_zero}
+    {card_rotate_low}
+    {card_healthy}
+    {card_reserve}
+    {card_process}
+  </div>"""
+
     html = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -752,6 +871,35 @@ def write_html_report(
   .camp-tag-none {{ font-family:var(--mono); font-size:11px; color:var(--text-3); }}
   .camps-cell {{ max-width:320px; }}
 
+  /* Recommendation cards */
+  .rec-card {{ background:var(--surface); border:1px solid var(--border); border-radius:4px;
+    padding:24px 28px; margin-bottom:16px; }}
+  .rec-card-danger {{ border-left:4px solid var(--danger); }}
+  .rec-card-warn   {{ border-left:4px solid var(--accent); }}
+  .rec-card-ok     {{ border-left:4px solid var(--teal); }}
+  .rec-card-info   {{ border-left:4px solid #3B82F6; }}
+  .rec-card-neutral {{ border-left:4px solid var(--border); }}
+  .rec-card-header {{ display:flex; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap; }}
+  .rec-card h3 {{ font-family:var(--mono); font-size:15px; font-weight:700; letter-spacing:-.01em; }}
+  .rec-card p {{ color:var(--text-2); font-size:13px; max-width:680px; margin-bottom:12px; line-height:1.7; }}
+  .rec-vendor-note {{ font-style:italic; color:var(--text-3); font-size:12px; margin-top:8px; }}
+  .rec-badge {{ display:inline-block; font-family:var(--mono); font-size:10px;
+    letter-spacing:.08em; text-transform:uppercase; padding:3px 9px; border-radius:3px; white-space:nowrap; }}
+  .rec-badge-danger  {{ background:#FFEBEE; color:#B71C1C; }}
+  .rec-badge-warn    {{ background:#FFF3E0; color:#7C4B00; }}
+  .rec-badge-ok      {{ background:#E8F5E9; color:#1B5E20; }}
+  .rec-badge-info    {{ background:#EFF6FF; color:#1E40AF; }}
+  .rec-badge-neutral {{ background:var(--surface-2); color:var(--text-3); }}
+  .rec-chips {{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }}
+  .rec-chip {{ display:inline-block; font-family:var(--mono); font-size:11px;
+    padding:3px 10px; border-radius:3px; white-space:nowrap; }}
+  .rec-chip-alert   {{ background:#FFEBEE; color:#B71C1C; border:1px solid #FFCDD2; }}
+  .rec-chip-warn    {{ background:#FFF3E0; color:#7C4B00; border:1px solid #FFE0B2; }}
+  .rec-chip-ok      {{ background:#E8F5E9; color:#1B5E20; border:1px solid #C8E6C9; }}
+  .rec-chip-neutral {{ background:var(--surface-2); color:var(--text-2); border:1px solid var(--border); }}
+  .rec-steps {{ padding-left:20px; color:var(--text-2); font-size:13px; line-height:1.9; max-width:680px; }}
+  .rec-steps li {{ padding-left:4px; }}
+
   /* Footer */
   .report-footer {{ border-top:1px solid var(--border); padding-top:24px; margin-top:24px;
     font-family:var(--mono); font-size:11px; color:var(--text-3); }}
@@ -835,6 +983,8 @@ def write_html_report(
     </div>
     {''.join(mailbox_sections_html)}
   </div>
+
+  {rec_html}
 
   <div class="report-footer">
     Generated {generated_at} &nbsp;·&nbsp; Replies window: last {lookback_days} days &nbsp;·&nbsp; {total_active_campaigns} active campaigns at time of report
