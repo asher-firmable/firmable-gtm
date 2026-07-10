@@ -795,7 +795,6 @@ def write_html_report(
     <div class="filter-bar" id="domainFilterBar">
       <button class="filter-btn active" onclick="filterDomains('all', this)">All</button>
       <button class="filter-btn" onclick="filterDomains('active', this)">Active only</button>
-      <button class="filter-btn" onclick="filterDomains('inactive', this)">Inactive only</button>
       <button class="filter-btn" onclick="filterDomains('Google', this)">Google</button>
       <button class="filter-btn" onclick="filterDomains('Microsoft', this)">Microsoft</button>
     </div>
