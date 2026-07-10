@@ -113,19 +113,23 @@ def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list)
     """
     For each ACTIVE campaign, get assigned email accounts and analytics.
     Returns:
-      - account_active_count: {account_id: int}  — active campaign slots per account
-      - account_active_sent:  {account_id: float} — apportioned all-time sends from active campaigns
+      - account_active_count:     {account_id: int}    — active campaign slots per account
+      - account_active_sent:      {account_id: float}  — apportioned all-time sends from active campaigns
+      - account_active_campaigns: {account_id: [name]} — list of active campaign names per account
       - total_active: int
     """
     account_active_count = defaultdict(int)
     account_active_sent = defaultdict(float)
+    account_active_campaigns = defaultdict(list)
     active = [c for c in campaigns if c.get("status") == "ACTIVE"]
 
     print(f"  {len(active)} active campaigns (of {len(campaigns)} total)")
 
     for i, camp in enumerate(active, 1):
         camp_id = str(camp["id"])
-        camp_name = camp.get("name", camp_id)
+        # Strip "[Campaign] " prefix SmartLead sometimes prepends
+        raw_name = camp.get("name", camp_id)
+        camp_name = raw_name.removeprefix("[Campaign] ") if raw_name.startswith("[Campaign] ") else raw_name
         print(f"  [{i}/{len(active)}] {camp_name}", end="\r", flush=True)
 
         try:
@@ -148,11 +152,12 @@ def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list)
             if acc_id:
                 account_active_count[acc_id] += 1
                 account_active_sent[acc_id] += per_account
+                account_active_campaigns[acc_id].append(camp_name)
 
     if active:
         print()
 
-    return dict(account_active_count), dict(account_active_sent), len(active)
+    return dict(account_active_count), dict(account_active_sent), dict(account_active_campaigns), len(active)
 
 
 def _get_inbox_replies_with_retry(client, offset, limit, start_iso, end_iso, max_retries=5):
@@ -198,6 +203,7 @@ def aggregate_by_domain(
     domain_to_esp: dict,
     account_active_count: dict,
     account_active_sent: dict,
+    account_active_campaigns: dict,
     account_replies: dict,
 ) -> list:
     domain_mailboxes = defaultdict(set)
@@ -210,7 +216,12 @@ def aggregate_by_domain(
         active_sent = sum(account_active_sent.get(a, 0) for a in acc_ids)
         replies = sum(account_replies.get(a, 0) for a in acc_ids)
         is_active = active_campaigns > 0
-        reply_rate = (replies / active_sent * 100) if active_sent > 0 else (None if is_active else None)
+        reply_rate = (replies / active_sent * 100) if active_sent > 0 else None
+        campaign_names = sorted(set(
+            name
+            for a in acc_ids
+            for name in account_active_campaigns.get(a, [])
+        ))
         rows.append({
             "domain": domain,
             "esp": domain_to_esp.get(domain, "Other"),
@@ -220,6 +231,7 @@ def aggregate_by_domain(
             "replies_14d": replies,
             "reply_rate": reply_rate,
             "is_active": is_active,
+            "campaign_names": campaign_names,
         })
 
     # Sort: active + no replies first, then active + replies (by rate desc), then inactive
@@ -382,6 +394,7 @@ def write_html_report(
     domain_to_esp: dict,
     account_active_count: dict,
     account_active_sent: dict,
+    account_active_campaigns: dict,
     account_replies: dict,
     lookback_days: int,
     total_active_campaigns: int,
@@ -438,6 +451,11 @@ def write_html_report(
                 if vendor else
                 '<span class="vendor-badge vendor-unknown">—</span>'
             )
+            camp_names = account_active_campaigns.get(acc_id, [])
+            if camp_names:
+                camps_html = " ".join(f'<span class="camp-tag">{n}</span>' for n in camp_names)
+            else:
+                camps_html = '<span class="camp-tag-none">—</span>'
             html.append(
                 f'<tr data-vendor="{vendor_slug}">'
                 f'<td class="mono col-email">{email}</td>'
@@ -446,6 +464,7 @@ def write_html_report(
                 f'<td class="mono num">{replies}</td>'
                 f'<td class="mono num rate-cell {rate_cls}">{rate_str}</td>'
                 f'<td>{status_html}</td>'
+                f'<td class="camps-cell">{camps_html}</td>'
                 f'</tr>'
             )
         return "\n".join(html)
@@ -464,12 +483,18 @@ def write_html_report(
         else:
             status_html = '<span class="status-badge status-ok">Active</span>'
 
+        camp_tooltip = " | ".join(r["campaign_names"]) if r["campaign_names"] else ""
+        camp_count_cell = (
+            f'<td class="mono num" title="{camp_tooltip}" style="cursor:help">{r["active_campaigns"]}</td>'
+            if camp_tooltip else
+            f'<td class="mono num">{r["active_campaigns"]}</td>'
+        )
         domain_rows_html.append(
             f'<tr data-esp="{r["esp"]}" data-active="{1 if r["is_active"] else 0}">'
             f'<td class="mono col-domain">{r["domain"]}</td>'
             f'<td><span class="esp-badge esp-{r["esp"].lower()}">{r["esp"]}</span></td>'
             f'<td class="mono num">{r["mailboxes"]}</td>'
-            f'<td class="mono num">{r["active_campaigns"]}</td>'
+            f'{camp_count_cell}'
             f'<td class="mono num">{r["replies_14d"]}</td>'
             f'<td class="rate-cell {rate_cls}">'
             f'  <div class="rate-bar-wrap">'
@@ -509,6 +534,10 @@ def write_html_report(
             f'{r["active_campaigns"]} campaign{"s" if r["active_campaigns"] != 1 else ""}'
             if r["is_active"] else "Inactive"
         )
+        camp_tags_html = ""
+        if r["campaign_names"]:
+            tags = "".join(f'<span class="camp-tag">{n}</span>' for n in r["campaign_names"])
+            camp_tags_html = f'<div class="domain-camps">{tags}</div>'
         mailbox_sections_html.append(f"""
         <details class="domain-group" data-vendors="{domain_vendors}" data-active="{1 if r['is_active'] else 0}">
           <summary class="domain-group-header">
@@ -519,6 +548,7 @@ def write_html_report(
             <span class="rate-pill {pill_class}">{pill_text}</span>
           </summary>
           <div class="domain-group-body">
+            {camp_tags_html}
             <table class="mailbox-table">
               <thead>
                 <tr>
@@ -528,6 +558,7 @@ def write_html_report(
                   <th class="num">Replies (14d)</th>
                   <th class="num">Reply Rate</th>
                   <th>Status</th>
+                  <th>Campaigns</th>
                 </tr>
               </thead>
               <tbody>
@@ -712,6 +743,15 @@ def write_html_report(
     color:var(--text-2); cursor:pointer; white-space:nowrap; transition:background .15s,color .15s; }}
   .expand-btn:hover {{ background:var(--surface-2); color:var(--text); }}
 
+  /* Campaign tags (inside mailbox table + domain group header) */
+  .domain-camps {{ display:flex; flex-wrap:wrap; gap:6px; padding:10px 16px 0;
+    border-top:1px solid var(--border); background:var(--surface-2); }}
+  .camp-tag {{ display:inline-block; font-family:var(--mono); font-size:10px;
+    letter-spacing:.04em; padding:3px 8px; border-radius:3px;
+    background:#EFF6FF; color:#1E40AF; white-space:nowrap; border:1px solid #BFDBFE; }}
+  .camp-tag-none {{ font-family:var(--mono); font-size:11px; color:var(--text-3); }}
+  .camps-cell {{ max-width:320px; }}
+
   /* Footer */
   .report-footer {{ border-top:1px solid var(--border); padding-top:24px; margin-top:24px;
     font-family:var(--mono); font-size:11px; color:var(--text-3); }}
@@ -862,7 +902,7 @@ def main():
 
     print("Fetching active campaigns and analytics...")
     campaigns = client.list_campaigns()
-    account_active_count, account_active_sent, total_active_campaigns = fetch_active_campaigns_per_account(client, campaigns)
+    account_active_count, account_active_sent, account_active_campaigns, total_active_campaigns = fetch_active_campaigns_per_account(client, campaigns)
 
     now = datetime.now(tz=timezone.utc)
     start = now - timedelta(days=LOOKBACK_DAYS)
@@ -874,7 +914,7 @@ def main():
 
     rows = aggregate_by_domain(
         account_to_domain, domain_to_esp,
-        account_active_count, account_active_sent, account_replies,
+        account_active_count, account_active_sent, account_active_campaigns, account_replies,
     )
     print_table(rows, LOOKBACK_DAYS)
     print_mailbox_table(
@@ -893,6 +933,7 @@ def main():
         domain_to_esp=domain_to_esp,
         account_active_count=account_active_count,
         account_active_sent=account_active_sent,
+        account_active_campaigns=account_active_campaigns,
         account_replies=account_replies,
         lookback_days=LOOKBACK_DAYS,
         total_active_campaigns=total_active_campaigns,
