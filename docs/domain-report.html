@@ -23,7 +23,7 @@
   *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
   body { background:var(--ground); color:var(--text); font-family:var(--sans);
           font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased; }
-  .report { max-width:960px; margin:0 auto; padding:48px 24px 96px; }
+  .report { max-width:980px; margin:0 auto; padding:48px 24px 96px; }
 
   /* Header */
   .report-header { border-bottom:1px solid var(--border); padding-bottom:36px; margin-bottom:56px; }
@@ -45,7 +45,6 @@
     line-height:1; letter-spacing:-.04em; display:block; margin-bottom:12px; }
   .hero-number--pass { color:var(--teal); text-shadow:0 2px 12px rgba(10,143,106,.18); }
   .hero-number--fail { color:var(--danger); text-shadow:0 2px 12px rgba(192,41,46,.18); }
-  .hero-number--neutral { color:var(--text-3); }
   .hero-label { font-family:var(--mono); font-size:11px; letter-spacing:.1em;
     text-transform:uppercase; color:var(--text-2); margin-bottom:4px; }
   .hero-sub { font-size:12px; color:var(--text-3); }
@@ -71,17 +70,24 @@
   .esp-microsoft { background:#E3F2FD; color:#0D47A1; }
   .esp-other     { background:var(--surface-2); color:var(--text-3); }
 
-  /* Status badges (inline in table cells) */
+  /* Status badges */
   .status-badge { display:inline-block; font-family:var(--mono); font-size:10px;
     letter-spacing:.06em; padding:2px 8px; border-radius:3px; white-space:nowrap; }
   .status-ok       { background:#E8F5E9; color:#1B5E20; }
   .status-alert    { background:#FFEBEE; color:#B71C1C; font-weight:600; }
   .status-inactive { background:var(--surface-2); color:var(--text-3); }
 
+  /* Rate colours */
+  .rate-good { color:var(--teal); }
+  .rate-mid  { color:var(--accent); }
+  .rate-low  { color:var(--danger); }
+  .rate-zero { color:var(--danger); opacity:.7; }
+  .rate-none { color:var(--text-3); }
+
   /* Domain summary table */
   .scroll-wrap { overflow-x:auto; }
   .domain-table { width:100%; border-collapse:collapse; font-size:13px;
-    font-variant-numeric:tabular-nums; min-width:600px; }
+    font-variant-numeric:tabular-nums; min-width:700px; }
   .domain-table th { font-family:var(--mono); font-size:10px; letter-spacing:.1em;
     text-transform:uppercase; color:var(--text-3); padding:10px 14px;
     text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }
@@ -93,6 +99,17 @@
   .num  { text-align:right; }
   .col-domain { font-size:13px; color:var(--text); }
   .col-email  { font-size:12px; color:var(--text-2); }
+
+  /* Rate bar in domain table */
+  .rate-cell { min-width:90px; }
+  .rate-bar-wrap { display:flex; align-items:center; gap:8px; }
+  .rate-bar { height:5px; border-radius:3px; background:var(--teal); flex-shrink:0; min-width:0; }
+  .rate-good .rate-bar { background:var(--teal); }
+  .rate-mid  .rate-bar { background:var(--accent); }
+  .rate-low  .rate-bar { background:var(--danger); }
+  .rate-zero .rate-bar { background:var(--danger); opacity:.5; width:0!important; }
+  .rate-none .rate-bar { display:none; }
+  .rate-label { font-size:12px; white-space:nowrap; }
 
   /* Domain group (mailbox breakdown) */
   .domain-group { border:1px solid var(--border); border-radius:4px;
@@ -111,7 +128,9 @@
   .dg-meta { font-size:12px; color:var(--text-3); white-space:nowrap; }
   .rate-pill { font-size:11px; padding:2px 8px; border-radius:20px; font-family:var(--mono); }
   .rate-good { background:#E8F5E9; color:#1B5E20; }
+  .rate-mid  { background:#FFF3E0; color:#7C4B00; }
   .rate-low  { background:#FFEBEE; color:#B71C1C; font-weight:600; }
+  .rate-zero { background:#FFEBEE; color:#B71C1C; opacity:.8; }
   .rate-none { background:var(--surface-2); color:var(--text-3); }
   .domain-group-body { padding:0; }
 
@@ -146,7 +165,6 @@
   .mailbox-section-header { display:flex; align-items:flex-start; justify-content:space-between;
     gap:16px; margin-bottom:0; }
   .mailbox-section-header h2 { margin-bottom:8px; }
-  .mailbox-section-header .section-desc { margin-bottom:28px; }
 
   /* Expand all button */
   .expand-btn { flex-shrink:0; margin-top:4px; font-family:var(--mono); font-size:11px;
@@ -171,14 +189,14 @@
       <span class="tag">10 Jul 2026</span>
     </div>
     <h1>Domain Health Report</h1>
-    <div class="header-sub">Replies: last 14 days &nbsp;·&nbsp; Active = currently assigned to an active campaign</div>
+    <div class="header-sub">Replies: last 14 days &nbsp;·&nbsp; Reply rate = replies / sends from active campaigns (all-time) &nbsp;·&nbsp; Active = in a live campaign</div>
   </div>
 
   <div class="hero-contrast">
     <div class="hero-stat">
       <span class="hero-number hero-number--pass">16</span>
       <div class="hero-label">Active &amp; getting replies</div>
-      <div class="hero-sub">domains in live campaigns with replies</div>
+      <div class="hero-sub">in live campaigns with replies in 14d</div>
     </div>
     <div class="hero-divider">vs</div>
     <div class="hero-stat">
@@ -193,9 +211,9 @@
     <h2>By Domain</h2>
     <p class="section-desc">
       All 47 sending domains across 186 mailboxes.
-      25 inactive (not in any active campaign). Sorted by urgency: active with no replies first.
+      25 inactive (not in any active campaign). Sorted by urgency.
     </p>
-    <div class="filter-bar">
+    <div class="filter-bar" id="domainFilterBar">
       <button class="filter-btn active" onclick="filterDomains('all', this)">All</button>
       <button class="filter-btn" onclick="filterDomains('active', this)">Active only</button>
       <button class="filter-btn" onclick="filterDomains('Google', this)">Google</button>
@@ -210,11 +228,12 @@
             <th class="num">Mailboxes</th>
             <th class="num">Active Campaigns</th>
             <th class="num">Replies (14d)</th>
+            <th>Reply Rate</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
-          <tr data-esp="Microsoft" data-active="1"><td class="mono col-domain">firmableinc.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">1</td><td class="mono num">0</td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablereach.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">0</td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablestudio.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">0</td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">linkfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">0</td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablesite.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1</td><td class="mono num">0</td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">usefirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1</td><td class="mono num">0</td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmableoutreach.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">14</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablescale.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">11</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablelabs.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">10</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmableconnect.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">10</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">readyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">9</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablegrowth.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">8</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">byfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">8</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">withfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">8</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablepartner.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">4</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablemail.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">3</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">viafirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">3</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Microsoft" data-active="1"><td class="mono col-domain">firmableedge.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">61</td><td class="mono num">2</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Microsoft" data-active="1"><td class="mono col-domain">firmablezone.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">63</td><td class="mono num">2</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">activatefirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">2</td><td class="mono num">2</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmableteam.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Microsoft" data-active="1"><td class="mono col-domain">firmableportal.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">2</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmablegroup.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">5</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">openfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">4</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">discoverfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">4</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmablecore.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">3</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">hellofirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">firmableenrich.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">accessfirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">meetfirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">firmablecloud.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">firmablebase.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">firmablehub.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">buildwithfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">runfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmabletrial.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmableorg.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmablepro.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">launchfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">poweredbyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmableleads.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">myfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmablehq.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmableapi.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">buyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">heyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmableplatform.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+          <tr data-esp="Microsoft" data-active="1"><td class="mono col-domain">firmableinc.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">1</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablereach.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablestudio.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">linkfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablesite.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">usefirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1</td><td class="mono num">0</td><td class="rate-cell rate-zero">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.00%</span>  </div></td><td><span class="status-badge status-alert">Active · No replies</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmableoutreach.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">14</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:78%"></div>    <span class="rate-label mono">3.94%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablescale.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">11</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:61%"></div>    <span class="rate-label mono">3.10%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablelabs.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">10</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:56%"></div>    <span class="rate-label mono">2.82%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmableconnect.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">10</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:56%"></div>    <span class="rate-label mono">2.82%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">readyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">9</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:50%"></div>    <span class="rate-label mono">2.54%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablegrowth.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">8</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:45%"></div>    <span class="rate-label mono">2.25%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">byfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">8</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:45%"></div>    <span class="rate-label mono">2.25%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">withfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">8</td><td class="rate-cell rate-good">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:45%"></div>    <span class="rate-label mono">2.25%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablepartner.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">4</td><td class="rate-cell rate-mid">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:22%"></div>    <span class="rate-label mono">1.13%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmablemail.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">3</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:16%"></div>    <span class="rate-label mono">0.85%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">viafirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">5</td><td class="mono num">3</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:16%"></div>    <span class="rate-label mono">0.85%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">firmableteam.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">1</td><td class="mono num">1</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:12%"></div>    <span class="rate-label mono">0.61%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Google" data-active="1"><td class="mono col-domain">activatefirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">2</td><td class="mono num">2</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:12%"></div>    <span class="rate-label mono">0.61%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Microsoft" data-active="1"><td class="mono col-domain">firmableportal.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">2</td><td class="mono num">1</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:6%"></div>    <span class="rate-label mono">0.31%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Microsoft" data-active="1"><td class="mono col-domain">firmableedge.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">61</td><td class="mono num">2</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.05%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Microsoft" data-active="1"><td class="mono col-domain">firmablezone.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">63</td><td class="mono num">2</td><td class="rate-cell rate-low">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">0.04%</span>  </div></td><td><span class="status-badge status-ok">Active</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">hellofirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">firmableenrich.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">accessfirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">25</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">meetfirmable.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">firmablecloud.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">firmablebase.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Microsoft" data-active="0"><td class="mono col-domain">firmablehub.com</td><td><span class="esp-badge esp-microsoft">Microsoft</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">openfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">4</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmablecore.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">3</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmablegroup.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">5</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">discoverfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">4</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">buildwithfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">runfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmabletrial.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmableorg.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmablepro.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">launchfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">poweredbyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmableleads.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">myfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmablehq.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmableapi.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">buyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">heyfirmable.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr><tr data-esp="Google" data-active="0"><td class="mono col-domain">firmableplatform.com</td><td><span class="esp-badge esp-google">Google</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num">0</td><td class="rate-cell rate-none">  <div class="rate-bar-wrap">    <div class="rate-bar" style="width:0%"></div>    <span class="rate-label mono">—</span>  </div></td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -229,7 +248,7 @@
       </div>
       <button class="expand-btn" id="expandAllBtn" onclick="toggleAll()">Expand all</button>
     </div>
-    <div class="filter-bar">
+    <div class="filter-bar" id="mailboxFilterBar">
       <button class="filter-btn active" onclick="filterMailboxes('all', this)">All</button>
       <button class="filter-btn" onclick="filterMailboxes('active-only', this)">Active only</button>
       <button class="filter-btn" onclick="filterMailboxes('inboxkit', this)">InboxKit</button><button class="filter-btn" onclick="filterMailboxes('scaledmail', this)">ScaledMail</button>
@@ -251,12 +270,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmableinc.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">data@firmableinc.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmableinc.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@firmableinc.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -277,12 +297,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablereach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablereach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablereach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablereach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -303,12 +324,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablestudio.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablestudio.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablestudio.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablestudio.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -329,12 +351,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">growth@linkfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">data@linkfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@linkfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@linkfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -355,12 +378,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">sales@firmablesite.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">asher@firmablesite.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">sales@firmablesite.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">asher@firmablesite.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -381,12 +405,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">sales@usefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">asher@usefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">sales@usefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">asher@usefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -397,7 +422,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 14 replies</span>
+            <span class="rate-pill rate-good">Active · 3.94%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -407,12 +432,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmableoutreach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">12</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableoutreach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">2</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmableoutreach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">12</td><td class="mono num rate-cell rate-good">8.48%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableoutreach.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.94%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -423,7 +449,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 11 replies</span>
+            <span class="rate-pill rate-good">Active · 3.10%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -433,12 +459,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablescale.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">9</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablescale.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">2</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablescale.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">9</td><td class="mono num rate-cell rate-good">6.36%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablescale.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.94%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -449,7 +476,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 10 replies</span>
+            <span class="rate-pill rate-good">Active · 2.82%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -459,12 +486,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablelabs.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">6</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablelabs.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">4</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablelabs.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">6</td><td class="mono num rate-cell rate-good">4.24%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablelabs.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">4</td><td class="mono num rate-cell rate-mid">1.87%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -475,7 +503,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 10 replies</span>
+            <span class="rate-pill rate-good">Active · 2.82%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -485,12 +513,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmableconnect.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">7</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableconnect.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">3</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmableconnect.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">4.95%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableconnect.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">3</td><td class="mono num rate-cell rate-mid">1.41%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -501,7 +530,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 9 replies</span>
+            <span class="rate-pill rate-good">Active · 2.54%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -511,12 +540,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">data@readyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">7</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@readyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">2</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@readyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">4.95%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@readyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.94%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -527,7 +557,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 8 replies</span>
+            <span class="rate-pill rate-good">Active · 2.25%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -537,12 +567,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablegrowth.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">6</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablegrowth.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">2</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablegrowth.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">6</td><td class="mono num rate-cell rate-good">4.24%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablegrowth.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.94%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -553,7 +584,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 8 replies</span>
+            <span class="rate-pill rate-good">Active · 2.25%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -563,12 +594,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">data@byfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">7</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@byfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@byfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">4.95%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@byfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.47%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -579,7 +611,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 8 replies</span>
+            <span class="rate-pill rate-good">Active · 2.25%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -589,12 +621,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">data@withfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">7</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@withfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@withfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">7</td><td class="mono num rate-cell rate-good">4.95%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@withfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.47%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -605,7 +638,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 4 replies</span>
+            <span class="rate-pill rate-mid">Active · 1.13%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -615,12 +648,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablepartner.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">3</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablepartner.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">data@firmablepartner.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">3</td><td class="mono num rate-cell rate-good">2.12%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablepartner.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.47%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -631,7 +665,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 3 replies</span>
+            <span class="rate-pill rate-low">Active · 0.85%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -641,12 +675,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablemail.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">2</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablemail.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablemail.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">2</td><td class="mono num rate-cell rate-low">0.94%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablemail.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.71%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -657,7 +692,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">5 campaigns</span>
-            <span class="rate-pill rate-good">Active · 3 replies</span>
+            <span class="rate-pill rate-low">Active · 0.85%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -667,136 +702,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">growth@viafirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">data@viafirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">3</td><td><span class="status-badge status-ok">Active</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </details>
-        <details class="domain-group" data-vendors="scaledmail" data-active="1">
-          <summary class="domain-group-header">
-            <span class="mono dg-domain">firmableedge.com</span>
-            <span class="esp-badge esp-microsoft">Microsoft</span>
-            <span class="dg-meta">25 mailboxes</span>
-            <span class="dg-meta">61 campaigns</span>
-            <span class="rate-pill rate-good">Active · 2 replies</span>
-          </summary>
-          <div class="domain-group-body">
-            <table class="mailbox-table">
-              <thead>
-                <tr>
-                  <th>Mailbox</th>
-                  <th>Vendor</th>
-                  <th class="num">Active Campaigns</th>
-                  <th class="num">Replies (14d)</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">impact@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">marketing@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">engage@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">discover@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">partner@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">elevate@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">network@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">scale@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">grow@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">target@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">motion@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">expand@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">data@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">align@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">launch@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">amplify@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">build@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">1</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">create@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </details>
-        <details class="domain-group" data-vendors="scaledmail" data-active="1">
-          <summary class="domain-group-header">
-            <span class="mono dg-domain">firmablezone.com</span>
-            <span class="esp-badge esp-microsoft">Microsoft</span>
-            <span class="dg-meta">25 mailboxes</span>
-            <span class="dg-meta">63 campaigns</span>
-            <span class="rate-pill rate-good">Active · 2 replies</span>
-          </summary>
-          <div class="domain-group-body">
-            <table class="mailbox-table">
-              <thead>
-                <tr>
-                  <th>Mailbox</th>
-                  <th>Vendor</th>
-                  <th class="num">Active Campaigns</th>
-                  <th class="num">Replies (14d)</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">launch@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">amplify@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">build@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">align@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">expand@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">reach@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">target@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">discover@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">grow@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">marketing@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">create@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">impact@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">engage@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">partner@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">scale@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">network@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">elevate@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">motion@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </details>
-        <details class="domain-group" data-vendors="inboxkit" data-active="1">
-          <summary class="domain-group-header">
-            <span class="mono dg-domain">activatefirmable.com</span>
-            <span class="esp-badge esp-google">Google</span>
-            <span class="dg-meta">2 mailboxes</span>
-            <span class="dg-meta">2 campaigns</span>
-            <span class="rate-pill rate-good">Active · 2 replies</span>
-          </summary>
-          <div class="domain-group-body">
-            <table class="mailbox-table">
-              <thead>
-                <tr>
-                  <th>Mailbox</th>
-                  <th>Vendor</th>
-                  <th class="num">Active Campaigns</th>
-                  <th class="num">Replies (14d)</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">data@activatefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">growth@activatefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">2</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@viafirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@viafirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">3</td><td class="mono num rate-cell rate-good">2.12%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -807,7 +719,7 @@
             <span class="esp-badge esp-google">Google</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">1 campaign</span>
-            <span class="rate-pill rate-good">Active · 1 reply</span>
+            <span class="rate-pill rate-low">Active · 0.61%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -817,12 +729,40 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">sales@firmableteam.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">asher@firmableteam.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">sales@firmableteam.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.61%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">asher@firmableteam.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <details class="domain-group" data-vendors="inboxkit" data-active="1">
+          <summary class="domain-group-header">
+            <span class="mono dg-domain">activatefirmable.com</span>
+            <span class="esp-badge esp-google">Google</span>
+            <span class="dg-meta">2 mailboxes</span>
+            <span class="dg-meta">2 campaigns</span>
+            <span class="rate-pill rate-low">Active · 0.61%</span>
+          </summary>
+          <div class="domain-group-body">
+            <table class="mailbox-table">
+              <thead>
+                <tr>
+                  <th>Mailbox</th>
+                  <th>Vendor</th>
+                  <th class="num">Active Campaigns</th>
+                  <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-vendor="inboxkit"><td class="mono col-email">data@activatefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">growth@activatefirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">2</td><td class="mono num rate-cell rate-mid">1.22%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -833,7 +773,7 @@
             <span class="esp-badge esp-microsoft">Microsoft</span>
             <span class="dg-meta">2 mailboxes</span>
             <span class="dg-meta">2 campaigns</span>
-            <span class="rate-pill rate-good">Active · 1 reply</span>
+            <span class="rate-pill rate-low">Active · 0.31%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -843,23 +783,24 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmableportal.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">0</td><td><span class="status-badge status-alert">No replies</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">data@firmableportal.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">1</td><td><span class="status-badge status-ok">Active</span></td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmableportal.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@firmableportal.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">1</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.61%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group" data-vendors="inboxkit" data-active="0">
+        <details class="domain-group" data-vendors="scaledmail" data-active="1">
           <summary class="domain-group-header">
-            <span class="mono dg-domain">firmablegroup.com</span>
-            <span class="esp-badge esp-google">Google</span>
-            <span class="dg-meta">2 mailboxes</span>
-            <span class="dg-meta">Inactive</span>
-            <span class="rate-pill rate-none">Inactive</span>
+            <span class="mono dg-domain">firmableedge.com</span>
+            <span class="esp-badge esp-microsoft">Microsoft</span>
+            <span class="dg-meta">25 mailboxes</span>
+            <span class="dg-meta">61 campaigns</span>
+            <span class="rate-pill rate-low">Active · 0.05%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -869,23 +810,47 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablegroup.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">3</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">data@firmablegroup.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">2</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">impact@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">marketing@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">discover@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">partner@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">elevate@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">network@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">scale@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">grow@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">target@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">motion@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">align@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">launch@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">amplify@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">build@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">1</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">create@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.47%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableedge.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.71%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
         </details>
-        <details class="domain-group" data-vendors="inboxkit" data-active="0">
+        <details class="domain-group" data-vendors="scaledmail" data-active="1">
           <summary class="domain-group-header">
-            <span class="mono dg-domain">openfirmable.com</span>
-            <span class="esp-badge esp-google">Google</span>
-            <span class="dg-meta">2 mailboxes</span>
-            <span class="dg-meta">Inactive</span>
-            <span class="rate-pill rate-none">Inactive</span>
+            <span class="mono dg-domain">firmablezone.com</span>
+            <span class="esp-badge esp-microsoft">Microsoft</span>
+            <span class="dg-meta">25 mailboxes</span>
+            <span class="dg-meta">63 campaigns</span>
+            <span class="rate-pill rate-low">Active · 0.04%</span>
           </summary>
           <div class="domain-group-body">
             <table class="mailbox-table">
@@ -895,64 +860,36 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">growth@openfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">2</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">data@openfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">2</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </details>
-        <details class="domain-group" data-vendors="inboxkit" data-active="0">
-          <summary class="domain-group-header">
-            <span class="mono dg-domain">discoverfirmable.com</span>
-            <span class="esp-badge esp-google">Google</span>
-            <span class="dg-meta">2 mailboxes</span>
-            <span class="dg-meta">Inactive</span>
-            <span class="rate-pill rate-none">Inactive</span>
-          </summary>
-          <div class="domain-group-body">
-            <table class="mailbox-table">
-              <thead>
-                <tr>
-                  <th>Mailbox</th>
-                  <th>Vendor</th>
-                  <th class="num">Active Campaigns</th>
-                  <th class="num">Replies (14d)</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">growth@discoverfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">4</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">data@discoverfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-        </details>
-        <details class="domain-group" data-vendors="inboxkit" data-active="0">
-          <summary class="domain-group-header">
-            <span class="mono dg-domain">firmablecore.com</span>
-            <span class="esp-badge esp-google">Google</span>
-            <span class="dg-meta">2 mailboxes</span>
-            <span class="dg-meta">Inactive</span>
-            <span class="rate-pill rate-none">Inactive</span>
-          </summary>
-          <div class="domain-group-body">
-            <table class="mailbox-table">
-              <thead>
-                <tr>
-                  <th>Mailbox</th>
-                  <th>Vendor</th>
-                  <th class="num">Active Campaigns</th>
-                  <th class="num">Replies (14d)</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablecore.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">2</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">data@firmablecore.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">1</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">launch@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">data@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">amplify@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">build@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">align@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">reach@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">target@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">discover@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">grow@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">marketing@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">create@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">impact@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">partner@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">scale@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">network@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">elevate@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">2</td><td class="mono num">0</td><td class="mono num rate-cell rate-zero">0.00%</td><td><span class="status-badge status-alert">No replies</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.47%</td><td><span class="status-badge status-ok">Active</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">motion@firmablezone.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">3</td><td class="mono num">1</td><td class="mono num rate-cell rate-low">0.47%</td><td><span class="status-badge status-ok">Active</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -973,12 +910,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">sales@hellofirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">asher@hellofirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">sales@hellofirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">asher@hellofirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -999,35 +937,36 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">grow@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">network@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">partner@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">marketing@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">amplify@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">target@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">create@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">impact@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">motion@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">align@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">elevate@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">build@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">scale@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">expand@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">engage@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">accelerate@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">discover@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">launch@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">grow@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">network@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">partner@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">marketing@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">amplify@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">target@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">create@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">impact@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">motion@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">align@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">elevate@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">build@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">scale@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">accelerate@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">discover@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">launch@firmableenrich.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1048,35 +987,36 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">motion@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">impact@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">discover@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">partner@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">network@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">growth@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">meet@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">explore@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">align@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">amplify@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">build@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">create@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">grow@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">scale@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">elevate@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">expand@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">accelerate@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">target@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">marketing@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">engage@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">reach@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">connect@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">outreach@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">launch@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">motion@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">impact@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">discover@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">partner@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">network@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">growth@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">align@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">amplify@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">build@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">create@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">grow@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">scale@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">elevate@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">accelerate@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">target@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">marketing@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">reach@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">launch@accessfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1097,12 +1037,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">asher@meetfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">sales@meetfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">asher@meetfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">sales@meetfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1123,12 +1064,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablecloud.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">data@firmablecloud.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablecloud.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@firmablecloud.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1149,12 +1091,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">data@firmablebase.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablebase.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">data@firmablebase.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablebase.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1175,12 +1118,121 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="inboxkit"><td class="mono col-email">data@firmablehub.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablehub.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="inboxkit"><td class="mono col-email">data@firmablehub.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablehub.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <details class="domain-group" data-vendors="inboxkit" data-active="0">
+          <summary class="domain-group-header">
+            <span class="mono dg-domain">openfirmable.com</span>
+            <span class="esp-badge esp-google">Google</span>
+            <span class="dg-meta">2 mailboxes</span>
+            <span class="dg-meta">Inactive</span>
+            <span class="rate-pill rate-none">Inactive</span>
+          </summary>
+          <div class="domain-group-body">
+            <table class="mailbox-table">
+              <thead>
+                <tr>
+                  <th>Mailbox</th>
+                  <th>Vendor</th>
+                  <th class="num">Active Campaigns</th>
+                  <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@openfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">2</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@openfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">2</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <details class="domain-group" data-vendors="inboxkit" data-active="0">
+          <summary class="domain-group-header">
+            <span class="mono dg-domain">firmablecore.com</span>
+            <span class="esp-badge esp-google">Google</span>
+            <span class="dg-meta">2 mailboxes</span>
+            <span class="dg-meta">Inactive</span>
+            <span class="rate-pill rate-none">Inactive</span>
+          </summary>
+          <div class="domain-group-body">
+            <table class="mailbox-table">
+              <thead>
+                <tr>
+                  <th>Mailbox</th>
+                  <th>Vendor</th>
+                  <th class="num">Active Campaigns</th>
+                  <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablecore.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">2</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@firmablecore.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">1</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <details class="domain-group" data-vendors="inboxkit" data-active="0">
+          <summary class="domain-group-header">
+            <span class="mono dg-domain">firmablegroup.com</span>
+            <span class="esp-badge esp-google">Google</span>
+            <span class="dg-meta">2 mailboxes</span>
+            <span class="dg-meta">Inactive</span>
+            <span class="rate-pill rate-none">Inactive</span>
+          </summary>
+          <div class="domain-group-body">
+            <table class="mailbox-table">
+              <thead>
+                <tr>
+                  <th>Mailbox</th>
+                  <th>Vendor</th>
+                  <th class="num">Active Campaigns</th>
+                  <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@firmablegroup.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">3</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@firmablegroup.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">2</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <details class="domain-group" data-vendors="inboxkit" data-active="0">
+          <summary class="domain-group-header">
+            <span class="mono dg-domain">discoverfirmable.com</span>
+            <span class="esp-badge esp-google">Google</span>
+            <span class="dg-meta">2 mailboxes</span>
+            <span class="dg-meta">Inactive</span>
+            <span class="rate-pill rate-none">Inactive</span>
+          </summary>
+          <div class="domain-group-body">
+            <table class="mailbox-table">
+              <thead>
+                <tr>
+                  <th>Mailbox</th>
+                  <th>Vendor</th>
+                  <th class="num">Active Campaigns</th>
+                  <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-vendor="inboxkit"><td class="mono col-email">growth@discoverfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">4</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="inboxkit"><td class="mono col-email">data@discoverfirmable.com</td><td><span class="vendor-badge vendor-inboxkit">InboxKit</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1201,12 +1253,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">scale@buildwithfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">expand@buildwithfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">scale@buildwithfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@buildwithfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1227,12 +1280,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">accelerate@runfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">meet@runfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">accelerate@runfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@runfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1253,12 +1307,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmabletrial.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmabletrial.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmabletrial.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmabletrial.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1279,12 +1334,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">discover@firmableorg.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmableorg.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">discover@firmableorg.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@firmableorg.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1305,12 +1361,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">launch@firmablepro.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmablepro.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">launch@firmablepro.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@firmablepro.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1331,12 +1388,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">launch@launchfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@launchfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">launch@launchfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">campaigns@launchfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1357,12 +1415,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">discover@poweredbyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">explore@poweredbyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">discover@poweredbyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">explore@poweredbyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1383,12 +1442,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">accelerate@firmableleads.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmableleads.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">accelerate@firmableleads.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">meet@firmableleads.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1409,12 +1469,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">marketing@myfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">engage@myfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">marketing@myfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@myfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1435,12 +1496,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablehq.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmablehq.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">growth@firmablehq.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">outreach@firmablehq.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1461,12 +1523,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableapi.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableapi.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableapi.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableapi.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1487,12 +1550,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">scale@buyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">expand@buyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">scale@buyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">expand@buyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1513,12 +1577,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">marketing@heyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">engage@heyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">marketing@heyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">engage@heyfirmable.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1539,12 +1604,13 @@
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                <tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableplatform.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
-<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableplatform.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+                <tr data-vendor="scaledmail"><td class="mono col-email">reach@firmableplatform.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
+<tr data-vendor="scaledmail"><td class="mono col-email">connect@firmableplatform.com</td><td><span class="vendor-badge vendor-scaledmail">ScaledMail</span></td><td class="mono num">0</td><td class="mono num">0</td><td class="mono num rate-cell rate-none">—</td><td><span class="status-badge status-inactive">Inactive</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -1566,7 +1632,7 @@
   }
 
   function filterDomains(esp, btn) {
-    document.querySelectorAll('#domainFilterBar .filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     document.querySelectorAll('.domain-table tbody tr').forEach(function(row) {
       var show = esp === 'all'
@@ -1577,12 +1643,11 @@
   }
 
   function filterMailboxes(vendor, btn) {
-    document.querySelectorAll('#mailboxFilterBar .filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     document.querySelectorAll('.domain-group').forEach(function(group) {
       if (vendor === 'active-only') {
-        var show = group.dataset.active === '1';
-        group.style.display = show ? '' : 'none';
+        group.style.display = group.dataset.active === '1' ? '' : 'none';
         return;
       }
       var rows = group.querySelectorAll('.mailbox-table tbody tr');
@@ -1594,40 +1659,8 @@
       });
       group.style.display = visible > 0 ? '' : 'none';
     });
-    var expandBtn = document.getElementById('expandAllBtn');
-    if (expandBtn) expandBtn.textContent = 'Expand all';
+    document.getElementById('expandAllBtn').textContent = 'Expand all';
   }
-
-  // Wire up filter bars by ID so the active-class logic is scoped correctly
-  document.addEventListener('DOMContentLoaded', function() {
-    var filterBars = document.querySelectorAll('.filter-bar');
-    if (filterBars[0]) filterBars[0].id = 'domainFilterBar';
-    if (filterBars[1]) filterBars[1].id = 'mailboxFilterBar';
-
-    // Re-wire domain filter buttons to use the scoped function
-    if (filterBars[0]) {
-      filterBars[0].querySelectorAll('.filter-btn').forEach(function(btn) {
-        var orig = btn.getAttribute('onclick');
-        btn.onclick = function() {
-          filterBars[0].querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
-          btn.classList.add('active');
-          var m = orig.match(/filterDomains\('([^']+)'/);
-          if (m) filterDomains(m[1], btn);
-        };
-      });
-    }
-    if (filterBars[1]) {
-      filterBars[1].querySelectorAll('.filter-btn').forEach(function(btn) {
-        var orig = btn.getAttribute('onclick');
-        btn.onclick = function() {
-          filterBars[1].querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
-          btn.classList.add('active');
-          var m = orig.match(/filterMailboxes\('([^']+)'/);
-          if (m) filterMailboxes(m[1], btn);
-        };
-      });
-    }
-  });
 </script>
 </body>
 </html>

@@ -5,10 +5,15 @@ For every sending domain across all mailboxes, shows:
   - Number of mailboxes on that domain
   - Number of active campaigns currently using this domain/mailbox
   - Replies received in the past 14 days
+  - Reply rate: replies (14d) / sends from active campaigns (all-time)
 
 A domain or mailbox is only flagged when it IS in an active campaign
 and receiving no replies in the past 14 days. Inactive domains with
 zero replies are expected and are not flagged.
+
+NOTE: Sent count is all-time per active campaign (SmartLead has no
+date-filtered sent API). Reply count is limited to the past 14 days.
+The rate is an approximation — treat it as directional.
 
 Run from repo root:
     PYTHONPATH=. python3 scripts/smartlead_domain_reply_analysis.py
@@ -30,7 +35,6 @@ LOOKBACK_DAYS = 14
 # ---------------------------------------------------------------------------
 
 def _extract_email(account: dict) -> str:
-    """Return the sending email address from an email account object."""
     for field in ("from_email", "username", "email", "smtp_username"):
         val = account.get(field, "")
         if val and "@" in val:
@@ -39,7 +43,6 @@ def _extract_email(account: dict) -> str:
 
 
 def _extract_vendor(tags: list) -> str:
-    """Infer vendor from SmartLead account tags. Returns 'InboxKit', 'ScaledMail', or ''."""
     if not tags:
         return ""
     names = [t.get("tag_name", "") for t in tags]
@@ -58,15 +61,21 @@ def _extract_vendor(tags: list) -> str:
     return ""
 
 
+def _reply_rate_class(rate):
+    if rate is None: return "rate-none"
+    if rate == 0:    return "rate-zero"
+    if rate < 1.0:   return "rate-low"
+    if rate < 2.0:   return "rate-mid"
+    return "rate-good"
+
+
+def _status_class(is_active: bool, replies: int) -> str:
+    if not is_active:   return "status-inactive"
+    if replies == 0:    return "status-alert"
+    return "status-ok"
+
+
 def build_account_domain_map(client: SmartLeadClient) -> tuple:
-    """
-    Paginate all email accounts.
-    Returns:
-      - id_to_domain: {account_id: domain}
-      - id_to_email: {account_id: full_email_address}
-      - id_to_vendor: {account_id: 'InboxKit' | 'ScaledMail' | ''}
-      - domain_to_esp: {domain: 'Google' | 'Microsoft' | 'Other'}
-    """
     id_to_domain = {}
     id_to_email = {}
     id_to_vendor = {}
@@ -102,12 +111,14 @@ def build_account_domain_map(client: SmartLeadClient) -> tuple:
 
 def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list) -> tuple:
     """
-    For each campaign with status ACTIVE, get the email accounts assigned to it.
+    For each ACTIVE campaign, get assigned email accounts and analytics.
     Returns:
-      - account_active_count: {account_id: int} — how many active campaigns this account is in
-      - total_active: int — number of active campaigns found
+      - account_active_count: {account_id: int}  — active campaign slots per account
+      - account_active_sent:  {account_id: float} — apportioned all-time sends from active campaigns
+      - total_active: int
     """
     account_active_count = defaultdict(int)
+    account_active_sent = defaultdict(float)
     active = [c for c in campaigns if c.get("status") == "ACTIVE"]
 
     print(f"  {len(active)} active campaigns (of {len(campaigns)} total)")
@@ -118,23 +129,33 @@ def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list)
         print(f"  [{i}/{len(active)}] {camp_name}", end="\r", flush=True)
 
         try:
+            analytics = client.get_campaign_analytics(camp_id)
+            unique_sent = int(analytics.get("unique_sent_count") or 0)
+        except Exception:
+            unique_sent = 0
+
+        try:
             camp_accounts = client._get(f"/campaigns/{camp_id}/email-accounts")
         except Exception:
             continue
 
-        for acc in (camp_accounts or []):
+        if not camp_accounts:
+            continue
+
+        per_account = unique_sent / len(camp_accounts) if unique_sent else 0
+        for acc in camp_accounts:
             acc_id = acc.get("id")
             if acc_id:
                 account_active_count[acc_id] += 1
+                account_active_sent[acc_id] += per_account
 
     if active:
-        print()  # newline after \r progress
+        print()
 
-    return dict(account_active_count), len(active)
+    return dict(account_active_count), dict(account_active_sent), len(active)
 
 
 def _get_inbox_replies_with_retry(client, offset, limit, start_iso, end_iso, max_retries=5):
-    """Call get_inbox_replies with exponential backoff on 429."""
     delay = 2
     for attempt in range(max_retries):
         try:
@@ -151,10 +172,6 @@ def _get_inbox_replies_with_retry(client, offset, limit, start_iso, end_iso, max
 
 
 def fetch_replies_per_account(client: SmartLeadClient, start_iso: str, end_iso: str) -> dict:
-    """
-    Paginate master inbox replies for the given date window.
-    Returns {account_id: reply_count}.
-    """
     account_replies = defaultdict(int)
     offset = 0
     limit = 20
@@ -180,9 +197,9 @@ def aggregate_by_domain(
     account_to_domain: dict,
     domain_to_esp: dict,
     account_active_count: dict,
+    account_active_sent: dict,
     account_replies: dict,
 ) -> list:
-    """Aggregate active campaign count + replies by domain."""
     domain_mailboxes = defaultdict(set)
     for acc_id, domain in account_to_domain.items():
         domain_mailboxes[domain].add(acc_id)
@@ -190,64 +207,66 @@ def aggregate_by_domain(
     rows = []
     for domain, acc_ids in domain_mailboxes.items():
         active_campaigns = sum(account_active_count.get(a, 0) for a in acc_ids)
+        active_sent = sum(account_active_sent.get(a, 0) for a in acc_ids)
         replies = sum(account_replies.get(a, 0) for a in acc_ids)
+        is_active = active_campaigns > 0
+        reply_rate = (replies / active_sent * 100) if active_sent > 0 else (None if is_active else None)
         rows.append({
             "domain": domain,
             "esp": domain_to_esp.get(domain, "Other"),
             "mailboxes": len(acc_ids),
             "active_campaigns": active_campaigns,
+            "active_sent": int(active_sent),
             "replies_14d": replies,
-            "is_active": active_campaigns > 0,
+            "reply_rate": reply_rate,
+            "is_active": is_active,
         })
 
-    # Sort: active + no replies first (most urgent), then active + replies, then inactive
+    # Sort: active + no replies first, then active + replies (by rate desc), then inactive
     rows.sort(key=lambda r: (
         0 if (r["is_active"] and r["replies_14d"] == 0) else
         1 if r["is_active"] else 2,
-        -r["replies_14d"]
+        -(r["reply_rate"] or 0)
     ))
     return rows
 
 
-def _status_class(is_active: bool, replies: int) -> str:
-    if not is_active:
-        return "status-inactive"
-    if replies == 0:
-        return "status-alert"
-    return "status-ok"
-
+# ---------------------------------------------------------------------------
+# Terminal output
+# ---------------------------------------------------------------------------
 
 def print_table(rows: list, lookback_days: int):
-    """Print domain stats as a terminal table."""
     col_domain = max(len(r["domain"]) for r in rows) if rows else 20
     col_domain = max(col_domain, 6)
     col_esp = 11
 
-    total_width = col_domain + col_esp + 12 + 18 + 12 + 18
+    total_width = col_domain + col_esp + 12 + 18 + 14 + 9 + 16
     divider = "=" * total_width
 
     print(f"\n{divider}")
-    print(f"  DOMAIN HEALTH REPORT  —  Replies: last {lookback_days} days")
+    print(f"  DOMAIN HEALTH REPORT  —  Replies: last {lookback_days} days  |  Rate: replies / active-campaign sends")
     print(f"{divider}")
-
-    header = (
+    print(
         f"  {'Domain':<{col_domain}}"
         f"  {'ESP':<{col_esp}}"
         f"  {'Mailboxes':>9}"
         f"  {'Active Campaigns':>16}"
         f"  {'Replies (14d)':>13}"
+        f"  {'Rate':>7}"
         f"  Status"
     )
-    print(header)
     print(f"  {'-' * (total_width - 2)}")
 
     for r in rows:
-        is_active = r["is_active"]
-        replies = r["replies_14d"]
+        rate = r["reply_rate"]
+        if rate is None:
+            rate_str = "    —"
+        else:
+            rate_str = f"{rate:>6.2f}%"
 
-        if not is_active:
+        if not r["is_active"]:
             status = "Inactive"
-        elif replies == 0:
+        elif r["replies_14d"] == 0:
             status = "⚠ No replies"
         else:
             status = "Active"
@@ -257,18 +276,18 @@ def print_table(rows: list, lookback_days: int):
             f"  {r['esp']:<{col_esp}}"
             f"  {r['mailboxes']:>9}"
             f"  {r['active_campaigns']:>16}"
-            f"  {replies:>13}"
+            f"  {r['replies_14d']:>13}"
+            f"  {rate_str}"
             f"  {status}"
         )
 
     print(f"{divider}")
-
     active_no_replies = [r for r in rows if r["is_active"] and r["replies_14d"] == 0]
-    active_ok = [r for r in rows if r["is_active"] and r["replies_14d"] > 0]
-    inactive = [r for r in rows if not r["is_active"]]
-    print(f"  Active, getting replies: {len(active_ok)} domain(s)")
-    print(f"  Active, NO replies (action needed): {len(active_no_replies)} domain(s)")
-    print(f"  Inactive (not in use): {len(inactive)} domain(s)")
+    active_ok         = [r for r in rows if r["is_active"] and r["replies_14d"] > 0]
+    inactive          = [r for r in rows if not r["is_active"]]
+    print(f"  Active, getting replies:          {len(active_ok)} domain(s)")
+    print(f"  Active, NO replies (check these): {len(active_no_replies)} domain(s)")
+    print(f"  Inactive (not in use):            {len(inactive)} domain(s)")
     print(f"{divider}\n")
 
 
@@ -277,19 +296,19 @@ def print_mailbox_table(
     id_to_email: dict,
     domain_to_esp: dict,
     account_active_count: dict,
+    account_active_sent: dict,
     account_replies: dict,
     domain_rows: list,
     lookback_days: int,
 ):
-    """Print per-mailbox breakdown grouped by domain, ordered to match domain_rows."""
     col_email = max(len(e) for e in id_to_email.values()) if id_to_email else 30
     col_email = max(col_email, 10)
 
-    total_width = col_email + 10 + 18 + 13 + 16
+    total_width = col_email + 18 + 14 + 9 + 16
     divider = "=" * total_width
 
     print(f"\n{divider}")
-    print(f"  MAILBOX BREAKDOWN  —  Replies: last {lookback_days} days")
+    print(f"  MAILBOX BREAKDOWN  —  Replies: last {lookback_days} days  |  Rate: replies / active-campaign sends")
     print(f"{divider}")
 
     domain_to_acc_ids = defaultdict(list)
@@ -304,13 +323,11 @@ def print_mailbox_table(
         def mailbox_sort_key(acc_id):
             active = account_active_count.get(acc_id, 0)
             replies = account_replies.get(acc_id, 0)
-            # Active + no replies first, then active + replies, then inactive
             if active > 0 and replies == 0:
                 return (0, -active)
             elif active > 0:
                 return (1, -replies)
-            else:
-                return (2, -replies)
+            return (2, -replies)
 
         acc_ids_sorted = sorted(acc_ids, key=mailbox_sort_key)
 
@@ -319,6 +336,7 @@ def print_mailbox_table(
             f"  {'Mailbox':<{col_email}}"
             f"  {'Active Campaigns':>16}"
             f"  {'Replies (14d)':>13}"
+            f"  {'Rate':>7}"
             f"  Status"
         )
         print(f"  {'-' * (total_width - 2)}")
@@ -326,7 +344,13 @@ def print_mailbox_table(
         for acc_id in acc_ids_sorted:
             email = id_to_email.get(acc_id, str(acc_id))
             active = account_active_count.get(acc_id, 0)
+            sent = account_active_sent.get(acc_id, 0)
             replies = account_replies.get(acc_id, 0)
+
+            if sent > 0:
+                rate_str = f"{replies / sent * 100:>6.2f}%"
+            else:
+                rate_str = "    —"
 
             if active == 0:
                 status = "Inactive"
@@ -339,6 +363,7 @@ def print_mailbox_table(
                 f"  {email:<{col_email}}"
                 f"  {active:>16}"
                 f"  {replies:>13}"
+                f"  {rate_str}"
                 f"  {status}"
             )
 
@@ -356,6 +381,7 @@ def write_html_report(
     id_to_vendor: dict,
     domain_to_esp: dict,
     account_active_count: dict,
+    account_active_sent: dict,
     account_replies: dict,
     lookback_days: int,
     total_active_campaigns: int,
@@ -381,22 +407,31 @@ def write_html_report(
                 return (0, -active)
             elif active > 0:
                 return (1, -replies)
-            else:
-                return (2, -replies)
+            return (2, -replies)
         acc_ids = sorted(acc_ids, key=sort_key)
         html = []
         for acc_id in acc_ids:
             email = id_to_email.get(acc_id, str(acc_id))
             vendor = id_to_vendor.get(acc_id, "")
             active = account_active_count.get(acc_id, 0)
+            sent   = account_active_sent.get(acc_id, 0)
             replies = account_replies.get(acc_id, 0)
-            sc = _status_class(active > 0, replies)
+
+            if sent > 0:
+                rate = replies / sent * 100
+                rate_str = f"{rate:.2f}%"
+                rate_cls = _reply_rate_class(rate)
+            else:
+                rate_str = "—"
+                rate_cls = "rate-none"
+
             if active == 0:
                 status_html = '<span class="status-badge status-inactive">Inactive</span>'
             elif replies == 0:
                 status_html = '<span class="status-badge status-alert">No replies</span>'
             else:
                 status_html = '<span class="status-badge status-ok">Active</span>'
+
             vendor_slug = vendor.lower().replace(" ", "-") if vendor else "unknown"
             vendor_html = (
                 f'<span class="vendor-badge vendor-{vendor_slug}">{vendor}</span>'
@@ -409,6 +444,7 @@ def write_html_report(
                 f'<td>{vendor_html}</td>'
                 f'<td class="mono num">{active}</td>'
                 f'<td class="mono num">{replies}</td>'
+                f'<td class="mono num rate-cell {rate_cls}">{rate_str}</td>'
                 f'<td>{status_html}</td>'
                 f'</tr>'
             )
@@ -416,13 +452,18 @@ def write_html_report(
 
     domain_rows_html = []
     for r in rows:
-        sc = _status_class(r["is_active"], r["replies_14d"])
+        rate = r["reply_rate"]
+        rate_str = f"{rate:.2f}%" if rate is not None else "—"
+        rate_cls = _reply_rate_class(rate)
+        bar_w = min(100, int(rate * 20)) if rate else 0
+
         if not r["is_active"]:
             status_html = '<span class="status-badge status-inactive">Inactive</span>'
         elif r["replies_14d"] == 0:
             status_html = '<span class="status-badge status-alert">Active · No replies</span>'
         else:
             status_html = '<span class="status-badge status-ok">Active</span>'
+
         domain_rows_html.append(
             f'<tr data-esp="{r["esp"]}" data-active="{1 if r["is_active"] else 0}">'
             f'<td class="mono col-domain">{r["domain"]}</td>'
@@ -430,6 +471,12 @@ def write_html_report(
             f'<td class="mono num">{r["mailboxes"]}</td>'
             f'<td class="mono num">{r["active_campaigns"]}</td>'
             f'<td class="mono num">{r["replies_14d"]}</td>'
+            f'<td class="rate-cell {rate_cls}">'
+            f'  <div class="rate-bar-wrap">'
+            f'    <div class="rate-bar" style="width:{bar_w}%"></div>'
+            f'    <span class="rate-label mono">{rate_str}</span>'
+            f'  </div>'
+            f'</td>'
             f'<td>{status_html}</td>'
             f'</tr>'
         )
@@ -443,21 +490,25 @@ def write_html_report(
     for r in rows:
         domain = r["domain"]
         esp    = domain_to_esp.get(domain, "Other")
-        sc = _status_class(r["is_active"], r["replies_14d"])
+        rate   = r["reply_rate"]
         if not r["is_active"]:
-            pill_text = "Inactive"
+            pill_text  = "Inactive"
             pill_class = "rate-none"
         elif r["replies_14d"] == 0:
-            pill_text = "Active · No replies"
+            pill_text  = "Active · No replies"
             pill_class = "rate-low"
         else:
-            pill_text = f"Active · {r['replies_14d']} repl{'ies' if r['replies_14d'] != 1 else 'y'}"
-            pill_class = "rate-good"
+            rate_display = f"{rate:.2f}%" if rate is not None else "n/a"
+            pill_text  = f"Active · {rate_display}"
+            pill_class = _reply_rate_class(rate)
         domain_vendors = " ".join(sorted(set(
             (id_to_vendor.get(a, "") or "unknown").lower().replace(" ", "-")
             for a in domain_to_acc_ids.get(domain, [])
         )))
-        active_count_display = f'{r["active_campaigns"]} campaign{"s" if r["active_campaigns"] != 1 else ""}' if r["is_active"] else "Inactive"
+        active_count_display = (
+            f'{r["active_campaigns"]} campaign{"s" if r["active_campaigns"] != 1 else ""}'
+            if r["is_active"] else "Inactive"
+        )
         mailbox_sections_html.append(f"""
         <details class="domain-group" data-vendors="{domain_vendors}" data-active="{1 if r['is_active'] else 0}">
           <summary class="domain-group-header">
@@ -475,6 +526,7 @@ def write_html_report(
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
+                  <th class="num">Reply Rate</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -510,7 +562,7 @@ def write_html_report(
   *,*::before,*::after {{ box-sizing:border-box; margin:0; padding:0; }}
   body {{ background:var(--ground); color:var(--text); font-family:var(--sans);
           font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased; }}
-  .report {{ max-width:960px; margin:0 auto; padding:48px 24px 96px; }}
+  .report {{ max-width:980px; margin:0 auto; padding:48px 24px 96px; }}
 
   /* Header */
   .report-header {{ border-bottom:1px solid var(--border); padding-bottom:36px; margin-bottom:56px; }}
@@ -532,7 +584,6 @@ def write_html_report(
     line-height:1; letter-spacing:-.04em; display:block; margin-bottom:12px; }}
   .hero-number--pass {{ color:var(--teal); text-shadow:0 2px 12px rgba(10,143,106,.18); }}
   .hero-number--fail {{ color:var(--danger); text-shadow:0 2px 12px rgba(192,41,46,.18); }}
-  .hero-number--neutral {{ color:var(--text-3); }}
   .hero-label {{ font-family:var(--mono); font-size:11px; letter-spacing:.1em;
     text-transform:uppercase; color:var(--text-2); margin-bottom:4px; }}
   .hero-sub {{ font-size:12px; color:var(--text-3); }}
@@ -558,17 +609,24 @@ def write_html_report(
   .esp-microsoft {{ background:#E3F2FD; color:#0D47A1; }}
   .esp-other     {{ background:var(--surface-2); color:var(--text-3); }}
 
-  /* Status badges (inline in table cells) */
+  /* Status badges */
   .status-badge {{ display:inline-block; font-family:var(--mono); font-size:10px;
     letter-spacing:.06em; padding:2px 8px; border-radius:3px; white-space:nowrap; }}
   .status-ok       {{ background:#E8F5E9; color:#1B5E20; }}
   .status-alert    {{ background:#FFEBEE; color:#B71C1C; font-weight:600; }}
   .status-inactive {{ background:var(--surface-2); color:var(--text-3); }}
 
+  /* Rate colours */
+  .rate-good {{ color:var(--teal); }}
+  .rate-mid  {{ color:var(--accent); }}
+  .rate-low  {{ color:var(--danger); }}
+  .rate-zero {{ color:var(--danger); opacity:.7; }}
+  .rate-none {{ color:var(--text-3); }}
+
   /* Domain summary table */
   .scroll-wrap {{ overflow-x:auto; }}
   .domain-table {{ width:100%; border-collapse:collapse; font-size:13px;
-    font-variant-numeric:tabular-nums; min-width:600px; }}
+    font-variant-numeric:tabular-nums; min-width:700px; }}
   .domain-table th {{ font-family:var(--mono); font-size:10px; letter-spacing:.1em;
     text-transform:uppercase; color:var(--text-3); padding:10px 14px;
     text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }}
@@ -580,6 +638,17 @@ def write_html_report(
   .num  {{ text-align:right; }}
   .col-domain {{ font-size:13px; color:var(--text); }}
   .col-email  {{ font-size:12px; color:var(--text-2); }}
+
+  /* Rate bar in domain table */
+  .rate-cell {{ min-width:90px; }}
+  .rate-bar-wrap {{ display:flex; align-items:center; gap:8px; }}
+  .rate-bar {{ height:5px; border-radius:3px; background:var(--teal); flex-shrink:0; min-width:0; }}
+  .rate-good .rate-bar {{ background:var(--teal); }}
+  .rate-mid  .rate-bar {{ background:var(--accent); }}
+  .rate-low  .rate-bar {{ background:var(--danger); }}
+  .rate-zero .rate-bar {{ background:var(--danger); opacity:.5; width:0!important; }}
+  .rate-none .rate-bar {{ display:none; }}
+  .rate-label {{ font-size:12px; white-space:nowrap; }}
 
   /* Domain group (mailbox breakdown) */
   .domain-group {{ border:1px solid var(--border); border-radius:4px;
@@ -598,7 +667,9 @@ def write_html_report(
   .dg-meta {{ font-size:12px; color:var(--text-3); white-space:nowrap; }}
   .rate-pill {{ font-size:11px; padding:2px 8px; border-radius:20px; font-family:var(--mono); }}
   .rate-good {{ background:#E8F5E9; color:#1B5E20; }}
+  .rate-mid  {{ background:#FFF3E0; color:#7C4B00; }}
   .rate-low  {{ background:#FFEBEE; color:#B71C1C; font-weight:600; }}
+  .rate-zero {{ background:#FFEBEE; color:#B71C1C; opacity:.8; }}
   .rate-none {{ background:var(--surface-2); color:var(--text-3); }}
   .domain-group-body {{ padding:0; }}
 
@@ -633,7 +704,6 @@ def write_html_report(
   .mailbox-section-header {{ display:flex; align-items:flex-start; justify-content:space-between;
     gap:16px; margin-bottom:0; }}
   .mailbox-section-header h2 {{ margin-bottom:8px; }}
-  .mailbox-section-header .section-desc {{ margin-bottom:28px; }}
 
   /* Expand all button */
   .expand-btn {{ flex-shrink:0; margin-top:4px; font-family:var(--mono); font-size:11px;
@@ -658,14 +728,14 @@ def write_html_report(
       <span class="tag">{generated_at}</span>
     </div>
     <h1>Domain Health Report</h1>
-    <div class="header-sub">Replies: last {lookback_days} days &nbsp;·&nbsp; Active = currently assigned to an active campaign</div>
+    <div class="header-sub">Replies: last {lookback_days} days &nbsp;·&nbsp; Reply rate = replies / sends from active campaigns (all-time) &nbsp;·&nbsp; Active = in a live campaign</div>
   </div>
 
   <div class="hero-contrast">
     <div class="hero-stat">
       <span class="hero-number hero-number--pass">{len(active_ok)}</span>
       <div class="hero-label">Active &amp; getting replies</div>
-      <div class="hero-sub">domains in live campaigns with replies</div>
+      <div class="hero-sub">in live campaigns with replies in {lookback_days}d</div>
     </div>
     <div class="hero-divider">vs</div>
     <div class="hero-stat">
@@ -680,9 +750,9 @@ def write_html_report(
     <h2>By Domain</h2>
     <p class="section-desc">
       All {len(rows)} sending domains across {sum(len(v) for v in domain_to_acc_ids.values())} mailboxes.
-      {len(inactive)} inactive (not in any active campaign). Sorted by urgency: active with no replies first.
+      {len(inactive)} inactive (not in any active campaign). Sorted by urgency.
     </p>
-    <div class="filter-bar">
+    <div class="filter-bar" id="domainFilterBar">
       <button class="filter-btn active" onclick="filterDomains('all', this)">All</button>
       <button class="filter-btn" onclick="filterDomains('active', this)">Active only</button>
       <button class="filter-btn" onclick="filterDomains('Google', this)">Google</button>
@@ -697,6 +767,7 @@ def write_html_report(
             <th class="num">Mailboxes</th>
             <th class="num">Active Campaigns</th>
             <th class="num">Replies (14d)</th>
+            <th>Reply Rate</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -716,7 +787,7 @@ def write_html_report(
       </div>
       <button class="expand-btn" id="expandAllBtn" onclick="toggleAll()">Expand all</button>
     </div>
-    <div class="filter-bar">
+    <div class="filter-bar" id="mailboxFilterBar">
       <button class="filter-btn active" onclick="filterMailboxes('all', this)">All</button>
       <button class="filter-btn" onclick="filterMailboxes('active-only', this)">Active only</button>
       {vendor_filter_btns}
@@ -739,7 +810,7 @@ def write_html_report(
   }}
 
   function filterDomains(esp, btn) {{
-    document.querySelectorAll('#domainFilterBar .filter-btn').forEach(function(b) {{ b.classList.remove('active'); }});
+    btn.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(function(b) {{ b.classList.remove('active'); }});
     btn.classList.add('active');
     document.querySelectorAll('.domain-table tbody tr').forEach(function(row) {{
       var show = esp === 'all'
@@ -750,12 +821,11 @@ def write_html_report(
   }}
 
   function filterMailboxes(vendor, btn) {{
-    document.querySelectorAll('#mailboxFilterBar .filter-btn').forEach(function(b) {{ b.classList.remove('active'); }});
+    btn.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(function(b) {{ b.classList.remove('active'); }});
     btn.classList.add('active');
     document.querySelectorAll('.domain-group').forEach(function(group) {{
       if (vendor === 'active-only') {{
-        var show = group.dataset.active === '1';
-        group.style.display = show ? '' : 'none';
+        group.style.display = group.dataset.active === '1' ? '' : 'none';
         return;
       }}
       var rows = group.querySelectorAll('.mailbox-table tbody tr');
@@ -767,40 +837,8 @@ def write_html_report(
       }});
       group.style.display = visible > 0 ? '' : 'none';
     }});
-    var expandBtn = document.getElementById('expandAllBtn');
-    if (expandBtn) expandBtn.textContent = 'Expand all';
+    document.getElementById('expandAllBtn').textContent = 'Expand all';
   }}
-
-  // Wire up filter bars by ID so the active-class logic is scoped correctly
-  document.addEventListener('DOMContentLoaded', function() {{
-    var filterBars = document.querySelectorAll('.filter-bar');
-    if (filterBars[0]) filterBars[0].id = 'domainFilterBar';
-    if (filterBars[1]) filterBars[1].id = 'mailboxFilterBar';
-
-    // Re-wire domain filter buttons to use the scoped function
-    if (filterBars[0]) {{
-      filterBars[0].querySelectorAll('.filter-btn').forEach(function(btn) {{
-        var orig = btn.getAttribute('onclick');
-        btn.onclick = function() {{
-          filterBars[0].querySelectorAll('.filter-btn').forEach(function(b) {{ b.classList.remove('active'); }});
-          btn.classList.add('active');
-          var m = orig.match(/filterDomains\('([^']+)'/);
-          if (m) filterDomains(m[1], btn);
-        }};
-      }});
-    }}
-    if (filterBars[1]) {{
-      filterBars[1].querySelectorAll('.filter-btn').forEach(function(btn) {{
-        var orig = btn.getAttribute('onclick');
-        btn.onclick = function() {{
-          filterBars[1].querySelectorAll('.filter-btn').forEach(function(b) {{ b.classList.remove('active'); }});
-          btn.classList.add('active');
-          var m = orig.match(/filterMailboxes\('([^']+)'/);
-          if (m) filterMailboxes(m[1], btn);
-        }};
-      }});
-    }}
-  }});
 </script>
 </body>
 </html>"""
@@ -822,9 +860,9 @@ def main():
     domain_count = len(set(account_to_domain.values()))
     print(f"  {len(account_to_domain)} mailboxes across {domain_count} domains\n")
 
-    print("Fetching active campaigns...")
+    print("Fetching active campaigns and analytics...")
     campaigns = client.list_campaigns()
-    account_active_count, total_active_campaigns = fetch_active_campaigns_per_account(client, campaigns)
+    account_active_count, account_active_sent, total_active_campaigns = fetch_active_campaigns_per_account(client, campaigns)
 
     now = datetime.now(tz=timezone.utc)
     start = now - timedelta(days=LOOKBACK_DAYS)
@@ -834,12 +872,15 @@ def main():
     print(f"\nFetching replies: {start.strftime('%Y-%m-%d')} to {now.strftime('%Y-%m-%d')}...")
     account_replies = fetch_replies_per_account(client, start_iso, end_iso)
 
-    rows = aggregate_by_domain(account_to_domain, domain_to_esp, account_active_count, account_replies)
+    rows = aggregate_by_domain(
+        account_to_domain, domain_to_esp,
+        account_active_count, account_active_sent, account_replies,
+    )
     print_table(rows, LOOKBACK_DAYS)
     print_mailbox_table(
         account_to_domain, id_to_email, domain_to_esp,
-        account_active_count, account_replies, rows,
-        LOOKBACK_DAYS,
+        account_active_count, account_active_sent, account_replies,
+        rows, LOOKBACK_DAYS,
     )
 
     import os
@@ -851,6 +892,7 @@ def main():
         id_to_vendor=id_to_vendor,
         domain_to_esp=domain_to_esp,
         account_active_count=account_active_count,
+        account_active_sent=account_active_sent,
         account_replies=account_replies,
         lookback_days=LOOKBACK_DAYS,
         total_active_campaigns=total_active_campaigns,
