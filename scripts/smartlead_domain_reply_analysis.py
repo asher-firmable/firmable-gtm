@@ -795,6 +795,7 @@ def write_html_report(
     <div class="filter-bar" id="domainFilterBar">
       <button class="filter-btn active" onclick="filterDomains('all', this)">All</button>
       <button class="filter-btn" onclick="filterDomains('active', this)">Active only</button>
+      <button class="filter-btn" onclick="filterDomains('inactive', this)">Inactive only</button>
       <button class="filter-btn" onclick="filterDomains('Google', this)">Google</button>
       <button class="filter-btn" onclick="filterDomains('Microsoft', this)">Microsoft</button>
     </div>
@@ -830,6 +831,7 @@ def write_html_report(
     <div class="filter-bar" id="mailboxFilterBar">
       <button class="filter-btn active" onclick="filterMailboxes('all', this)">All</button>
       <button class="filter-btn" onclick="filterMailboxes('active-only', this)">Active only</button>
+      <button class="filter-btn" onclick="filterMailboxes('inactive-only', this)">Inactive only</button>
       {vendor_filter_btns}
     </div>
     {''.join(mailbox_sections_html)}
@@ -854,7 +856,8 @@ def write_html_report(
     btn.classList.add('active');
     document.querySelectorAll('.domain-table tbody tr').forEach(function(row) {{
       var show = esp === 'all'
-        || (esp === 'active' && row.dataset.active === '1')
+        || (esp === 'active'   && row.dataset.active === '1')
+        || (esp === 'inactive' && row.dataset.active === '0')
         || row.dataset.esp === esp;
       row.style.display = show ? '' : 'none';
     }});
@@ -866,6 +869,10 @@ def write_html_report(
     document.querySelectorAll('.domain-group').forEach(function(group) {{
       if (vendor === 'active-only') {{
         group.style.display = group.dataset.active === '1' ? '' : 'none';
+        return;
+      }}
+      if (vendor === 'inactive-only') {{
+        group.style.display = group.dataset.active === '0' ? '' : 'none';
         return;
       }}
       var rows = group.querySelectorAll('.mailbox-table tbody tr');
