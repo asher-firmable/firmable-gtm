@@ -588,21 +588,31 @@ def write_html_report(
         return f'<span class="rec-chip rec-chip-{cls}">{text}</span>'
 
     def _chips_by_vendor(domain_rows, chip_cls, label_fn=None):
-        """Group domain chips by vendor, rendering a labelled row per vendor."""
-        groups = {}
+        """Group domain chips by vendor, then by ESP within each vendor."""
+        vendor_groups = {}
         for r in domain_rows:
             vendor = _vendor_for_domain(r["domain"]) or "Unknown"
-            groups.setdefault(vendor, []).append(r)
+            esp = domain_to_esp.get(r["domain"], "Other")
+            vendor_groups.setdefault(vendor, {}).setdefault(esp, []).append(r)
         parts = []
-        for vendor in sorted(groups.keys()):
-            chips = "".join(
-                _chip(label_fn(r) if label_fn else r["domain"], chip_cls)
-                for r in groups[vendor]
-            )
+        for vendor in sorted(vendor_groups.keys()):
+            esp_parts = []
+            for esp in sorted(vendor_groups[vendor].keys()):
+                esp_domains = vendor_groups[vendor][esp]
+                chips = "".join(
+                    _chip(label_fn(r) if label_fn else r["domain"], chip_cls)
+                    for r in esp_domains
+                )
+                esp_parts.append(
+                    f'<div class="rec-esp-group">'
+                    f'<span class="rec-esp-label rec-esp-{esp.lower()}">{esp}</span>'
+                    f'<div class="rec-chips">{chips}</div>'
+                    f'</div>'
+                )
             parts.append(
                 f'<div class="rec-vendor-group">'
                 f'<span class="rec-vendor-label">{vendor}</span>'
-                f'<div class="rec-chips">{chips}</div>'
+                f'{"".join(esp_parts)}'
                 f'</div>'
             )
         return "".join(parts)
@@ -907,10 +917,18 @@ def write_html_report(
   .rec-chip-warn    {{ background:#FFF3E0; color:#7C4B00; border:1px solid #FFE0B2; }}
   .rec-chip-ok      {{ background:#E8F5E9; color:#1B5E20; border:1px solid #C8E6C9; }}
   .rec-chip-neutral {{ background:var(--surface-2); color:var(--text-2); border:1px solid var(--border); }}
-  .rec-vendor-group {{ margin-top:14px; }}
-  .rec-vendor-label {{ display:inline-block; font-family:var(--mono); font-size:10px;
-    letter-spacing:.1em; text-transform:uppercase; color:var(--text-3);
-    margin-bottom:6px; }}
+  .rec-vendor-group {{ margin-top:16px; }}
+  .rec-vendor-label {{ display:block; font-family:var(--mono); font-size:10px;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--text-2);
+    font-weight:600; margin-bottom:8px; }}
+  .rec-esp-group {{ margin-left:12px; margin-bottom:8px; display:flex;
+    align-items:flex-start; gap:10px; flex-wrap:wrap; }}
+  .rec-esp-label {{ display:inline-block; font-family:var(--mono); font-size:10px;
+    letter-spacing:.06em; text-transform:uppercase; padding:2px 7px;
+    border-radius:2px; white-space:nowrap; margin-top:2px; }}
+  .rec-esp-google    {{ background:#E8F5E9; color:#1B5E20; }}
+  .rec-esp-microsoft {{ background:#E3F2FD; color:#0D47A1; }}
+  .rec-esp-other     {{ background:var(--surface-2); color:var(--text-3); }}
   .rec-steps {{ padding-left:20px; color:var(--text-2); font-size:13px; line-height:1.9; max-width:680px; }}
   .rec-steps li {{ padding-left:4px; }}
 
