@@ -723,6 +723,7 @@ def write_html_report(
   .header-meta .tag:last-child {{ border-right:1px solid var(--border); }}
   .report-header h1 {{ font-family:var(--mono); font-size:clamp(22px,4vw,32px);
     font-weight:700; line-height:1.2; letter-spacing:-.02em; margin-bottom:10px; }}
+  .last-updated {{ font-family:var(--mono); font-size:13px; color:var(--text-2); margin-bottom:6px; }}
   .header-sub {{ font-family:var(--mono); font-size:12px; color:var(--text-3); letter-spacing:.04em; }}
 
   /* Hero */
@@ -916,6 +917,7 @@ def write_html_report(
       <span class="tag">{generated_at}</span>
     </div>
     <h1>Domain Health Report</h1>
+    <div class="last-updated">Last updated: {generated_at}</div>
     <div class="header-sub">Replies: last {lookback_days} days &nbsp;·&nbsp; Reply rate = replies / sends from active campaigns (all-time) &nbsp;·&nbsp; Active = in a live campaign</div>
   </div>
 
