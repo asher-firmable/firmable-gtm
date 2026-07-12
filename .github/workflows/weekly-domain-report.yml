@@ -1,0 +1,38 @@
+name: Weekly Domain Health Report
+
+on:
+  schedule:
+    - cron: '0 1 * * 1'  # Every Monday at 1am UTC (11am AEST)
+  workflow_dispatch:       # Also allows manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests python-dotenv
+
+      - name: Generate report
+        env:
+          SMARTLEAD_API_KEY: ${{ secrets.SMARTLEAD_API_KEY }}
+        run: PYTHONPATH=. python3 scripts/smartlead_domain_reply_analysis.py
+
+      - name: Commit and push updated report
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add docs/domain-report.html
+          git diff --staged --quiet || git commit -m "Auto-update domain health report [skip ci]"
+          git push
