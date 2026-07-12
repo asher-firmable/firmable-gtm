@@ -1,0 +1,1055 @@
+<title>Firmable Deliverability Brief — July 2026</title>
+<style>
+  :root {
+    --ground:    #F8FAFC;
+    --surface:   #FFFFFF;
+    --surface-2: #F1F5F9;
+    --surface-3: #E4ECF5;
+    --border:    #D0DCE8;
+    --text:      #0F1929;
+    --text-2:    #3D5470;
+    --text-3:    #7A94B0;
+    --accent:    #C46A00;
+    --teal:      #0A8F6A;
+    --danger:    #C0292E;
+    --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--ground);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .report {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+
+  /* ── Header ── */
+  .report-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 36px;
+    margin-bottom: 56px;
+  }
+  .header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin-bottom: 20px;
+  }
+  .header-meta .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-right: none;
+  }
+  .header-meta .tag:last-child { border-right: 1px solid var(--border); }
+  .report-header h1 {
+    font-family: var(--mono);
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .header-sub {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Hero contrast ── */
+  .hero-contrast {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 48px 40px;
+    margin-bottom: 72px;
+  }
+  .hero-stat { text-align: center; }
+  .hero-number {
+    font-family: var(--mono);
+    font-size: clamp(48px, 9vw, 80px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    display: block;
+    margin-bottom: 12px;
+  }
+  .hero-number--pass {
+    color: var(--teal);
+  }
+  .hero-number--fail {
+    color: var(--accent);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-number--pass {
+      text-shadow: 0 2px 12px rgba(10, 143, 106, 0.18);
+    }
+    .hero-number--fail {
+      text-shadow: 0 2px 12px rgba(196, 106, 0, 0.18);
+    }
+  }
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    margin-bottom: 4px;
+  }
+  .hero-sub {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+  .hero-divider {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-3);
+    letter-spacing: 0.1em;
+    text-align: center;
+    padding: 0 8px;
+  }
+  @media (max-width: 520px) {
+    .hero-contrast {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto;
+      padding: 32px 24px;
+    }
+    .hero-divider { display: none; }
+  }
+
+  /* ── Sections ── */
+  .section {
+    margin-bottom: 72px;
+  }
+  .section-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .section > h2 {
+    font-family: var(--mono);
+    font-size: clamp(18px, 3vw, 24px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .section > .section-desc {
+    color: var(--text-2);
+    font-size: 14px;
+    max-width: 640px;
+    margin-bottom: 36px;
+  }
+
+  /* ── Subsections ── */
+  .subsection {
+    margin-bottom: 40px;
+  }
+  .subsection h3 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+  }
+  .subsection-note {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-bottom: 16px;
+  }
+
+  /* ── Bar rows (sending inbox breakdown) ── */
+  .bar-list { display: flex; flex-direction: column; gap: 14px; }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 120px;
+    align-items: center;
+    gap: 16px;
+  }
+  .bar-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bar-track {
+    height: 6px;
+    background: var(--surface-2);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .bar-fill--teal  { background: var(--teal); }
+  .bar-fill--amber { background: var(--accent); }
+  .bar-fill--red   { background: var(--danger); }
+  .bar-fill--dim   { background: var(--surface-3); }
+  .bar-value {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-2);
+    text-align: right;
+    white-space: nowrap;
+  }
+  @media (max-width: 560px) {
+    .bar-row { grid-template-columns: 1fr 80px; }
+    .bar-track { display: none; }
+  }
+
+  /* ── 2D Matrix ── */
+  .matrix-scroll { overflow-x: auto; }
+  .matrix {
+    width: 100%;
+    min-width: 500px;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  .matrix th {
+    padding: 10px 16px;
+    text-align: left;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+    font-weight: 400;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .matrix th.col-header {
+    text-align: center;
+    border-left: 1px solid var(--border);
+  }
+  .matrix td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .matrix td.row-header {
+    color: var(--text-2);
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .matrix td.cell {
+    text-align: center;
+    border-left: 1px solid var(--border);
+    position: relative;
+  }
+  .cell-count {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .cell-pct {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    opacity: 0.7;
+  }
+  .cell-empty .cell-count { color: var(--text-3); font-size: 14px; }
+
+  /* Cell heat: background rgba based on volume */
+  .cell-h-xl  { background: rgba(45, 212, 167, 0.18); }
+  .cell-h-xl  .cell-count { color: var(--teal); }
+  .cell-h-lg  { background: rgba(232, 132, 10, 0.14); }
+  .cell-h-lg  .cell-count { color: var(--accent); }
+  .cell-h-md  { background: rgba(232, 132, 10, 0.08); }
+  .cell-h-md  .cell-count { color: var(--accent); }
+  .cell-h-sm  { background: rgba(232, 132, 10, 0.04); }
+  .cell-h-sm  .cell-count { color: var(--text-3); }
+  .cell-empty { background: transparent; }
+  .cell-empty .cell-count { color: var(--text-3); }
+
+  /* ── Campaign list ── */
+  .campaign-list { display: flex; flex-direction: column; gap: 2px; }
+  .campaign-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 60px;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    background: var(--surface);
+    border-radius: 2px;
+  }
+  .campaign-rank {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    text-align: right;
+  }
+  .campaign-name {
+    font-size: 13px;
+    color: var(--text-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .campaign-count {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: right;
+  }
+
+  /* ── Test cards ── */
+  .test-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .test-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+  }
+  .test-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .test-card-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .test-overall {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .test-overall-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-3);
+    text-align: right;
+    margin-top: 2px;
+  }
+  .test-provider { margin-bottom: 10px; }
+  .test-provider-name {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.06em;
+    margin-bottom: 5px;
+  }
+  .test-split-bar {
+    height: 24px;
+    background: var(--surface-2);
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    position: relative;
+  }
+  .split-inbox {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: #FFFFFF;
+    background: var(--teal);
+    white-space: nowrap;
+    overflow: hidden;
+    min-width: 0;
+    flex-shrink: 0;
+  }
+  .split-spam {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--danger);
+    white-space: nowrap;
+    overflow: hidden;
+    flex: 1;
+  }
+  .split-full-inbox .split-spam { display: none; }
+  .split-full-spam .split-inbox  { display: none; }
+  .split-full-spam .split-spam   { background: var(--danger); width: 100%; }
+  .test-warmup {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-3);
+    line-height: 1.4;
+  }
+  .test-warmup strong {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--text-2);
+  }
+
+  /* ── Infrastructure grid ── */
+  .infra-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .infra-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+  }
+  .infra-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .infra-dot--pass { background: var(--teal); }
+  .infra-item-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-2);
+    line-height: 1.3;
+  }
+  .infra-item-status {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--teal);
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* ── Actions ── */
+  .action-list { display: flex; flex-direction: column; gap: 3px; }
+  .action-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 64px 1fr;
+  }
+  .action-priority {
+    background: var(--surface-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 8px;
+    border-right: 1px solid var(--border);
+    gap: 4px;
+  }
+  .priority-num {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-3);
+    line-height: 1;
+  }
+  .priority-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .action-body { padding: 20px 24px; }
+  .action-timing {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .action-title {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+  }
+  .action-desc {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
+  .action-why {
+    font-size: 12px;
+    color: var(--text-3);
+    background: var(--surface-2);
+    border-left: 2px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 0 2px 2px 0;
+    line-height: 1.5;
+  }
+  .action-why strong {
+    color: var(--text-2);
+    font-weight: 600;
+  }
+
+  /* ── Callout ── */
+  .callout {
+    background: rgba(232, 132, 10, 0.07);
+    border: 1px solid rgba(232, 132, 10, 0.25);
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--text-2);
+    margin-bottom: 32px;
+    line-height: 1.55;
+  }
+  .callout strong {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ── TLDR ── */
+  .tldr {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin-bottom: 36px;
+  }
+  .tldr-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-top: 2px;
+    white-space: nowrap;
+  }
+  .tldr-body p {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.6;
+  }
+  .tldr-body p + p {
+    margin-top: 10px;
+  }
+
+  /* ── Footer ── */
+  .report-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    margin-top: 72px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .footer-text {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+  }
+</style>
+
+<div class="report">
+
+  <!-- ── Header ── -->
+  <header class="report-header">
+    <div class="header-meta">
+      <span class="tag">Firmable GTM</span>
+      <span class="tag">Email Deliverability</span>
+      <span class="tag">June 6 – July 6, 2026</span>
+      <span class="tag">Last Updated: 6 Jul 2026</span>
+    </div>
+    <h1>Deliverability Brief &amp;<br>Remediation Plan</h1>
+    <p class="header-sub">262 replies analysed · 3 placement tests · 235 domains resolved via MX lookup</p>
+  </header>
+
+  <!-- ── TLDR ── -->
+  <div class="tldr">
+    <span class="tldr-label">TL;DR</span>
+    <div class="tldr-body">
+      <p>Google inboxes are landing cleanly — 95%+ inbox rate across all three placement tests. Microsoft inboxes are failing badly, hitting 100% spam in one test and averaging 67% spam across all three. The data is clear: send from Google, not Microsoft.</p>
+      <p>One gap remains: all tests used same-provider matching (Google→Google, Microsoft→Microsoft). We haven't tested cross-provider — Google sending to a Microsoft recipient, or Microsoft sending to a Google recipient. That test needs to run before making any final inbox decisions.</p>
+      <p>Three actions: run cross-provider placement tests this week (15 minutes), pause the worst Microsoft inboxes and shift volume to Google, then set up a weekly health check to flag any inbox dropping below 1% reply rate.</p>
+    </div>
+  </div>
+
+  <!-- ── Hero ── -->
+  <div class="hero-contrast">
+    <div class="hero-stat">
+      <span class="hero-number hero-number--pass" data-count="96.8" data-suffix="%">96.8%</span>
+      <div class="hero-label">G Suite avg inbox rate</div>
+      <div class="hero-sub">across 3 placement tests</div>
+    </div>
+    <div class="hero-divider">vs</div>
+    <div class="hero-stat">
+      <span class="hero-number hero-number--fail" data-count="33.2" data-suffix="%">33.2%</span>
+      <div class="hero-label">Office 365 avg inbox rate</div>
+      <div class="hero-sub">67.8% avg spam placement</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 01 — REPLY FLOW ANALYSIS
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-eyebrow">01 — Reply Flow Analysis</div>
+    <h2>Where replies are landing</h2>
+    <p class="section-desc">
+      262 genuine replies from the SmartLead master inbox, June 6 – July 6 2026.
+      Bounces and NDRs excluded (emailStatus=Replied). Prospect email provider
+      determined by live MX record lookup on each unique domain.
+    </p>
+
+    <div class="subsection">
+      <h3>Our sending inboxes — 262 replies received</h3>
+      <div class="bar-list">
+        <div class="bar-row">
+          <span class="bar-label">Google (Gmail / Workspace)</span>
+          <div class="bar-track"><div class="bar-fill bar-fill--teal" style="width:88.2%"></div></div>
+          <span class="bar-value">231 &middot; 88.2%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">Microsoft (Outlook / 365)</span>
+          <div class="bar-track"><div class="bar-fill bar-fill--amber" style="width:11.1%"></div></div>
+          <span class="bar-value">29 &middot; 11.1%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">Unknown inbox</span>
+          <div class="bar-track"><div class="bar-fill bar-fill--dim" style="width:0.8%"></div></div>
+          <span class="bar-value">2 &middot; 0.8%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>Sending provider × Prospect provider — reply flow matrix</h3>
+      <p class="subsection-note">Each cell: reply count / % of 262 total. Cell shading encodes volume.</p>
+      <div class="matrix-scroll">
+        <table class="matrix" role="grid">
+          <thead>
+            <tr>
+              <th style="width:180px">Our inbox</th>
+              <th class="col-header">Reply from<br>Google</th>
+              <th class="col-header">Reply from<br>Microsoft</th>
+              <th class="col-header">Reply from<br>Other / Unknown</th>
+              <th class="col-header" style="color:var(--text-2)">Row total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-header">Google sending</td>
+              <td class="cell cell-h-xl">
+                <span class="cell-count">159</span>
+                <span class="cell-pct">60.7%</span>
+              </td>
+              <td class="cell cell-h-sm">
+                <span class="cell-count">1</span>
+                <span class="cell-pct">0.4%</span>
+              </td>
+              <td class="cell cell-h-lg">
+                <span class="cell-count">71</span>
+                <span class="cell-pct">27.1%</span>
+              </td>
+              <td class="cell" style="border-left:1px solid var(--border)">
+                <span class="cell-count" style="color:var(--text-2)">231</span>
+                <span class="cell-pct">88.2%</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="row-header">Microsoft sending</td>
+              <td class="cell cell-empty">
+                <span class="cell-count">—</span>
+                <span class="cell-pct">0%</span>
+              </td>
+              <td class="cell cell-h-md">
+                <span class="cell-count">22</span>
+                <span class="cell-pct">8.4%</span>
+              </td>
+              <td class="cell cell-h-sm">
+                <span class="cell-count">7</span>
+                <span class="cell-pct">2.7%</span>
+              </td>
+              <td class="cell" style="border-left:1px solid var(--border)">
+                <span class="cell-count" style="color:var(--text-2)">29</span>
+                <span class="cell-pct">11.1%</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3>Replies by campaign — top 11</h3>
+      <div class="campaign-list">
+        <div class="campaign-row">
+          <span class="campaign-rank">01</span>
+          <span class="campaign-name">[Campaign] ANZ HQed — Creative Ideas, SMB, General + Sales Leaders</span>
+          <span class="campaign-count">65</span>
+        </div>
+        <div class="campaign-row">
+          <span class="campaign-rank">02</span>
+          <span class="campaign-name">[Campaign] SEA HQed — Creative Ideas, SMB, General + Sales Leaders</span>
+          <span class="campaign-count">54</span>
+        </div>
+        <div class="campaign-row">
+          <span class="campaign-rank">03</span>
+          <span class="campaign-name">[Event/Webinar] SDR Webinar, 8th July 2026</span>
+          <span class="campaign-count">28</span>
+        </div>
+        <div class="campaign-row">
+          <span class="campaign-rank">04</span>
+          <span class="campaign-name">US Founding 100 — MSP &amp; IT Services, Tier 1, Highly Likely (Second Push)</span>
+          <span class="campaign-count">23</span>
+        </div>
+        <div class="campaign-row">
+          <span class="campaign-rank">05</span>
+          <span class="campaign-name">US Founding 100 — SaaS, Tier 1, Highly Likely</span>
+          <span class="campaign-count">18</span>
+        </div>
+        <div class="campaign-row">
+          <span class="campaign-rank">06</span>
+          <span class="campaign-name">US Founding 100 — MSP &amp; IT Services, Tier 1, Highly Likely</span>
+          <span class="campaign-count">17</span>
+        </div>
+        <div class="campaign-row">
+          <span class="campaign-rank">07</span>
+          <span class="campaign-name">US Founding 100 — MSP &amp; IT Services, Tier 2 + Tier 3, Highly Likely</span>
+          <span class="campaign-count">14</span>
+        </div>
+        <div class="campaign-row">
+          <span class="campaign-rank">08</span>
+          <span class="campaign-name">US Founding 100 — SaaS, Tier 2 + Tier 3, Highly Likely</span>
+          <span class="campaign-count">11</span>
+        </div>
+        <div class="campaign-row">
+          <span class="campaign-rank">08</span>
+          <span class="campaign-name">[Event/Webinar] SEA — Sales + Sales Development Leaders, Executive Lunch, June 2026</span>
+          <span class="campaign-count">11</span>
+        </div>
+        <div class="campaign-row">
+          <span class="campaign-rank">10</span>
+          <span class="campaign-name">[Campaign] Non-SEA HQed — Creative Ideas, SMB, General + Sales Leaders</span>
+          <span class="campaign-count">10</span>
+        </div>
+        <div class="campaign-row">
+          <span class="campaign-rank">11</span>
+          <span class="campaign-name">[Conference] ANZ — CeMAT Australia 2026</span>
+          <span class="campaign-count">9</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 02 — SPAM PLACEMENT TESTS
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-eyebrow">02 — Spam Placement Tests</div>
+    <h2>Inbox placement by provider</h2>
+    <p class="section-desc">
+      Three SmartLead deliverability tests run in June – July 2026, same-provider matching
+      (Google→Google, Office365→Office365). Cross-provider data not yet collected — see Action 1.
+    </p>
+
+    <div class="callout">
+      <strong>Caveat:</strong> These tests matched sending provider to receiving provider, so they measure
+      same-provider reputation, not cross-provider. A Google inbox sending to a Microsoft recipient
+      may behave differently — that test is still outstanding.
+    </div>
+
+    <div class="test-cards">
+      <!-- Test 1 -->
+      <div class="test-card">
+        <div class="test-card-header">
+          <div class="test-card-title">Test 1</div>
+          <div>
+            <div class="test-overall">79.9%</div>
+            <div class="test-overall-label">overall inbox</div>
+          </div>
+        </div>
+        <div class="test-provider">
+          <div class="test-provider-name">G SUITE · 90 emails</div>
+          <div class="test-split-bar">
+            <div class="split-inbox" style="width:95.56%">95.6%</div>
+            <div class="split-spam">4.4%</div>
+          </div>
+        </div>
+        <div class="test-provider">
+          <div class="test-provider-name">OFFICE 365 · 114 emails</div>
+          <div class="test-split-bar">
+            <div class="split-inbox" style="width:67.54%">67.5%</div>
+            <div class="split-spam">32.5%</div>
+          </div>
+        </div>
+        <div class="test-warmup">Warmup: <strong>193</strong> positive intent · <strong>40</strong> spam rescued to Primary</div>
+      </div>
+
+      <!-- Test 2 -->
+      <div class="test-card">
+        <div class="test-card-header">
+          <div class="test-card-title">Test 2</div>
+          <div>
+            <div class="test-overall" style="color:var(--danger)">52.5%</div>
+            <div class="test-overall-label">overall inbox</div>
+          </div>
+        </div>
+        <div class="test-provider">
+          <div class="test-provider-name">G SUITE · 84 emails</div>
+          <div class="test-split-bar split-full-inbox">
+            <div class="split-inbox" style="width:100%">100%</div>
+            <div class="split-spam"></div>
+          </div>
+        </div>
+        <div class="test-provider">
+          <div class="test-provider-name">OFFICE 365 · 76 emails</div>
+          <div class="test-split-bar split-full-spam">
+            <div class="split-inbox" style="width:0%"></div>
+            <div class="split-spam" style="width:100%">100% SPAM</div>
+          </div>
+        </div>
+        <div class="test-warmup">Warmup: <strong>153</strong> positive intent · <strong>76</strong> spam rescued to Primary</div>
+      </div>
+
+      <!-- Test 3 -->
+      <div class="test-card">
+        <div class="test-card-header">
+          <div class="test-card-title">Test 3</div>
+          <div>
+            <div class="test-overall">61.2%</div>
+            <div class="test-overall-label">overall inbox</div>
+          </div>
+        </div>
+        <div class="test-provider">
+          <div class="test-provider-name">G SUITE · 99 emails</div>
+          <div class="test-split-bar">
+            <div class="split-inbox" style="width:94.95%">95.0%</div>
+            <div class="split-spam">5.0%</div>
+          </div>
+        </div>
+        <div class="test-provider">
+          <div class="test-provider-name">OFFICE 365 · 115 emails</div>
+          <div class="test-split-bar">
+            <div class="split-inbox" style="width:32.17%">32%</div>
+            <div class="split-spam">68%</div>
+          </div>
+        </div>
+        <div class="test-warmup">Warmup: <strong>211</strong> positive intent · <strong>83</strong> spam rescued to Primary</div>
+      </div>
+    </div>
+
+    <div class="subsection" style="margin-top:32px">
+      <h3>Infrastructure status — all clear</h3>
+      <div class="infra-grid">
+        <div class="infra-item">
+          <div class="infra-dot infra-dot--pass"></div>
+          <div class="infra-item-label">ESP IP Reputation</div>
+          <div class="infra-item-status">0 blacklisted</div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-dot infra-dot--pass"></div>
+          <div class="infra-item-label">rDNS Report</div>
+          <div class="infra-item-status">Pass</div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-dot infra-dot--pass"></div>
+          <div class="infra-item-label">Domain Blacklists</div>
+          <div class="infra-item-status">Clean</div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-dot infra-dot--pass"></div>
+          <div class="infra-item-label">DKIM</div>
+          <div class="infra-item-status">Pass</div>
+        </div>
+        <div class="infra-item">
+          <div class="infra-dot infra-dot--pass"></div>
+          <div class="infra-item-label">SPF</div>
+          <div class="infra-item-status">Pass</div>
+        </div>
+      </div>
+      <p style="margin-top:12px;font-size:12px;color:var(--text-3)">
+        The problem is not infrastructure. IP, domain, and authentication are all clean.
+        Microsoft 365's aggressive spam filters on cold outreach content are the likely cause.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 03 — RECOMMENDED ACTIONS
+  ═══════════════════════════════════════════════════════════ -->
+  <section class="section">
+    <div class="section-eyebrow">03 — Recommended Actions</div>
+    <h2>What to do next</h2>
+    <p class="section-desc">
+      Priority-ordered. Action 1 takes 15 minutes and unblocks the decision on whether
+      to keep any Microsoft inboxes at all.
+    </p>
+
+    <div class="action-list">
+
+      <div class="action-item">
+        <div class="action-priority">
+          <div class="priority-num">1</div>
+          <div class="priority-label">First</div>
+        </div>
+        <div class="action-body">
+          <div class="action-timing">This week · 15 minutes</div>
+          <div class="action-title">Run cross-provider placement tests in SmartLead</div>
+          <div class="action-desc">
+            Manually configure a spam test using Google sending accounts against Office365 seed inboxes,
+            and separately, Office365 sending accounts against Google seed inboxes.
+            The current data only covers same-provider pairs — cross-provider performance is unknown.
+          </div>
+          <div class="action-why">
+            <strong>Why this is first:</strong> If Google→Microsoft also lands in spam, the issue is in the
+            email content and affects everyone. If only Microsoft→Microsoft fails, it's a Microsoft sender
+            reputation problem specifically — and that's what we're killing. This test is the decision gate
+            for Action 2. Until you have this data, don't assume the worst-case scenario.
+          </div>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-priority">
+          <div class="priority-num">2</div>
+          <div class="priority-label">Next</div>
+        </div>
+        <div class="action-body">
+          <div class="action-timing">This week / next · Based on Action 1 results</div>
+          <div class="action-title">Pause underperforming Microsoft inboxes, shift volume to Google</div>
+          <div class="action-desc">
+            Immediately pause the worst Microsoft inboxes (those confirmed as low inbox rate in tests 1–3),
+            and redistribute their daily send quota to Google inboxes. Don't delete — just pause,
+            in case cross-provider tests show they still have value.
+            If the path to 90 Google inboxes requires new accounts, provision and begin warmup now
+            (2–3 weeks to reach full volume).
+          </div>
+          <div class="action-why">
+            <strong>Current capacity:</strong> 72 Gmail × 15 emails/day = ~1,080 sends/day. Scaling to
+            90 Gmail inboxes adds ~270 more. Keep a small Microsoft reserve (10–15 inboxes) as a hedge —
+            over-indexing on one provider creates single-point-of-failure risk if Google tightens filters.
+          </div>
+        </div>
+      </div>
+
+      <div class="action-item">
+        <div class="action-priority">
+          <div class="priority-num">3</div>
+          <div class="priority-label">Ongoing</div>
+        </div>
+        <div class="action-body">
+          <div class="action-timing">Weekly · Automated script</div>
+          <div class="action-title">Weekly inbox health check — flag inboxes below 1% reply rate</div>
+          <div class="action-desc">
+            Run a script weekly that pulls reply counts per inbox from the master inbox API and
+            estimated sent volume from email account data. Flag any inbox below 1% reply rate
+            over a 30-day window as KILL or WATCH, and output a sorted table to review.
+          </div>
+          <div class="action-why">
+            <strong>What to build:</strong> <code style="font-family:var(--mono);font-size:11px;color:var(--teal)">scripts/smartlead_inbox_health.py</code>
+            — reuses <code style="font-family:var(--mono);font-size:11px;color:var(--teal)">get_email_accounts()</code>
+            and <code style="font-family:var(--mono);font-size:11px;color:var(--teal)">get_inbox_replies()</code>
+            already in <code style="font-family:var(--mono);font-size:11px;color:var(--teal)">scripts/smartlead_client.py</code>.
+            Output: inbox email · provider · replies · sent (approx) · reply rate · status flag.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="report-footer">
+    <span class="footer-text">Firmable GTM Engineering</span>
+    <span class="footer-text">Generated July 6, 2026</span>
+    <span class="footer-text">Data: SmartLead API · 30-day window · MX lookup via dnspython</span>
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function setFinal() {
+      document.querySelectorAll('[data-count]').forEach(function (el) {
+        el.textContent = el.dataset.count + (el.dataset.suffix || '');
+      });
+    }
+
+    if (mq.matches) {
+      setFinal();
+      return;
+    }
+
+    function animateCounters() {
+      document.querySelectorAll('[data-count]').forEach(function (el) {
+        var target = parseFloat(el.dataset.count);
+        var isFloat = el.dataset.count.indexOf('.') !== -1;
+        var suffix = el.dataset.suffix || '';
+        var duration = 1400;
+        var startTime = null;
+
+        function step(ts) {
+          if (!startTime) startTime = ts;
+          var progress = Math.min((ts - startTime) / duration, 1);
+          var eased = 1 - Math.pow(1 - progress, 3);
+          var value = target * eased;
+          el.textContent = (isFloat ? value.toFixed(1) : Math.round(value)) + suffix;
+          if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      });
+    }
+
+    window.addEventListener('load', animateCounters);
+  })();
+</script>
