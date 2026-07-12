@@ -587,16 +587,28 @@ def write_html_report(
     def _chip(text, cls):
         return f'<span class="rec-chip rec-chip-{cls}">{text}</span>'
 
+    def _chips_by_vendor(domain_rows, chip_cls, label_fn=None):
+        """Group domain chips by vendor, rendering a labelled row per vendor."""
+        groups = {}
+        for r in domain_rows:
+            vendor = _vendor_for_domain(r["domain"]) or "Unknown"
+            groups.setdefault(vendor, []).append(r)
+        parts = []
+        for vendor in sorted(groups.keys()):
+            chips = "".join(
+                _chip(label_fn(r) if label_fn else r["domain"], chip_cls)
+                for r in groups[vendor]
+            )
+            parts.append(
+                f'<div class="rec-vendor-group">'
+                f'<span class="rec-vendor-label">{vendor}</span>'
+                f'<div class="rec-chips">{chips}</div>'
+                f'</div>'
+            )
+        return "".join(parts)
+
     # Card 1: rotate immediately (zero replies)
     if rec_zero:
-        zero_chips = "".join(_chip(r["domain"], "alert") for r in rec_zero)
-        zero_vendor_note = ""
-        zero_vendors = [v for v in (_vendor_for_domain(r["domain"]) for r in rec_zero) if v]
-        if zero_vendors:
-            from collections import Counter
-            top = Counter(zero_vendors).most_common()
-            vendor_str = ", ".join(f"{v} ({c})" for v, c in top)
-            zero_vendor_note = f'<p class="rec-vendor-note">Vendor breakdown for these domains: {vendor_str}. If one vendor dominates, raise it with them.</p>'
         card_rotate_zero = f"""
         <div class="rec-card rec-card-danger">
           <div class="rec-card-header">
@@ -604,15 +616,13 @@ def write_html_report(
             <h3>Pull these domains from active campaigns now</h3>
           </div>
           <p>{len(rec_zero)} domain{"s" if len(rec_zero) != 1 else ""} {"are" if len(rec_zero) != 1 else "is"} currently sending but received zero replies in the past {lookback_days} days. Zero replies while active is the clearest signal a domain is burned or being silently filtered. Remove them from your campaigns immediately and replace with fresh domains from the reserve pool.</p>
-          <div class="rec-chips">{zero_chips}</div>
-          {zero_vendor_note}
+          {_chips_by_vendor(rec_zero, "alert")}
         </div>"""
     else:
         card_rotate_zero = ""
 
     # Card 2: low reply rate (0 < rate < 1%)
     if rec_low:
-        low_chips = "".join(_chip(f'{r["domain"]} ({r["reply_rate"]:.2f}%)', "warn") for r in rec_low)
         card_rotate_low = f"""
         <div class="rec-card rec-card-warn">
           <div class="rec-card-header">
@@ -620,14 +630,13 @@ def write_html_report(
             <h3>Below 1% reply rate — prepare to rotate out</h3>
           </div>
           <p>{len(rec_low)} domain{"s" if len(rec_low) != 1 else ""} {"are" if len(rec_low) != 1 else "is"} active with a reply rate under 1%. This is below the threshold for a healthy sending domain. If the rate does not improve in the next 7 days, pull these from campaigns and bring in reserve domains.</p>
-          <div class="rec-chips">{low_chips}</div>
+          {_chips_by_vendor(rec_low, "warn", label_fn=lambda r: f'{r["domain"]} ({r["reply_rate"]:.2f}%)')}
         </div>"""
     else:
         card_rotate_low = ""
 
     # Card 3: healthy — reassurance
     if rec_healthy:
-        healthy_chips = "".join(_chip(f'{r["domain"]} ({r["reply_rate"]:.2f}%)', "ok") for r in rec_healthy)
         card_healthy = f"""
         <div class="rec-card rec-card-ok">
           <div class="rec-card-header">
@@ -635,7 +644,7 @@ def write_html_report(
             <h3>Keep running — these domains are working</h3>
           </div>
           <p>{len(rec_healthy)} domain{"s" if len(rec_healthy) != 1 else ""} {"are" if len(rec_healthy) != 1 else "is"} active with reply rates above 1%. No action needed. Continue monitoring weekly and rotate out if rate drops.</p>
-          <div class="rec-chips">{healthy_chips}</div>
+          {_chips_by_vendor(rec_healthy, "ok", label_fn=lambda r: f'{r["domain"]} ({r["reply_rate"]:.2f}%)')}
         </div>"""
     else:
         card_healthy = ""
@@ -898,6 +907,10 @@ def write_html_report(
   .rec-chip-warn    {{ background:#FFF3E0; color:#7C4B00; border:1px solid #FFE0B2; }}
   .rec-chip-ok      {{ background:#E8F5E9; color:#1B5E20; border:1px solid #C8E6C9; }}
   .rec-chip-neutral {{ background:var(--surface-2); color:var(--text-2); border:1px solid var(--border); }}
+  .rec-vendor-group {{ margin-top:14px; }}
+  .rec-vendor-label {{ display:inline-block; font-family:var(--mono); font-size:10px;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--text-3);
+    margin-bottom:6px; }}
   .rec-steps {{ padding-left:20px; color:var(--text-2); font-size:13px; line-height:1.9; max-width:680px; }}
   .rec-steps li {{ padding-left:4px; }}
 

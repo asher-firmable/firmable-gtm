@@ -209,6 +209,10 @@
   .rec-chip-warn    { background:#FFF3E0; color:#7C4B00; border:1px solid #FFE0B2; }
   .rec-chip-ok      { background:#E8F5E9; color:#1B5E20; border:1px solid #C8E6C9; }
   .rec-chip-neutral { background:var(--surface-2); color:var(--text-2); border:1px solid var(--border); }
+  .rec-vendor-group { margin-top:14px; }
+  .rec-vendor-label { display:inline-block; font-family:var(--mono); font-size:10px;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--text-3);
+    margin-bottom:6px; }
   .rec-steps { padding-left:20px; color:var(--text-2); font-size:13px; line-height:1.9; max-width:680px; }
   .rec-steps li { padding-left:4px; }
 
@@ -1767,8 +1771,7 @@
             <h3>Pull these domains from active campaigns now</h3>
           </div>
           <p>6 domains are currently sending but received zero replies in the past 14 days. Zero replies while active is the clearest signal a domain is burned or being silently filtered. Remove them from your campaigns immediately and replace with fresh domains from the reserve pool.</p>
-          <div class="rec-chips"><span class="rec-chip rec-chip-alert">firmableinc.com</span><span class="rec-chip rec-chip-alert">firmablereach.com</span><span class="rec-chip rec-chip-alert">firmablestudio.com</span><span class="rec-chip rec-chip-alert">linkfirmable.com</span><span class="rec-chip rec-chip-alert">firmablesite.com</span><span class="rec-chip rec-chip-alert">usefirmable.com</span></div>
-          <p class="rec-vendor-note">Vendor breakdown for these domains: InboxKit (3), ScaledMail (3). If one vendor dominates, raise it with them.</p>
+          <div class="rec-vendor-group"><span class="rec-vendor-label">InboxKit</span><div class="rec-chips"><span class="rec-chip rec-chip-alert">firmableinc.com</span><span class="rec-chip rec-chip-alert">firmablesite.com</span><span class="rec-chip rec-chip-alert">usefirmable.com</span></div></div><div class="rec-vendor-group"><span class="rec-vendor-label">ScaledMail</span><div class="rec-chips"><span class="rec-chip rec-chip-alert">firmablereach.com</span><span class="rec-chip rec-chip-alert">firmablestudio.com</span><span class="rec-chip rec-chip-alert">linkfirmable.com</span></div></div>
         </div>
     
         <div class="rec-card rec-card-warn">
@@ -1777,7 +1780,7 @@
             <h3>Below 1% reply rate — prepare to rotate out</h3>
           </div>
           <p>7 domains are active with a reply rate under 1%. This is below the threshold for a healthy sending domain. If the rate does not improve in the next 7 days, pull these from campaigns and bring in reserve domains.</p>
-          <div class="rec-chips"><span class="rec-chip rec-chip-warn">firmablemail.com (0.85%)</span><span class="rec-chip rec-chip-warn">viafirmable.com (0.85%)</span><span class="rec-chip rec-chip-warn">firmableteam.com (0.61%)</span><span class="rec-chip rec-chip-warn">activatefirmable.com (0.61%)</span><span class="rec-chip rec-chip-warn">firmableportal.com (0.31%)</span><span class="rec-chip rec-chip-warn">firmableedge.com (0.05%)</span><span class="rec-chip rec-chip-warn">firmablezone.com (0.04%)</span></div>
+          <div class="rec-vendor-group"><span class="rec-vendor-label">InboxKit</span><div class="rec-chips"><span class="rec-chip rec-chip-warn">firmableteam.com (0.61%)</span><span class="rec-chip rec-chip-warn">activatefirmable.com (0.61%)</span><span class="rec-chip rec-chip-warn">firmableportal.com (0.31%)</span></div></div><div class="rec-vendor-group"><span class="rec-vendor-label">ScaledMail</span><div class="rec-chips"><span class="rec-chip rec-chip-warn">firmablemail.com (0.85%)</span><span class="rec-chip rec-chip-warn">viafirmable.com (0.85%)</span><span class="rec-chip rec-chip-warn">firmableedge.com (0.05%)</span><span class="rec-chip rec-chip-warn">firmablezone.com (0.04%)</span></div></div>
         </div>
     
         <div class="rec-card rec-card-ok">
@@ -1786,7 +1789,7 @@
             <h3>Keep running — these domains are working</h3>
           </div>
           <p>9 domains are active with reply rates above 1%. No action needed. Continue monitoring weekly and rotate out if rate drops.</p>
-          <div class="rec-chips"><span class="rec-chip rec-chip-ok">firmableoutreach.com (3.94%)</span><span class="rec-chip rec-chip-ok">firmablescale.com (3.10%)</span><span class="rec-chip rec-chip-ok">firmablelabs.com (2.82%)</span><span class="rec-chip rec-chip-ok">firmableconnect.com (2.82%)</span><span class="rec-chip rec-chip-ok">readyfirmable.com (2.54%)</span><span class="rec-chip rec-chip-ok">firmablegrowth.com (2.25%)</span><span class="rec-chip rec-chip-ok">byfirmable.com (2.25%)</span><span class="rec-chip rec-chip-ok">withfirmable.com (2.25%)</span><span class="rec-chip rec-chip-ok">firmablepartner.com (1.13%)</span></div>
+          <div class="rec-vendor-group"><span class="rec-vendor-label">ScaledMail</span><div class="rec-chips"><span class="rec-chip rec-chip-ok">firmableoutreach.com (3.94%)</span><span class="rec-chip rec-chip-ok">firmablescale.com (3.10%)</span><span class="rec-chip rec-chip-ok">firmablelabs.com (2.82%)</span><span class="rec-chip rec-chip-ok">firmableconnect.com (2.82%)</span><span class="rec-chip rec-chip-ok">readyfirmable.com (2.54%)</span><span class="rec-chip rec-chip-ok">firmablegrowth.com (2.25%)</span><span class="rec-chip rec-chip-ok">byfirmable.com (2.25%)</span><span class="rec-chip rec-chip-ok">withfirmable.com (2.25%)</span><span class="rec-chip rec-chip-ok">firmablepartner.com (1.13%)</span></div></div>
         </div>
     
         <div class="rec-card rec-card-info">
