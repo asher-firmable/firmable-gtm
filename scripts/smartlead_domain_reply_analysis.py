@@ -626,7 +626,7 @@ def write_html_report(
             <h3>Pull these domains from active campaigns now</h3>
           </div>
           <p>{len(rec_zero)} domain{"s" if len(rec_zero) != 1 else ""} {"are" if len(rec_zero) != 1 else "is"} currently active with a reply rate below 0.5%. At this level the domain is either burned or being silently filtered. Remove {"them" if len(rec_zero) != 1 else "it"} from your campaigns immediately and replace with fresh domains from the reserve pool.</p>
-          {_chips_by_vendor(rec_zero, "alert")}
+          {_chips_by_vendor(rec_zero, "alert", label_fn=lambda r: f'{r["domain"]} ({r["reply_rate"]:.2f}%)' if r["reply_rate"] is not None else f'{r["domain"]} (0.00%)')}
         </div>"""
     else:
         card_rotate_zero = ""
