@@ -660,11 +660,6 @@ def write_html_report(
         card_healthy = ""
 
     # Card 4: reserve pool
-    reserve_display = rec_reserve[:12]
-    reserve_more = len(rec_reserve) - 12
-    reserve_chips = "".join(_chip(r["domain"], "neutral") for r in reserve_display)
-    if reserve_more > 0:
-        reserve_chips += f'<span class="rec-chip rec-chip-neutral">+{reserve_more} more</span>'
     card_reserve = f"""
         <div class="rec-card rec-card-info">
           <div class="rec-card-header">
@@ -672,7 +667,7 @@ def write_html_report(
             <h3>{len(rec_reserve)} inactive domain{"s" if len(rec_reserve) != 1 else ""} available to rotate in</h3>
           </div>
           <p>These domains are not assigned to any active campaign. When you pull a burned domain, replace it with one of these. Before adding a reserve domain to a campaign, confirm it has been warmed up — check SmartLead's warm-up status and ensure it has been running warm-up emails for at least 2 to 3 weeks.</p>
-          <div class="rec-chips">{reserve_chips}</div>
+          {_chips_by_vendor(rec_reserve, "neutral")}
         </div>"""
 
     # Card 5: rotation process
