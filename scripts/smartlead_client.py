@@ -64,3 +64,24 @@ class SmartLeadClient:
 
     def get_campaign_analytics(self, campaign_id: str) -> dict:
         return self._get(f"/campaigns/{campaign_id}/analytics")
+
+    def get_email_accounts(self, limit: int = 100, offset: int = 0) -> list:
+        result = self._get("/email-accounts", params={"limit": limit, "offset": offset})
+        return result if isinstance(result, list) else result.get("data", [])
+
+    def get_inbox_replies(self, offset: int = 0, limit: int = 20,
+                          start_date: str = None, end_date: str = None) -> dict:
+        """Fetch from the main master inbox (POST /master-inbox/inbox-replies).
+
+        Response: {"ok": true, "data": [...], "offset": N, "limit": N}
+        Each record has email_account_id, email_campaign_name, last_reply_time, lead_*.
+        start_date / end_date: ISO 8601 strings for replyTimeBetween filter.
+        """
+        filters = {}
+        if start_date and end_date:
+            filters["replyTimeBetween"] = [start_date, end_date]
+        payload = {"offset": offset, "limit": limit, "sortBy": "REPLY_TIME_DESC", "filters": filters}
+        url = f"{self.BASE_URL}/master-inbox/inbox-replies"
+        resp = requests.post(url, params={"api_key": self.api_key, "fetch_message_history": "false"}, json=payload)
+        resp.raise_for_status()
+        return resp.json()
