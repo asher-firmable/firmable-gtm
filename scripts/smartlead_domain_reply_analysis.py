@@ -569,8 +569,8 @@ def write_html_report(
         </details>""")
 
     # ---- Recommendations ----
-    rec_zero    = [r for r in rows if r["is_active"] and r["replies_14d"] == 0]
-    rec_low     = [r for r in rows if r["is_active"] and r["reply_rate"] is not None and 0 < r["reply_rate"] < 1.0]
+    rec_zero    = [r for r in rows if r["is_active"] and (r["reply_rate"] is None or r["reply_rate"] < 0.5)]
+    rec_low     = [r for r in rows if r["is_active"] and r["reply_rate"] is not None and 0.5 <= r["reply_rate"] < 1.0]
     rec_healthy = [r for r in rows if r["is_active"] and r["reply_rate"] is not None and r["reply_rate"] >= 1.0]
     rec_reserve = [r for r in rows if not r["is_active"]]
 
@@ -625,7 +625,7 @@ def write_html_report(
             <span class="rec-badge rec-badge-danger">Action required</span>
             <h3>Pull these domains from active campaigns now</h3>
           </div>
-          <p>{len(rec_zero)} domain{"s" if len(rec_zero) != 1 else ""} {"are" if len(rec_zero) != 1 else "is"} currently sending but received zero replies in the past {lookback_days} days. Zero replies while active is the clearest signal a domain is burned or being silently filtered. Remove them from your campaigns immediately and replace with fresh domains from the reserve pool.</p>
+          <p>{len(rec_zero)} domain{"s" if len(rec_zero) != 1 else ""} {"are" if len(rec_zero) != 1 else "is"} currently active with a reply rate below 0.5%. At this level the domain is either burned or being silently filtered. Remove {"them" if len(rec_zero) != 1 else "it"} from your campaigns immediately and replace with fresh domains from the reserve pool.</p>
           {_chips_by_vendor(rec_zero, "alert")}
         </div>"""
     else:
@@ -639,7 +639,7 @@ def write_html_report(
             <span class="rec-badge rec-badge-warn">Watch closely</span>
             <h3>Below 1% reply rate — prepare to rotate out</h3>
           </div>
-          <p>{len(rec_low)} domain{"s" if len(rec_low) != 1 else ""} {"are" if len(rec_low) != 1 else "is"} active with a reply rate under 1%. This is below the threshold for a healthy sending domain. If the rate does not improve in the next 7 days, pull these from campaigns and bring in reserve domains.</p>
+          <p>{len(rec_low)} domain{"s" if len(rec_low) != 1 else ""} {"are" if len(rec_low) != 1 else "is"} active with a reply rate between 0.5% and 1%. Not critical yet, but trending in the wrong direction. Monitor for another 7 days — if the rate drops below 0.5%, move {"them" if len(rec_low) != 1 else "it"} to action required and rotate out.</p>
           {_chips_by_vendor(rec_low, "warn", label_fn=lambda r: f'{r["domain"]} ({r["reply_rate"]:.2f}%)')}
         </div>"""
     else:
@@ -697,7 +697,7 @@ def write_html_report(
     <h2>Recommendations</h2>
     <p class="section-desc">
       Based on activity in the past {lookback_days} days across {total_active_campaigns} active campaigns.
-      Threshold: reply rate below 1% while active = rotate out.
+      Action required: below 0.5% reply rate. Watch closely: 0.5% to 1%.
     </p>
     {card_rotate_zero}
     {card_rotate_low}
