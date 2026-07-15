@@ -5,15 +5,17 @@ For every sending domain across all mailboxes, shows:
   - Number of mailboxes on that domain
   - Number of active campaigns currently using this domain/mailbox
   - Replies received in the past 14 days
-  - Reply rate: replies (14d) / sends from active campaigns (all-time)
+  - Reply rate (14d): replies (14d) / sends from active campaigns (all-time)
+  - Reply rate (all-time): all-time replies / all-time sends across ALL campaigns
 
 A domain or mailbox is only flagged when it IS in an active campaign
 and receiving no replies in the past 14 days. Inactive domains with
 zero replies are expected and are not flagged.
 
 NOTE: Sent count is all-time per active campaign (SmartLead has no
-date-filtered sent API). Reply count is limited to the past 14 days.
-The rate is an approximation — treat it as directional.
+date-filtered sent API). The 14d rate is an approximation; the all-time
+rate uses campaign analytics reply_count across all campaigns (active +
+completed) and is the best indicator of whether a domain is burned.
 
 Run from repo root:
     PYTHONPATH=. python3 scripts/smartlead_domain_reply_analysis.py
@@ -160,6 +162,53 @@ def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list)
     return dict(account_active_count), dict(account_active_sent), dict(account_active_campaigns), len(active)
 
 
+def fetch_alltime_stats_per_account(client: SmartLeadClient, campaigns: list) -> tuple:
+    """
+    Process ALL campaigns (active + completed + paused) to compute all-time
+    sent and reply counts per mailbox. Uses campaign analytics reply_count,
+    apportioned evenly across mailboxes assigned to each campaign.
+    Returns:
+      - account_alltime_sent:    {account_id: float}
+      - account_alltime_replies: {account_id: float}
+    """
+    account_alltime_sent = defaultdict(float)
+    account_alltime_replies = defaultdict(float)
+
+    print(f"  Fetching all-time stats across {len(campaigns)} campaigns...")
+    for i, camp in enumerate(campaigns, 1):
+        camp_id = str(camp["id"])
+        camp_name = camp.get("name", camp_id)
+        print(f"  [{i}/{len(campaigns)}] {camp_name[:60]}", end="\r", flush=True)
+
+        try:
+            analytics = client.get_campaign_analytics(camp_id)
+            unique_sent = int(analytics.get("unique_sent_count") or 0)
+            reply_count = int(analytics.get("reply_count") or 0)
+        except Exception:
+            continue
+
+        if unique_sent == 0:
+            continue
+
+        try:
+            camp_accounts = client._get(f"/campaigns/{camp_id}/email-accounts")
+        except Exception:
+            continue
+
+        if not camp_accounts:
+            continue
+
+        n = len(camp_accounts)
+        for acc in camp_accounts:
+            acc_id = acc.get("id")
+            if acc_id:
+                account_alltime_sent[acc_id] += unique_sent / n
+                account_alltime_replies[acc_id] += reply_count / n
+
+    print()
+    return dict(account_alltime_sent), dict(account_alltime_replies)
+
+
 def _get_inbox_replies_with_retry(client, offset, limit, start_iso, end_iso, max_retries=5):
     delay = 2
     for attempt in range(max_retries):
@@ -205,6 +254,8 @@ def aggregate_by_domain(
     account_active_sent: dict,
     account_active_campaigns: dict,
     account_replies: dict,
+    account_alltime_sent: dict,
+    account_alltime_replies: dict,
 ) -> list:
     domain_mailboxes = defaultdict(set)
     for acc_id, domain in account_to_domain.items():
@@ -217,6 +268,11 @@ def aggregate_by_domain(
         replies = sum(account_replies.get(a, 0) for a in acc_ids)
         is_active = active_campaigns > 0
         reply_rate = (replies / active_sent * 100) if active_sent > 0 else None
+
+        alltime_sent = sum(account_alltime_sent.get(a, 0) for a in acc_ids)
+        alltime_replies = sum(account_alltime_replies.get(a, 0) for a in acc_ids)
+        alltime_rate = (alltime_replies / alltime_sent * 100) if alltime_sent > 0 else None
+
         campaign_names = sorted(set(
             name
             for a in acc_ids
@@ -230,6 +286,9 @@ def aggregate_by_domain(
             "active_sent": int(active_sent),
             "replies_14d": replies,
             "reply_rate": reply_rate,
+            "alltime_sent": int(alltime_sent),
+            "alltime_replies": int(alltime_replies),
+            "alltime_rate": alltime_rate,
             "is_active": is_active,
             "campaign_names": campaign_names,
         })
@@ -396,6 +455,8 @@ def write_html_report(
     account_active_sent: dict,
     account_active_campaigns: dict,
     account_replies: dict,
+    account_alltime_sent: dict,
+    account_alltime_replies: dict,
     lookback_days: int,
     total_active_campaigns: int,
     output_path: str,
@@ -438,6 +499,16 @@ def write_html_report(
                 rate_str = "—"
                 rate_cls = "rate-none"
 
+            at_sent = account_alltime_sent.get(acc_id, 0)
+            at_replies = account_alltime_replies.get(acc_id, 0)
+            if at_sent > 0:
+                at_rate = at_replies / at_sent * 100
+                at_rate_str = f"{at_rate:.2f}%"
+                at_rate_cls = _reply_rate_class(at_rate)
+            else:
+                at_rate_str = "—"
+                at_rate_cls = "rate-none"
+
             if active == 0:
                 status_html = '<span class="status-badge status-inactive">Inactive</span>'
             elif replies == 0:
@@ -463,6 +534,7 @@ def write_html_report(
                 f'<td class="mono num">{active}</td>'
                 f'<td class="mono num">{replies}</td>'
                 f'<td class="mono num rate-cell {rate_cls}">{rate_str}</td>'
+                f'<td class="mono num rate-cell {at_rate_cls}">{at_rate_str}</td>'
                 f'<td>{status_html}</td>'
                 f'<td class="camps-cell">{camps_html}</td>'
                 f'</tr>'
@@ -475,6 +547,10 @@ def write_html_report(
         rate_str = f"{rate:.2f}%" if rate is not None else "—"
         rate_cls = _reply_rate_class(rate)
         bar_w = min(100, int(rate * 20)) if rate else 0
+
+        at_rate = r["alltime_rate"]
+        at_rate_str = f"{at_rate:.2f}%" if at_rate is not None else "—"
+        at_rate_cls = _reply_rate_class(at_rate)
 
         if not r["is_active"]:
             status_html = '<span class="status-badge status-inactive">Inactive</span>'
@@ -502,6 +578,7 @@ def write_html_report(
             f'    <span class="rate-label mono">{rate_str}</span>'
             f'  </div>'
             f'</td>'
+            f'<td class="mono num rate-cell {at_rate_cls}">{at_rate_str}</td>'
             f'<td>{status_html}</td>'
             f'</tr>'
         )
@@ -556,7 +633,8 @@ def write_html_report(
                   <th>Vendor</th>
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
-                  <th class="num">Reply Rate</th>
+                  <th class="num">Rate (14d)</th>
+                  <th class="num">Rate (all-time)</th>
                   <th>Status</th>
                   <th>Campaigns</th>
                 </tr>
@@ -983,7 +1061,8 @@ def write_html_report(
             <th class="num">Mailboxes</th>
             <th class="num">Active Campaigns</th>
             <th class="num">Replies (14d)</th>
-            <th>Reply Rate</th>
+            <th>Rate (14d)</th>
+            <th class="num">Rate (all-time)</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -1088,6 +1167,9 @@ def main():
     campaigns = client.list_campaigns()
     account_active_count, account_active_sent, account_active_campaigns, total_active_campaigns = fetch_active_campaigns_per_account(client, campaigns)
 
+    print("\nFetching all-time stats across all campaigns...")
+    account_alltime_sent, account_alltime_replies = fetch_alltime_stats_per_account(client, campaigns)
+
     now = datetime.now(tz=timezone.utc)
     start = now - timedelta(days=LOOKBACK_DAYS)
     start_iso = start.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -1099,6 +1181,7 @@ def main():
     rows = aggregate_by_domain(
         account_to_domain, domain_to_esp,
         account_active_count, account_active_sent, account_active_campaigns, account_replies,
+        account_alltime_sent, account_alltime_replies,
     )
     print_table(rows, LOOKBACK_DAYS)
     print_mailbox_table(
@@ -1119,6 +1202,8 @@ def main():
         account_active_sent=account_active_sent,
         account_active_campaigns=account_active_campaigns,
         account_replies=account_replies,
+        account_alltime_sent=account_alltime_sent,
+        account_alltime_replies=account_alltime_replies,
         lookback_days=LOOKBACK_DAYS,
         total_active_campaigns=total_active_campaigns,
         output_path="docs/domain-report.html",
