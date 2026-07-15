@@ -647,9 +647,9 @@ def write_html_report(
         </details>""")
 
     # ---- Recommendations ----
-    rec_zero    = [r for r in rows if r["is_active"] and (r["reply_rate"] is None or r["reply_rate"] < 0.5)]
-    rec_low     = [r for r in rows if r["is_active"] and r["reply_rate"] is not None and 0.5 <= r["reply_rate"] < 1.0]
-    rec_healthy = [r for r in rows if r["is_active"] and r["reply_rate"] is not None and r["reply_rate"] >= 1.0]
+    rec_zero    = [r for r in rows if r["is_active"] and (r["alltime_rate"] is None or r["alltime_rate"] < 0.5)]
+    rec_low     = [r for r in rows if r["is_active"] and r["alltime_rate"] is not None and 0.5 <= r["alltime_rate"] < 1.0]
+    rec_healthy = [r for r in rows if r["is_active"] and r["alltime_rate"] is not None and r["alltime_rate"] >= 1.0]
     rec_reserve = [r for r in rows if not r["is_active"]]
 
     def _vendor_for_domain(domain):
@@ -703,8 +703,8 @@ def write_html_report(
             <span class="rec-badge rec-badge-danger">Action required</span>
             <h3>Pull these domains from active campaigns now</h3>
           </div>
-          <p>{len(rec_zero)} domain{"s" if len(rec_zero) != 1 else ""} {"are" if len(rec_zero) != 1 else "is"} currently active with a reply rate below 0.5%. At this level the domain is either burned or being silently filtered. Remove {"them" if len(rec_zero) != 1 else "it"} from your campaigns immediately and replace with fresh domains from the reserve pool.</p>
-          {_chips_by_vendor(rec_zero, "alert", label_fn=lambda r: f'{r["domain"]} ({r["reply_rate"]:.2f}%)' if r["reply_rate"] is not None else f'{r["domain"]} (0.00%)')}
+          <p>{len(rec_zero)} domain{"s" if len(rec_zero) != 1 else ""} {"are" if len(rec_zero) != 1 else "is"} currently active with an all-time reply rate below 0.5%. At this level the domain is either burned or being silently filtered. Remove {"them" if len(rec_zero) != 1 else "it"} from your campaigns immediately and replace with fresh domains from the reserve pool.</p>
+          {_chips_by_vendor(rec_zero, "alert", label_fn=lambda r: f'{r["domain"]} ({r["alltime_rate"]:.2f}%)' if r["alltime_rate"] is not None else f'{r["domain"]} (0.00%)')}
         </div>"""
     else:
         card_rotate_zero = ""
@@ -717,8 +717,8 @@ def write_html_report(
             <span class="rec-badge rec-badge-warn">Watch closely</span>
             <h3>Below 1% reply rate — prepare to rotate out</h3>
           </div>
-          <p>{len(rec_low)} domain{"s" if len(rec_low) != 1 else ""} {"are" if len(rec_low) != 1 else "is"} active with a reply rate between 0.5% and 1%. Not critical yet, but trending in the wrong direction. Monitor for another 7 days — if the rate drops below 0.5%, move {"them" if len(rec_low) != 1 else "it"} to action required and rotate out.</p>
-          {_chips_by_vendor(rec_low, "warn", label_fn=lambda r: f'{r["domain"]} ({r["reply_rate"]:.2f}%)')}
+          <p>{len(rec_low)} domain{"s" if len(rec_low) != 1 else ""} {"are" if len(rec_low) != 1 else "is"} active with an all-time reply rate between 0.5% and 1%. Not critical yet, but trending in the wrong direction. Monitor for another 7 days — if the rate drops below 0.5%, move {"them" if len(rec_low) != 1 else "it"} to action required and rotate out.</p>
+          {_chips_by_vendor(rec_low, "warn", label_fn=lambda r: f'{r["domain"]} ({r["alltime_rate"]:.2f}%)')}
         </div>"""
     else:
         card_rotate_low = ""
@@ -731,8 +731,8 @@ def write_html_report(
             <span class="rec-badge rec-badge-ok">Healthy</span>
             <h3>Keep running — these domains are working</h3>
           </div>
-          <p>{len(rec_healthy)} domain{"s" if len(rec_healthy) != 1 else ""} {"are" if len(rec_healthy) != 1 else "is"} active with reply rates above 1%. No action needed. Continue monitoring weekly and rotate out if rate drops.</p>
-          {_chips_by_vendor(rec_healthy, "ok", label_fn=lambda r: f'{r["domain"]} ({r["reply_rate"]:.2f}%)')}
+          <p>{len(rec_healthy)} domain{"s" if len(rec_healthy) != 1 else ""} {"are" if len(rec_healthy) != 1 else "is"} active with all-time reply rates above 1%. No action needed. Continue monitoring weekly and rotate out if rate drops.</p>
+          {_chips_by_vendor(rec_healthy, "ok", label_fn=lambda r: f'{r["domain"]} ({r["alltime_rate"]:.2f}%)')}
         </div>"""
     else:
         card_healthy = ""
