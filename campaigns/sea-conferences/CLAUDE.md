@@ -18,10 +18,15 @@ sea-conferences/
 │   ├── scrape_exhibitors.py
 │   └── output/
 │       └── exhibitors.csv
-└── hr-tech-festival-asia-2026/
+├── hr-tech-festival-asia-2026/
+│   ├── CLAUDE.md
+│   ├── scrape_exhibitors.py
+│   ├── run_pipeline.py
+│   └── output/
+│       └── exhibitors.csv
+└── asia-business-show-2026/
     ├── CLAUDE.md
     ├── scrape_exhibitors.py
-    ├── run_pipeline.py
     └── output/
         └── exhibitors.csv
 ```

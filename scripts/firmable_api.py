@@ -108,13 +108,20 @@ class FirmableClient:
             },
             "size": 0,
         }
-        resp = requests.post(
-            "https://staging-search.firmable.com/apikey/os_search",
-            headers={"x-api-key": os_api_key, "Content-Type": "application/json"},
-            json=payload,
-            timeout=15,
-        )
-        resp.raise_for_status()
+        import time as _time
+        for attempt in range(4):
+            resp = requests.post(
+                "https://staging-search.firmable.com/apikey/os_search",
+                headers={"x-api-key": os_api_key, "Content-Type": "application/json"},
+                json=payload,
+                timeout=15,
+            )
+            if resp.status_code == 429 and attempt < 3:
+                _time.sleep(2 ** attempt)
+                continue
+            resp.raise_for_status()
+            break
+
         buckets = (
             resp.json()
             .get("aggregations", {})
@@ -134,6 +141,10 @@ class FirmableClient:
             "au_sales_team_size":    _get("au"),
             "nz_sales_team_size":    _get("nz"),
             "sea_sales_team_size":   sum(sea_vals) if sea_vals else None,
+            "sg_sales_team_size":    _get("sg"),
+            "my_sales_team_size":    _get("my"),
+            "hk_sales_team_size":    _get("hk"),
+            "ph_sales_team_size":    _get("ph"),
             "us_sales_team_size":    _get("us"),
             "total_sales_team_size": sum(counts.values()) if counts else None,
         }

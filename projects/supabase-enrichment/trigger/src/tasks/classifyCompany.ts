@@ -34,7 +34,7 @@ const CONFIDENCE_THRESHOLD = 0.75;
 
 export const classifyCompany = task({
   id: "classify-company",
-  concurrencyLimit: 3,
+  concurrencyLimit: 20,
   retry: { maxAttempts: 3 },
   run: async ({ companyId, firmableId }: { companyId: string; firmableId?: string | null }) => {
     try {

@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEA Closed-Won Deal Analysis</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f4f5f7;
+      color: #172b4d;
+      padding: 40px 24px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #6b778c;
+      margin-bottom: 36px;
+    }
+
+    /* ---- Summary table ---- */
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      margin-bottom: 48px;
+      font-size: 13px;
+    }
+
+    .summary-table thead tr {
+      background: #0052cc;
+      color: #fff;
+    }
+
+    .summary-table th {
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .summary-table tbody tr {
+      border-bottom: 1px solid #f0f1f3;
+    }
+
+    .summary-table tbody tr:last-child { border-bottom: none; }
+
+    .summary-table td {
+      padding: 11px 14px;
+      vertical-align: top;
+    }
+
+    .summary-table tbody tr:hover { background: #f8f9ff; }
+
+    /* ---- Badges ---- */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .badge-teams   { background: #e3f2fd; color: #0d47a1; }
+    .badge-indiv   { background: #e8f5e9; color: #1b5e20; }
+
+    .maturity-1  { background: #fff3e0; color: #e65100; }
+    .maturity-2  { background: #e8f5e9; color: #1b5e20; }
+    .maturity-3  { background: #e3f2fd; color: #0d47a1; }
+    .maturity-4  { background: #ede7f6; color: #4527a0; }
+    .maturity-unk{ background: #f5f5f5; color: #757575; }
+
+    /* ---- Deal cards ---- */
+    .section-heading {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(640px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #f0f1f3;
+    }
+
+    .card-header-left h2 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .card-meta {
+      font-size: 12px;
+      color: #6b778c;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .card-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .card-amount {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0052cc;
+      white-space: nowrap;
+    }
+
+    .card-currency {
+      font-size: 11px;
+      color: #6b778c;
+      font-weight: 400;
+    }
+
+    .card-body {
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px 24px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+
+    .field.full { grid-column: 1 / -1; }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: #6b778c;
+    }
+
+    .field-value {
+      font-size: 13px;
+      line-height: 1.55;
+      color: #172b4d;
+    }
+
+    .field-value ul {
+      padding-left: 16px;
+      margin: 0;
+    }
+
+    .field-value li { margin-bottom: 2px; }
+
+    .no-recording {
+      font-size: 12px;
+      color: #97a0af;
+      font-style: italic;
+    }
+
+    .fathom-link {
+      font-size: 11px;
+      color: #0052cc;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 4px;
+    }
+
+    .fathom-link:hover { text-decoration: underline; }
+
+    .card-footer {
+      background: #f8f9ff;
+      border-top: 1px solid #f0f1f3;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .footer-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: #6b778c;
+    }
+
+    /* ---- Footnote ---- */
+    .footnote {
+      font-size: 12px;
+      color: #97a0af;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<h1>SEA Closed-Won Deal Analysis</h1>
+<p class="subtitle">HubSpot List 4501 &mdash; 7 deals &mdash; Closed from 9 Feb 2026 &mdash; Generated 17 Jun 2026</p>
+
+<!-- SUMMARY TABLE -->
+<table class="summary-table">
+  <thead>
+    <tr>
+      <th>Company</th>
+      <th>Country</th>
+      <th>Vertical</th>
+      <th>Plan</th>
+      <th>Amount</th>
+      <th>Closed With</th>
+      <th>Seniority</th>
+      <th>Maturity</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Paydibs</strong></td>
+      <td>Malaysia</td>
+      <td>Fintech / Payment Gateway</td>
+      <td><span class="badge badge-teams">Teams</span></td>
+      <td>SGD 5,760</td>
+      <td>Joe Low</td>
+      <td>Manager (BDM)</td>
+      <td><span class="badge maturity-2">Has sales team, first time using intel tool</span></td>
+    </tr>
+    <tr>
+      <td><strong>V-Key</strong></td>
+      <td>Singapore</td>
+      <td>Cybersecurity / Mobile Security</td>
+      <td><span class="badge badge-teams">Teams</span></td>
+      <td>SGD 3,420</td>
+      <td>Peter MAH</td>
+      <td>VP / Director</td>
+      <td><span class="badge maturity-3">Used tools before, still developing motion</span></td>
+    </tr>
+    <tr>
+      <td><strong>Singtel</strong></td>
+      <td>Singapore</td>
+      <td>Telecommunications</td>
+      <td><span class="badge badge-teams">Teams</span></td>
+      <td>SGD 2,280</td>
+      <td>Ann Wong</td>
+      <td>VP / Director</td>
+      <td><span class="badge maturity-1">First-time use of this tool type</span></td>
+    </tr>
+    <tr>
+      <td><strong>SVS Limited</strong></td>
+      <td>Papua New Guinea</td>
+      <td>Retail / Grocery / Wholesale</td>
+      <td><span class="badge badge-indiv">Individual</span></td>
+      <td>SGD 1,740</td>
+      <td>Pubalan Bathmanathan</td>
+      <td>Unknown</td>
+      <td><span class="badge maturity-unk">Unknown &mdash; no recording</span></td>
+    </tr>
+    <tr>
+      <td><strong>Capability Group</strong></td>
+      <td>New Zealand</td>
+      <td>Management Consulting / L&amp;D</td>
+      <td><span class="badge badge-indiv">Individual</span></td>
+      <td>SGD 1,740</td>
+      <td>Sudan Jeganathan</td>
+      <td>Manager</td>
+      <td><span class="badge maturity-2">Experienced buyer &mdash; Sales Nav replacement</span></td>
+    </tr>
+    <tr>
+      <td><strong>ARGES Global</strong></td>
+      <td>Hong Kong</td>
+      <td>IT Services / RPA / AI Consulting</td>
+      <td><span class="badge badge-indiv">Individual</span></td>
+      <td>AUD 960</td>
+      <td>Payal Kawale</td>
+      <td>Individual Contributor (GTM Lead)</td>
+      <td><span class="badge maturity-3">Used tools before, building motion at new company</span></td>
+    </tr>
+    <tr>
+      <td><strong>Taama</strong></td>
+      <td>Singapore</td>
+      <td>Compliance Services / FMCG RegTech</td>
+      <td><span class="badge badge-indiv">Individual</span></td>
+      <td>SGD 840</td>
+      <td>Krystle Law</td>
+      <td>Founder / Operator</td>
+      <td><span class="badge maturity-1">Starting a sales team, first tool</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- DETAIL CARDS -->
+<p class="section-heading">Deal Breakdowns</p>
+
+<div class="cards">
+
+  <!-- ======== PAYDIBS ======== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <h2>Paydibs</h2>
+        <div class="card-meta">
+          <span>Malaysia</span>
+          <span>Fintech / Payment Gateway</span>
+          <span>48 employees</span>
+          <span>Closed 28 May 2026</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="card-amount">SGD 5,760 <span class="card-currency">/ yr</span></div>
+        <span class="badge badge-teams">Teams</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="field">
+        <div class="field-label">Persona on call</div>
+        <div class="field-value">Joe Low &mdash; Business Development Manager</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Seniority closed with</div>
+        <div class="field-value">Manager level. Joe owns outbound as the sole BDM. Decision to buy was influenced heavily by support quality from Vanessa Kumar (Firmable AE).</div>
+      </div>
+      <div class="field">
+        <div class="field-label">How they found us</div>
+        <div class="field-value"><span class="no-recording">Discovery path not captured in recordings. They trialled Firmable alongside competitors and chose based on support quality from Vanessa Kumar &mdash; suggesting some form of outbound or inbound reach triggered the trial.</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Why they reached out</div>
+        <div class="field-value">Needed a scalable way to find decision-makers at micro-SMEs in Malaysia. Competing against large players like Stripe means Paydibs deliberately targets smaller merchants (1&ndash;50 employees) where they can win. Inbound discovery path unknown &mdash; but Vanessa's responsiveness was the deciding factor over competitors they also trialled.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Problems they were solving</div>
+        <div class="field-value">
+          <ul>
+            <li>Micro-SMEs have almost no public online presence, making lead sourcing very hard.</li>
+            <li>Trial showed low email bounce rate (2&ndash;3 of 50), but too many non-decision-makers surfaced &mdash; seniority accuracy was the core pain.</li>
+            <li>Management required flexibility &mdash; couldn't commit to an annual plan, settled on quarterly.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Who they are targeting</div>
+        <div class="field-value">Owners, C-suite, directors, and GMs at Malaysian micro-SMEs (1&ndash;50 employees) across e-commerce, gaming, insurance, and other sectors. Government sector also in scope. Primary outreach channel: email + WhatsApp follow-up.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Maturity stage</div>
+        <div class="field-value"><strong>Has a sales team but first time using a sales intelligence tool.</strong> They have a functioning BDM doing outbound, but their prospecting was largely manual or ad hoc. Trial results were mixed &mdash; they needed coaching on seniority filtering. Chose Firmable for support quality, not because the data blew them away.</div>
+      </div>
+      <div class="field full">
+        <div class="field-label">Fathom recordings</div>
+        <div class="field-value">
+          <a class="fathom-link" href="https://fathom.video/calls/681874794" target="_blank">Trial review &amp; subscription close (22 May 2026)</a><br>
+          <a class="fathom-link" href="https://fathom.video/calls/703656519" target="_blank">Onboarding session (10 Jun 2026)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-label">Maturity</span>
+      <span class="badge maturity-2">Has sales team, first time using intel tool</span>
+    </div>
+  </div>
+
+  <!-- ======== V-KEY ======== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <h2>V-Key</h2>
+        <div class="card-meta">
+          <span>Singapore</span>
+          <span>Cybersecurity / Mobile Security / Digital Identity</span>
+          <span>117 employees</span>
+          <span>Closed 23 Apr 2026</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="card-amount">SGD 3,420 <span class="card-currency">/ yr</span></div>
+        <span class="badge badge-teams">Teams</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="field">
+        <div class="field-label">Persona on call</div>
+        <div class="field-value">Peter MAH &mdash; VP of Global Sales (decision-maker and economic buyer). Also involved: Chermie Dingle (Sr. Marketing Executive), Nathan Curcio (Sales Manager, AU), Jinger Caparas (Insight Sales Rep, PH).</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Seniority closed with</div>
+        <div class="field-value">VP / Director level. Peter MAH drove the commercial decision and negotiated the first-year discount. He pressed for a "partnership" frame, not just a vendor relationship.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">How they found us</div>
+        <div class="field-value">Partner referral. Duco from Haymarket (a mutual partner) recommended Firmable specifically for its ANZ data focus.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Why they reached out</div>
+        <div class="field-value">Recommended by Duco from Haymarket (a mutual partner) specifically for Firmable's ANZ focus. V-Key has been investing in the Australian market for two years and generated $0 revenue &mdash; they needed a lead-gen platform to crack FSI accounts there.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Problems they were solving</div>
+        <div class="field-value">
+          <ul>
+            <li>Agency-led outreach to ~90 Australian contacts (including the top 4 banks) failed to produce engagement.</li>
+            <li>Nathan's 2025 Firmable trial found the data incomplete for senior ANZ contacts &mdash; had to be rebutted in 2026.</li>
+            <li>Chrome-only browser extension was a blocker (V-Key is an Apple shop, primarily Safari).</li>
+            <li>Had evaluated Lucia, Apollo, and ZoomInfo &mdash; none delivered for ANZ FSI specifically.</li>
+            <li>Needed intent data (Bombora) for topics like "digital identity" and "mobile security compliance" to surface active buyers.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Who they are targeting</div>
+        <div class="field-value">Australian and NZ FSI sector: major banks, insurance, superannuation, credit unions, building societies. Target personas: CISO, Head of Mobile Banking, CDO (Chief Digital Officer), CTO, CRO (Chief Risk Officer), CFrO (Chief Fraud Officer). Enterprise only &mdash; 5,000+ employee companies. Secondary markets: Singapore (existing) and the Philippines (growth).</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Maturity stage</div>
+        <div class="field-value"><strong>Has used other sales tools before, still developing the motion.</strong> V-Key is a 15-year-old company with 500M+ global users but only recently built an internal sales team for AU (Nathan joined ~1 year ago). They have HubSpot set up, have evaluated multiple tools, and have a structured BDR function across AU, SG, and PH &mdash; but have not yet converted their investment in AU into revenue. Sophisticated buyers who know what they want, but the motion isn't landing yet.</div>
+      </div>
+      <div class="field full">
+        <div class="field-label">Fathom recordings</div>
+        <div class="field-value">
+          <a class="fathom-link" href="https://fathom.video/calls/582344821" target="_blank">Initial discovery &amp; demo (2 Mar 2026)</a><br>
+          <a class="fathom-link" href="https://fathom.video/calls/642849966" target="_blank">Trial review &amp; partnership / close discussion (21 Apr 2026)</a><br>
+          <a class="fathom-link" href="https://fathom.video/calls/653468238" target="_blank">Platform onboarding for sales team (29 Apr 2026)</a><br>
+          <a class="fathom-link" href="https://fathom.video/calls/668125018" target="_blank">Signal Agents setup (12 May 2026)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-label">Maturity</span>
+      <span class="badge maturity-3">Used tools before, still developing motion</span>
+    </div>
+  </div>
+
+  <!-- ======== SINGTEL ======== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <h2>Singtel</h2>
+        <div class="card-meta">
+          <span>Singapore</span>
+          <span>Telecommunications</span>
+          <span>~7,850 employees</span>
+          <span>Closed 25 May 2026</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="card-amount">SGD 2,280 <span class="card-currency">/ yr</span></div>
+        <span class="badge badge-teams">Teams</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="field">
+        <div class="field-label">Persona on call</div>
+        <div class="field-value">Ann Wong &mdash; Director, Prepaid Mobile Go-to-Market (primary). Also: Jade Bai &mdash; Trade Marketing Manager.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Seniority closed with</div>
+        <div class="field-value">VP / Director level. Ann was the economic buyer. Jade was the evaluator and hands-on user who would run the platform day-to-day.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">How they found us</div>
+        <div class="field-value"><span class="no-recording">Discovery path not mentioned in the recording. Vanessa Kumar (Firmable AE) ran the call, suggesting it may have come through her outbound or a referral within her network.</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Why they reached out</div>
+        <div class="field-value">Singtel's CIS (Corporate Individual Scheme) campaign was failing. They needed to reach HR contacts at ~1,000 of their eligible corporate accounts to get them to promote Singtel's employee mobile plans internally. Their existing manual outreach wasn't working.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Problems they were solving</div>
+        <div class="field-value">
+          <ul>
+            <li>Manual email outreach to HR/benefits contacts was being blocked by corporate spam filters.</li>
+            <li>Couldn't find the right person &mdash; they needed someone interested in staff welfare, often not a senior VP.</li>
+            <li>No scalable way to source verified HR contacts across 1,000 accounts.</li>
+            <li>Needed PDPA-compliant contact data for Singapore.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Who they are targeting</div>
+        <div class="field-value">HR / Benefits / Recognition contacts (~60%), IT (~30%), Admin &amp; Procurement (~10%) across their 1,000 eligible corporate accounts. Not typical sales prospecting &mdash; this is a marketing campaign to activate corporate customers into distributing employee mobile benefits.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Maturity stage</div>
+        <div class="field-value"><strong>First-time use of this type of tool.</strong> Singtel is a large enterprise, but this is a specific campaign use case, not an established sales intelligence workflow. They were doing this manually before. Evaluated on a backend data-matching project against their 50-company test list before committing. Not a traditional SDR/BDM use case &mdash; closer to a marketing data sourcing problem.</div>
+      </div>
+      <div class="field full">
+        <div class="field-label">Fathom recordings</div>
+        <div class="field-value">
+          <a class="fathom-link" href="https://fathom.video/calls/678681092" target="_blank">Intro &amp; evaluation call (19 May 2026)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-label">Maturity</span>
+      <span class="badge maturity-1">First-time use of this tool type</span>
+    </div>
+  </div>
+
+  <!-- ======== SVS LIMITED ======== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <h2>SVS Limited</h2>
+        <div class="card-meta">
+          <span>Papua New Guinea</span>
+          <span>Retail / Grocery / Wholesale</span>
+          <span>336 employees</span>
+          <span>Closed 9 Apr 2026</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="card-amount">SGD 1,740 <span class="card-currency">/ yr</span></div>
+        <span class="badge badge-indiv">Individual</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="field">
+        <div class="field-label">Persona on call</div>
+        <div class="field-value">Pubalan Bathmanathan. No job title recorded in HubSpot.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Seniority closed with</div>
+        <div class="field-value">Unknown &mdash; no job title on file and no Fathom recording available.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">How they found us</div>
+        <div class="field-value">Self-serve sign-up via Clerk (Firmable's auth platform) &mdash; pure inbound, no AE outbound. Pubalan started a free trial directly on the website, then converted to a paid plan. Darcy Jack was assigned as owner after trial activation.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Why they reached out</div>
+        <div class="field-value"><span class="no-recording">No discovery call recording accessible. Trial started 26 Mar 2026, converted 9 Apr 2026. No pre-trial email exchange logged &mdash; they signed up independently without a demo.</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Problems they were solving</div>
+        <div class="field-value">Post-conversion support emails reveal Pubalan was actively hunting for missing contact data &mdash; 7 data-request emails sent to Firmable Customer Success (Vishal) between May&ndash;Jun 2026, all requesting missing mobile numbers and emails for specific people. This signals he was prospecting regularly but hitting gaps in coverage for his target market (likely PNG/Pacific contacts). He cross-referenced found contacts on the Firmable platform directly.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Who they are targeting</div>
+        <div class="field-value"><span class="no-recording">Not explicitly stated in any accessible source. SVS holds sole distributorships for 15+ international agency lines &mdash; likely targeting importers, distributors, retail buyers, or supply chain contacts across PNG and the Pacific. The frequency of data requests suggests active outbound prospecting.</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Maturity stage</div>
+        <div class="field-value"><strong>Likely first-time buyer, self-directed learner.</strong> No demo or AE-led onboarding &mdash; Pubalan signed up and started using the platform independently. His repeated data requests to support suggest he's working without a structured workflow guide. An established business (40 years, 336 employees) that is new to a tool like this.</div>
+      </div>
+      <div class="field full">
+        <div class="field-label">Fathom recordings</div>
+        <div class="field-value"><span class="no-recording">No recordings. Self-serve &mdash; no demo call was booked. Post-sale email trail (7 support requests, May&ndash;Jun 2026) confirms active usage.</span></div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-label">Maturity</span>
+      <span class="badge maturity-unk">Unknown &mdash; no recording</span>
+    </div>
+  </div>
+
+  <!-- ======== CAPABILITY GROUP ======== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <h2>Capability Group</h2>
+        <div class="card-meta">
+          <span>New Zealand (Auckland)</span>
+          <span>Management Consulting / L&amp;D / OD</span>
+          <span>~30 employees</span>
+          <span>Closed 31 Mar 2026</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="card-amount">SGD 1,740 <span class="card-currency">/ yr</span></div>
+        <span class="badge badge-indiv">Individual</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="field">
+        <div class="field-label">Persona on call</div>
+        <div class="field-value">Sudan Jeganathan &mdash; Regional Manager, Sales &amp; Product. Nick Erskine-Shaw (Founder &amp; CEO, Kauri Global &mdash; a connected NZ software firm) is also associated with this deal in HubSpot.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Seniority closed with</div>
+        <div class="field-value">Manager level. Sudan is the Regional Manager responsible for sales, suggesting he controls the tool budget at this level.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">How they found us</div>
+        <div class="field-value">Self-serve trial sign-up (Direct Traffic). Sudan started a trial on the Firmable website but bailed at the card payment page. Darcy followed up proactively after the abandoned sign-up (12 Mar 2026). Also connected to Nick Erskine-Shaw (Founder &amp; CEO, Kauri Global), who was actively referring multiple companies to Firmable in the same period and described it as "a very useful alternative to Sales Nav" &mdash; it is unclear whether Nick introduced Sudan or Sudan found Firmable independently.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Why they reached out</div>
+        <div class="field-value">Seeking a Sales Navigator alternative with better APAC coverage. Sudan was specifically interested in the Signals feature for tracking buying intent. The Firmable trial was set up 12 Mar 2026; Sudan tested Signals during the trial period and requested an extension on 24 Mar before approving a licence on 27 Mar and converting on 31 Mar 2026.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Problems they were solving</div>
+        <div class="field-value">
+          <ul style="margin:0; padding-left:1.2rem;">
+            <li>Sales Navigator not adequately covering the APAC market</li>
+            <li>Signal notifications too broad and unspecific &mdash; too many false positives during trial</li>
+            <li>Post-close: trouble getting annual budget approved for CRM integrations due to a business change at Capability Group (flagged in May 2026 check-in)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Who they are targeting</div>
+        <div class="field-value">Enterprise clients in APAC for L&amp;D, OD, and change management consultancy. Sudan's BD motion is enterprise consultative sales built around Capability Group's product and service suite &mdash; primarily the Axonify platform (microlearning) and Digital Creative offerings. Likely targeting HR Directors, CLOs, People &amp; Culture Heads, and L&amp;D decision-makers at large organisations.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Maturity stage</div>
+        <div class="field-value"><strong>Experienced buyer &mdash; replacing or supplementing Sales Navigator.</strong> Sudan knew what he wanted and evaluated Signals specifically. The Individual plan was a solo proof-of-concept before any broader commitment. Post-close notes suggest ongoing usage challenges (CRM integrations, budget approval) typical of an organisation still building its commercial motion rather than a mature ops-led team.</div>
+      </div>
+      <div class="field full">
+        <div class="field-label">Fathom recordings</div>
+        <div class="field-value"><span class="no-recording">No demo call recorded &mdash; all pre-sale context sourced from 18 HubSpot email engagements. Timeline: self-serve sign-up &rarr; card-page bail &rarr; Darcy follow-up &rarr; free trial set up 12 Mar &rarr; trial extended to 27 Mar &rarr; licence approved 27 Mar &rarr; converted 31 Mar 2026. Deal closed before the accessible Fathom window.</span></div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-label">Maturity</span>
+      <span class="badge maturity-2">Experienced buyer &mdash; Sales Nav replacement</span>
+    </div>
+  </div>
+
+  <!-- ======== ARGES GLOBAL ======== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <h2>ARGES Global</h2>
+        <div class="card-meta">
+          <span>Hong Kong</span>
+          <span>IT Services / RPA / AI / Digital Transformation</span>
+          <span>16 employees</span>
+          <span>Closed 9 Jun 2026</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="card-amount">AUD 960 <span class="card-currency">/ yr</span></div>
+        <span class="badge badge-indiv">Individual</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="field">
+        <div class="field-label">Persona on call</div>
+        <div class="field-value">Payal Kawale &mdash; GTM Lead / Growth Specialist (14&ndash;15 days in role at time of demo). The referral came from Siddhesh Kotkar (Delivery Lead), who had previously used Firmable and shared the free trial link with Payal.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Seniority closed with</div>
+        <div class="field-value">Individual contributor level &mdash; Payal was new to the company but owns the outbound function and controlled the tool decision. Siddhesh was the internal influencer who had prior Firmable experience.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">How they found us</div>
+        <div class="field-value">Internal referral. Siddhesh Kotkar (Delivery Lead at ARGES Global) had used Firmable previously, then shared the free trial link with Payal when she joined as GTM Lead.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Why they reached out</div>
+        <div class="field-value">Word of mouth from within the company. Siddhesh had used Firmable previously at ARGES Global, recommended it to Payal when she joined as GTM Lead, and shared the free trial link directly. She was evaluating tools to build an outbound pipeline from scratch in her new role.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Problems they were solving</div>
+        <div class="field-value">
+          <ul>
+            <li>Needed APAC-focused contact data &mdash; ZoomInfo, Lusha, and Apollo are weak in AU/NZ/SEA for ARGES's niche (automation, RPA, AI consulting).</li>
+            <li>CRM is WeTiger &mdash; no direct Firmable integration, relied on CSV or API export.</li>
+            <li>No outbound pipeline existed &mdash; Payal was building from zero with a KPI of 10&ndash;15 meetings/month.</li>
+            <li>Decision-makers in her target verticals (Operations, Delivery, C-suite) are hard to find in APAC directories.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Who they are targeting</div>
+        <div class="field-value">C-suite, Directors, VPs in Operations or Delivery at companies with 500+ employees. Primary market: Australia (banking, manufacturing, GCCs, higher education, energy/utilities). Secondary: NZ, Hong Kong, Singapore, Malaysia, Indonesia, Philippines, Japan.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Maturity stage</div>
+        <div class="field-value"><strong>Experienced user, building the motion at a new company.</strong> Payal brings 6&ndash;7 years of ZoomInfo experience plus Apollo and Lusha. She knew exactly what she needed and was evaluating quality vs. her prior tools. However, ARGES itself had no standing outbound process &mdash; she was starting from scratch. The buy was driven by Siddhesh's existing trust in Firmable, not a formal evaluation. An Individual plan reflects budget caution at a small firm (16 people), not inexperience.</div>
+      </div>
+      <div class="field full">
+        <div class="field-label">Fathom recordings</div>
+        <div class="field-value">
+          <a class="fathom-link" href="https://fathom.video/calls/683530530" target="_blank">Product demo with Payal (22 May 2026)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-label">Maturity</span>
+      <span class="badge maturity-3">Used tools before, building motion at new company</span>
+    </div>
+  </div>
+
+  <!-- ======== TAAMA ======== -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <h2>Taama</h2>
+        <div class="card-meta">
+          <span>Singapore (likely)</span>
+          <span>Compliance Services / FMCG RegTech</span>
+          <span>Early-stage startup</span>
+          <span>Closed 17 Jun 2026</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="card-amount">SGD 840 <span class="card-currency">/ yr</span></div>
+        <span class="badge badge-indiv">Individual</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="field">
+        <div class="field-label">Persona on call</div>
+        <div class="field-value">Krystle Law &mdash; appears to be a founder or early operator running BD. No formal title in HubSpot.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Seniority closed with</div>
+        <div class="field-value">Founder / Operator level. Krystle controls the tooling decision directly. No approvals or internal discussion required &mdash; she made the call herself during the trial.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">How they found us</div>
+        <div class="field-value"><span class="no-recording">Discovery path not mentioned in recordings. Vanessa Kumar (Firmable AE) ran both calls, suggesting outbound outreach or a referral within her network. Not explicitly stated by Krystle.</span></div>
+      </div>
+      <div class="field">
+        <div class="field-label">Why they reached out</div>
+        <div class="field-value">Existing lead-gen tools could not surface the right contacts in ANZ's FMCG manufacturing sector. Taama provides food safety and regulatory compliance services to FMCG brands and distributors, and their current tools returned restaurants and cafes instead of the manufacturers they needed. Firmable's SSIC-code filtering and product-based search solved this specifically.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Problems they were solving</div>
+        <div class="field-value">
+          <ul>
+            <li>Generic industry filters (e.g., "Food &amp; Beverages") are too broad &mdash; return food service businesses, not food manufacturers.</li>
+            <li>Key operational contacts (Ops, Supply Chain) often have no LinkedIn profile, making org-mapping nearly impossible with standard tools.</li>
+            <li>Conference and trade show exhibitor lists had no contact data attached &mdash; needed a way to enrich company names into verified contacts.</li>
+            <li>Early-stage company &mdash; preferred month-to-month flexibility rather than an annual commitment.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Who they are targeting</div>
+        <div class="field-value">FMCG brands, retailers, and distributors. Key personas: R&amp;D heads, Compliance/Quality managers, Ops &amp; Supply Chain heads. Primary market: ANZ (highest priority). Secondary: EU/US FMCG brands entering SEA. Tertiary: SEA-based FMCG companies.</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Maturity stage</div>
+        <div class="field-value"><strong>Starting a sales team, first-time tool buyer.</strong> Taama is an early-stage company with no prior sales intelligence platform. Krystle was manually searching for FMCG contacts before. She wanted month-to-month pricing specifically because of uncertainty about whether the platform would work for their niche. The workflow Firmable had to support was entirely manual (Firmable &rarr; CSV &rarr; LinkedIn automation tool Reactin &rarr; HubSpot). A genuine first-time buyer with no established process.</div>
+      </div>
+      <div class="field full">
+        <div class="field-label">Fathom recordings</div>
+        <div class="field-value">
+          <a class="fathom-link" href="https://fathom.video/calls/695590111" target="_blank">Initial evaluation call (3 Jun 2026)</a><br>
+          <a class="fathom-link" href="https://fathom.video/calls/698423929" target="_blank">Trial walkthrough &amp; workflow refinement (5 Jun 2026)</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <span class="footer-label">Maturity</span>
+      <span class="badge maturity-1">Starting a sales team, first tool</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTNOTE -->
+<p class="footnote">
+  <strong>Data sources:</strong> HubSpot CRM (deal, company, contact records) and Fathom call recordings.<br>
+  <strong>Note on SVS &amp; Capability Group:</strong> No Fathom recordings were accessible. Both deals closed in Mar&ndash;Apr 2026; discovery calls fall outside the ~500-meeting Fathom search window (accessible window starts ~May 2026). Qualitative fields for both accounts were sourced from HubSpot email engagement logs: 7 post-close support emails for SVS (Pubalan actively requesting contact data May&ndash;Jun 2026) and 18 pre/post-sale email exchanges for Capability Group (Sudan&rsquo;s trial journey, Signals evaluation, Nick Erskine-Shaw referral connection, and post-close check-in).<br>
+  <strong>Note on Taama country:</strong> HubSpot does not have a country on file. Singapore is inferred from context (SGD currency, SEA-focused deal pipeline, and ANZ as primary target market suggesting they are based outside ANZ).
+</p>
+
+</body>
+</html>

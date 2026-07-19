@@ -15,6 +15,8 @@ campaigns/**/output/
 
 # Campaign data
 campaigns/**/input/*.csv
+campaigns/**/input/*.xlsx
+campaigns/**/input/*.xls
 campaigns/**/data/raw/*.csv
 campaigns/**/data/qualified/*.csv
 campaigns/**/data/validated/*.csv

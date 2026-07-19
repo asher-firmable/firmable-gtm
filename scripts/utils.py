@@ -17,7 +17,10 @@ def load_csv(filepath: str) -> pd.DataFrame:
     if filepath.endswith(".xlsx"):
         df = pd.read_excel(filepath)
     else:
-        df = pd.read_csv(filepath)
+        try:
+            df = pd.read_csv(filepath)
+        except UnicodeDecodeError:
+            df = pd.read_csv(filepath, encoding="latin-1")
     df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
     return df
 

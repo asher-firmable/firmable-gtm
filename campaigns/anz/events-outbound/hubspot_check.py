@@ -40,7 +40,7 @@ load_dotenv()
 HS_PROPERTIES = [
     "name", "domain",
     "hubspot_owner_id",
-    "sdr__new_", "sdr_nz", "sdr_sea",
+    "sdr__new_", "sdr_nz",
     "outreach_engagement_status", "outreach_engagement_statussea",
     "customer_status",
     "notes_last_contacted",
@@ -55,13 +55,12 @@ OUTPUT_COLUMNS = [
     "company_owner",
     "sdr_au",
     "sdr_nz",
-    "sdr_sea",
     "outreach_engagement_status",
     "outreach_engagement_status_sea",
     "customer_status",
+    "open_deal",
     "sales_team_au",
     "sales_team_nz",
-    "sales_team_sea",
     "last_contacted",
 ]
 
@@ -175,7 +174,7 @@ def get_firmable_sizes(fm: FirmableClient, bare_domain: str) -> dict:
     Look up a company in Firmable by domain and return real-time sales team sizes.
     Returns dict with keys: found_in_firmable, sales_team_au, sales_team_nz, sales_team_sea.
     """
-    empty = {"found_in_firmable": "NO", "sales_team_au": "", "sales_team_nz": "", "sales_team_sea": ""}
+    empty = {"found_in_firmable": "NO", "sales_team_au": "", "sales_team_nz": ""}
     try:
         company = fm.lookup_company(bare_domain)
         if not company:
@@ -188,10 +187,23 @@ def get_firmable_sizes(fm: FirmableClient, bare_domain: str) -> dict:
             "found_in_firmable": "YES",
             "sales_team_au": sizes.get("au_sales_team_size", "") if sizes.get("au_sales_team_size") is not None else "",
             "sales_team_nz": sizes.get("nz_sales_team_size", "") if sizes.get("nz_sales_team_size") is not None else "",
-            "sales_team_sea": sizes.get("sea_sales_team_size", "") if sizes.get("sea_sales_team_size") is not None else "",
         }
     except Exception:
         return empty
+
+
+# ── Deal helpers ─────────────────────────────────────────────────────────────
+
+CLOSED_STAGES = {"closedwon", "closedlost"}
+
+
+def has_open_deal(hs: HubSpotClient, record_id: str) -> str:
+    """Return 'YES' if the company has any deal not in a closed stage, else 'NO'."""
+    try:
+        stages = hs.get_company_deal_stages(record_id)
+        return "YES" if any(s not in CLOSED_STAGES for s in stages if s) else "NO"
+    except Exception:
+        return ""
 
 
 # ── Formatting ────────────────────────────────────────────────────────────────
@@ -234,6 +246,7 @@ def build_row(
     bare_domain: str,
     portal_id: str,
     owner_map: dict,
+    open_deal: str = "",
 ) -> dict:
     in_hs = hs_record is not None
     props = hs_record["properties"] if in_hs else {}
@@ -247,13 +260,12 @@ def build_row(
         "company_owner": owner_map.get(oid, "") if in_hs else "",
         "sdr_au": props.get("sdr__new_") or "",
         "sdr_nz": props.get("sdr_nz") or "",
-        "sdr_sea": props.get("sdr_sea") or "",
         "outreach_engagement_status": props.get("outreach_engagement_status") or "",
         "outreach_engagement_status_sea": props.get("outreach_engagement_statussea") or "",
         "customer_status": props.get("customer_status") or "",
+        "open_deal": open_deal,
         "sales_team_au": firmable["sales_team_au"],
         "sales_team_nz": firmable["sales_team_nz"],
-        "sales_team_sea": firmable["sales_team_sea"],
         "last_contacted": format_date(props.get("notes_last_contacted")),
     }
 
@@ -292,18 +304,19 @@ def main():
         bare = extract_bare_domain(raw_url)
         if not bare:
             print("SKIP (no domain)")
-            out_rows.append(build_row(None, {"found_in_firmable": "NO", "sales_team_au": "", "sales_team_nz": "", "sales_team_sea": ""}, input_name, raw_url, bare, portal_id, owner_map))
+            out_rows.append(build_row(None, {"found_in_firmable": "NO", "sales_team_au": "", "sales_team_nz": ""}, input_name, raw_url, bare, portal_id, owner_map))
             continue
 
         hs_record = find_hs_company(hs, bare)
         firmable = get_firmable_sizes(fm, bare)
+        open_deal = has_open_deal(hs, hs_record["id"]) if hs_record else ""
 
         hs_status = f"HubSpot={'YES' if hs_record else 'NO'}"
         fm_status = f"Firmable={firmable['found_in_firmable']}"
         name_found = hs_record["properties"].get("name") if hs_record else ""
         print(f"{hs_status} {fm_status}" + (f" → {name_found}" if name_found else ""))
 
-        out_rows.append(build_row(hs_record, firmable, input_name, raw_url, bare, portal_id, owner_map))
+        out_rows.append(build_row(hs_record, firmable, input_name, raw_url, bare, portal_id, owner_map, open_deal))
         time.sleep(REQUEST_DELAY)
 
     os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)

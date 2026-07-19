@@ -8,6 +8,7 @@ Enrichment and classification project for ~8,000 US companies. Segments by compa
 | Folder | Segment | Supabase table |
 |---|---|---|
 | `msp-it-services/` | MSPs and IT services firms | `us_founding_100` |
+| `saas/` | SaaS companies | — |
 
 ## How the pipeline works
 

@@ -7,19 +7,11 @@ For each domain in the CSV:
   - If unknown: insert into master_companies as pending (for Trigger.dev to enrich)
     and insert into us_founding_100 as pending.
 
-Usage:
-    PYTHONPATH=. python3 campaigns/us/msp-it-services/founding-100/scripts/upload.py \\
-        --file campaigns/us/msp-it-services/founding-100/input/<file>.csv
+Automatically triggers enrich-batch if there are pending domains.
 
-After upload, trigger enrich-batch for the pending domains:
-    python3 -c "
-    from dotenv import load_dotenv; load_dotenv('.env')
-    import os, requests
-    r = requests.post('https://api.trigger.dev/api/v1/tasks/enrich-batch/trigger',
-        headers={'Authorization': f'Bearer {os.getenv(\"TRIGGER_SECRET_KEY\")}', 'Content-Type': 'application/json'},
-        json={})
-    print(r.status_code, r.text)
-    "
+Usage:
+    PYTHONPATH=. python3 campaigns/us/founding-100/msp-it-services/scripts/upload.py \\
+        --file campaigns/us/founding-100/msp-it-services/input/<file>.csv
 
 Then run sync.py once Trigger.dev finishes.
 """
@@ -27,6 +19,7 @@ Then run sync.py once Trigger.dev finishes.
 import argparse
 import os
 import sys
+import requests
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", ".."))
 from dotenv import load_dotenv
@@ -200,9 +193,26 @@ def main():
     print(f"  Total rows:           {len(all_rows)}")
     print(f"  Pre-filled (cached):  {len(hits)}")
     print(f"  Pending enrichment:   {len(misses)}")
+
     if misses:
-        print(f"\nNext step: trigger enrich-batch in Trigger.dev to enrich the {len(misses)} pending domains.")
-        print("Then run sync.py once enrichment is complete.")
+        trigger_key = os.getenv("TRIGGER_SECRET_KEY")
+        if not trigger_key:
+            print(f"\nWARNING: TRIGGER_SECRET_KEY not set — trigger enrich-batch manually.")
+        else:
+            print(f"\nTriggering enrich-batch for {len(misses)} pending domains...")
+            r = requests.post(
+                "https://api.trigger.dev/api/v1/tasks/enrich-batch/trigger",
+                headers={"Authorization": f"Bearer {trigger_key}", "Content-Type": "application/json"},
+                json={},
+            )
+            if r.status_code == 200:
+                run_id = r.json().get("id", "unknown")
+                print(f"  Enrichment started (run: {run_id})")
+                print(f"  Monitor progress in the Trigger.dev dashboard.")
+                print(f"  When done, run: PYTHONPATH=. python3 campaigns/us/founding-100/msp-it-services/scripts/sync.py")
+            else:
+                print(f"  WARNING: Trigger.dev returned {r.status_code}: {r.text}")
+                print(f"  Trigger enrich-batch manually from the Trigger.dev dashboard.")
     else:
         print("\nAll rows pre-filled from cache — no enrichment needed!")
 

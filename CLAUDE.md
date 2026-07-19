@@ -70,18 +70,44 @@ firmable-gtm-engineering/
 │   │   │   ├── CLAUDE.md            ← Sub-agent: scrape BDO Our People (Deal Advisory)
 │   │   │   ├── scrape_people.py     ← Playwright scraper → output/people.csv
 │   │   │   └── output/              ← Scraped CSVs (gitignored)
+│   │   ├── fti-consulting/          ← FTI Consulting Asia Pacific Strategic Communications team scrape
+│   │   │   ├── CLAUDE.md            ← Sub-agent: scrape FTI experts directory
+│   │   │   ├── scrape_people.py     ← Playwright scraper → output/fti_consulting_experts.csv
+│   │   │   └── output/              ← Scraped CSVs (gitignored)
+│   │   ├── aml-tranche-2/           ← AML/compliance vendors campaign (AUSTRAC Tranche 2, July 2026)
+│   │   │   ├── CLAUDE.md            ← Sub-agent: two-phase pipeline (description check → HubSpot enrichment)
+│   │   │   ├── input/               ← Drop approved CSV here (gitignored)
+│   │   │   ├── output/              ← Enriched CSVs (gitignored)
+│   │   │   └── scripts/
+│   │   │       └── hubspot_check.py ← Read-only: deal status, owner, last contacted, engagement status
 │   │   └── events-outbound/         ← ANZ event/expo exhibitor outreach campaigns
 │   │       ├── CLAUDE.md            ← Events outbound conventions
 │   │       ├── sydney-build-expo-2026/
 │   │       │   ├── CLAUDE.md        ← Sub-agent: scrape exhibitors from Sydney Build Expo 2026
 │   │       │   ├── scrape_exhibitors.py ← Playwright scraper → output/exhibitors.csv
 │   │       │   └── output/          ← Scraped CSVs (gitignored)
-│   │       └── fhweek-2026/
-│   │           ├── CLAUDE.md        ← Sub-agent: scrape exhibitors from FH Week 2026
-│   │           ├── scrape_exhibitors.py ← Playwright + BS4 scraper → output/exhibitors.csv
+│   │       ├── fhweek-2026/
+│   │       │   ├── CLAUDE.md        ← Sub-agent: scrape exhibitors from FH Week 2026
+│   │       │   ├── scrape_exhibitors.py ← Playwright + BS4 scraper → output/exhibitors.csv
+│   │       │   └── output/          ← Scraped CSVs (gitignored)
+│   │       ├── cemat-2026/
+│   │       │   ├── CLAUDE.md        ← Sub-agent: scrape exhibitors from CEMAT 2026
+│   │       │   ├── scrape_exhibitors.py ← Playwright + requests scraper → output/exhibitors.csv
+│   │       │   └── output/          ← Scraped CSVs (gitignored)
+│   │       └── smallbiz-melbourne-2026/
+│   │           ├── CLAUDE.md        ← Sub-agent: scrape exhibitors from Small Biz Melbourne 2026
+│   │           ├── scrape_exhibitors.py ← Playwright + requests scraper → output/exhibitors.csv (2026 only)
 │   │           └── output/          ← Scraped CSVs (gitignored)
 │   ├── us/                          ← US campaigns
 │   │   ├── CLAUDE.md                ← US region sub-agent
+│   │   ├── creative-ideas/          ← Wide US outbound: Clay AI generates 2-3 personalised Firmable ideas per SMB company
+│   │   │   └── CLAUDE.md            ← Sub-agent: input/output conventions, how to run
+│   │   ├── events-outbound/         ← US event/conference sponsor scraping campaigns
+│   │   │   ├── CLAUDE.md            ← Index of US events-outbound campaigns
+│   │   │   └── blackhat-us-2026/    ← Black Hat US 2026 sponsor list
+│   │   │       ├── CLAUDE.md        ← Sub-agent: scrape sponsors from Black Hat US 2026
+│   │   │       ├── scrape_exhibitors.py ← Playwright scraper → output/exhibitors.csv (name, domain, tier, firmable_id)
+│   │   │       └── output/          ← Scraped CSVs (gitignored)
 │   │   └── founding-100/            ← US Founding 100 project (~8k company enrichment)
 │   │       ├── CLAUDE.md            ← Sub-agent: project overview + segment index
 │   │       └── msp-it-services/     ← Segment: MSPs and IT services firms
@@ -98,10 +124,14 @@ firmable-gtm-engineering/
 │   │   │   ├── CLAUDE.md            ← Sub-agent: scrape AsiaTechX SG 2025 exhibitors
 │   │   │   ├── scrape_exhibitors.py ← requests+BS4 scraper → output/exhibitors.csv
 │   │   │   └── output/              ← Scraped CSVs (gitignored)
-│   │   └── hr-tech-festival-asia-2026/
-│   │       ├── CLAUDE.md            ← Sub-agent: scrape HR Tech Festival Asia 2026 sponsors
-│   │       ├── scrape_exhibitors.py ← requests+BS4 scraper → output/exhibitors.csv
-│   │       ├── run_pipeline.py      ← Full pipeline: scrape → copy → enrich (sales team sizes)
+│   │   ├── hr-tech-festival-asia-2026/
+│   │   │   ├── CLAUDE.md            ← Sub-agent: scrape HR Tech Festival Asia 2026 sponsors
+│   │   │   ├── scrape_exhibitors.py ← requests+BS4 scraper → output/exhibitors.csv
+│   │   │   ├── run_pipeline.py      ← Full pipeline: scrape → copy → enrich (sales team sizes)
+│   │   │   └── output/              ← Scraped CSVs (gitignored)
+│   │   └── asia-business-show-2026/
+│   │       ├── CLAUDE.md            ← Sub-agent: scrape Asia Business Show 2026 exhibitors
+│   │       ├── scrape_exhibitors.py ← requests+BS4 scraper → output/exhibitors.csv (name, website, linkedin)
 │   │       └── output/              ← Scraped CSVs (gitignored)
 │   ├── company-checks/              ← Pre-campaign eligibility gates (any region)
 │   │   ├── CLAUDE.md                ← Sub-agent: filter logic, input/output conventions
@@ -113,12 +143,18 @@ firmable-gtm-engineering/
 │   │       ├── output/              ← Checked CSVs (gitignored)
 │   │       └── scripts/
 │   │           └── description_check.py ← Extract batch for Claude to evaluate; write results to CSV
-│   └── quick-sales-team-size-check/ ← Ad-hoc enrichment: ANZ/SEA/US sales team size from domain or Firmable ID
-│       ├── CLAUDE.md                ← Sub-agent: input/output conventions, how to run
-│       ├── input/                   ← Drop CSV or Excel here before running
-│       ├── output/                  ← Enriched CSVs (gitignored)
+│   ├── quick-sales-team-size-check/ ← Ad-hoc enrichment: ANZ/SEA/US sales team size from domain or Firmable ID
+│   │   ├── CLAUDE.md                ← Sub-agent: input/output conventions, how to run
+│   │   ├── input/                   ← Drop CSV or Excel here before running
+│   │   ├── output/                  ← Enriched CSVs (gitignored)
+│   │   └── scripts/
+│   │       └── enrich_sales_team_size.py ← Resolves IDs, calls OS Search API, writes enriched CSV
+│   └── partner-identification/      ← Categorize companies as potential Firmable GTM partners
+│       ├── CLAUDE.md                ← Sub-agent: categories, how to run iterative batches
+│       ├── input/                   ← Drop company CSV/Excel here before running (gitignored)
+│       ├── output/                  ← partner_categories.csv (gitignored)
 │       └── scripts/
-│           └── enrich_sales_team_size.py ← Resolves IDs, calls OS Search API, writes enriched CSV
+│           └── categorize_partners.py ← Claude API classifier; 8 categories; --start/--count/--append
 │
 ├── projects/                        ← All production bots, pipelines, and internal tools
 │   ├── CLAUDE.md                    ← Index of all sub-projects
@@ -195,7 +231,9 @@ firmable-gtm-engineering/
     │   ├── n8n-export/              ← Convert pipelines to n8n JSON
     │   ├── creative-ideas-campaign-anz/ ← Clay table + AI column prompts for wide ANZ SMB outbound (AU registers, 22% stat)
     │   ├── creative-ideas-campaign-anz-short/ ← Short form A/B variant: same slots, ideas as 15-25 word phrases, curiosity bridge line
-    │   └── creative-ideas-campaign-sea/ ← Clay table + AI column prompts for wide SEA SMB outbound (coverage + AU/SG HQ angle)
+    │   ├── creative-ideas-campaign-sea/ ← Clay table + AI column prompts for wide SEA SMB outbound (coverage + AU/SG HQ angle)
+    │   ├── creative-ideas-campaign-us/ ← Clay table + AI column prompts for wide US SMB outbound (co-build angle, weekly-verified contacts)
+    │   └── us-competitor-displacement/ ← ZoomInfo displacement two-email sequence for US startups + mid-market (demo → trial)
     └── commands/                    ← Slash commands
         ├── new-campaign.md                    ← /new-campaign — campaign setup wizard
         ├── qualify-list.md                    ← /qualify-list — run classifier on CSV
@@ -214,6 +252,8 @@ firmable-gtm-engineering/
 | Build or modify the ANZ creative ideas campaign (Clay table + AI column prompts) | `.claude/skills/creative-ideas-campaign-anz/SKILL.md` |
 | Build or modify the ANZ short form A/B variant (compact bullet phrases, curiosity bridge line) | `.claude/skills/creative-ideas-campaign-anz-short/SKILL.md` |
 | Build or modify the SEA creative ideas campaign (Clay table + AI column prompts) | `.claude/skills/creative-ideas-campaign-sea/SKILL.md` |
+| Build or modify the US creative ideas campaign (Clay table + AI column prompts) | `.claude/skills/creative-ideas-campaign-us/SKILL.md` |
+| Run US creative ideas campaign data (input/output, Clay setup) | `campaigns/us/creative-ideas/` |
 | SmartLead pre-campaign eligibility gate (any region — filter trial/comms/tasks) | `campaigns/company-checks/` + `/smartlead-pre-campaign-check` |
 | Check company descriptions against a yes/no question (e.g. "Is this a staffing agency?") | `campaigns/company-checks/description-check/` + `/description-check` |
 | Check company list against HubSpot before upload (SEA or any region) | `projects/sea-company-upload/` |
@@ -224,13 +264,18 @@ firmable-gtm-engineering/
 | Manage campaign data | `campaigns/` |
 | ANZ SMB SaaS/Software general outreach (sales team ≤4) | `campaigns/anz/ANZ_SMB_SaaS/Software_General_Outreach/` |
 | Scrape BDO Australia Deal Advisory people into a contact list | `campaigns/anz/bdo-deal-advisory/` |
+| Scrape FTI Consulting Asia Pacific Strategic Communications team | `campaigns/anz/fti-consulting/` |
+| AML Tranche 2 campaign — qualify AML/compliance vendors + HubSpot triage | `campaigns/anz/aml-tranche-2/` |
 | Scrape ANZ event/expo exhibitor lists | `campaigns/anz/events-outbound/` |
 | Enrich event exhibitor list with HubSpot + Firmable data | `/event-exhibitor-check` |
 | Scrape SEA conference/expo exhibitor lists | `campaigns/sea-conferences/` |
 | AsiaTechX Singapore 2025 exhibitor scrape | `campaigns/sea-conferences/asiatechx-sg-2025/` |
 | HR Tech Festival Asia 2026 exhibitor scrape | `campaigns/sea-conferences/hr-tech-festival-asia-2026/` |
+| Asia Business Show 2026 exhibitor scrape | `campaigns/sea-conferences/asia-business-show-2026/` |
 | Sydney Build Expo 2026 exhibitor scrape | `campaigns/anz/events-outbound/sydney-build-expo-2026/` |
 | FH Week 2026 exhibitor scrape | `campaigns/anz/events-outbound/fhweek-2026/` |
+| CEMAT 2026 exhibitor scrape | `campaigns/anz/events-outbound/cemat-2026/` |
+| Small Biz Melbourne 2026 exhibitor scrape | `campaigns/anz/events-outbound/smallbiz-melbourne-2026/` |
 | Run full ANZ pre-outreach pipeline (any ANZ campaign) | `campaigns/anz/run_pipeline.py` |
 | Run pre-campaign eligibility check + Firmable enrichment | `scripts/hubspot_eligibility.py` |
 | Normalise company names in a campaign CSV | `scripts/normalize_company_names.py` |
@@ -242,10 +287,15 @@ firmable-gtm-engineering/
 | Firmable product context + competitive positioning | `knowledge/firmable-product.md` |
 | Email framework selection | `knowledge/messaging-frameworks.md` |
 | Enrich company list with ANZ/SEA/US sales team size (from domain or Firmable ID) | `campaigns/quick-sales-team-size-check/` |
+| Categorize a company list as potential Firmable GTM partners (8 categories, iterative batches) | `campaigns/partner-identification/` |
 | Generate 3 Firmable ideas for a company via web UI (live Vercel app) | `projects/creative-ideas-webapp/` |
 | Classify US sales influencers and generate personalised outreach copy | `projects/us-influencer-outreach/` |
 | Parallel company enrichment pipeline (company type + persona, Trigger.dev + Supabase) | `projects/supabase-enrichment/` + `.claude/skills/supabase-enrichment/SKILL.md` |
 | US Founding 100 campaign enrichment (~8k companies, MSP/IT services segment) | `campaigns/us/founding-100/msp-it-services/` |
+| Scrape US event/conference sponsor lists | `campaigns/us/events-outbound/` |
+| Black Hat US 2026 sponsor scrape | `campaigns/us/events-outbound/blackhat-us-2026/` |
+| ZoomInfo displacement two-email sequence for US startups + mid-market | `.claude/skills/us-competitor-displacement/SKILL.md` |
+| Run ZoomInfo displacement copy generation for US contacts | `campaigns/us/zoominfo-displacement/` |
 
 ---
 

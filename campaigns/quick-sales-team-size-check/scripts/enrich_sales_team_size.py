@@ -33,16 +33,19 @@ def _find_latest_input() -> Path:
 
 
 def _detect_id_column(columns: list[str]) -> tuple[str, str]:
-    """Return (col_name, col_type) where col_type is 'firmable_id' or 'domain'."""
-    lower = [c.lower() for c in columns]
+    """Return (col_name, col_type) where col_type is 'firmable_id', 'firmable_url', or 'domain'."""
+    norm = [c.lower().replace(" ", "_") for c in columns]
     for candidate in ("firmable_id", "id"):
-        if candidate in lower:
-            return columns[lower.index(candidate)], "firmable_id"
-    for candidate in ("domain", "website", "fqdn"):
-        if candidate in lower:
-            return columns[lower.index(candidate)], "domain"
+        if candidate in norm:
+            return columns[norm.index(candidate)], "firmable_id"
+    for candidate in ("firmable_company_url", "firmable_company_link"):
+        if candidate in norm:
+            return columns[norm.index(candidate)], "firmable_url"
+    for candidate in ("domain", "website", "fqdn", "company_website"):
+        if candidate in norm:
+            return columns[norm.index(candidate)], "domain"
     raise ValueError(
-        f"No usable identifier column found. Expected one of: firmable_id, id, domain, website. Got: {columns}"
+        f"No usable identifier column found. Expected one of: firmable_id, firmable_company_url, domain, website, company_website. Got: {columns}"
     )
 
 
@@ -50,19 +53,26 @@ def _resolve_row(i: int, row: pd.Series, col: str, col_type: str,
                  client: FirmableClient, domain_cache: dict) -> dict:
     """Return enrichment dict for one row. Returns None values on failure."""
     identifier = str(row[col]).strip() if pd.notna(row[col]) else ""
+    _empty = {"firmable_id": None, "anz_sales_team_size": None, "sea_sales_team_size": None,
+              "sg_sales_team_size": None, "my_sales_team_size": None,
+              "hk_sales_team_size": None, "ph_sales_team_size": None,
+              "apac_sales_team_size": None, "us_sales_team_size": None}
+
     if not identifier:
         log.warning(f"Row {i + 1}: empty identifier — skipping")
-        return {"firmable_id": None, "anz_sales_team_size": None, "sea_sales_team_size": None, "apac_sales_team_size": None, "us_sales_team_size": None}
+        return _empty
 
     try:
-        if col_type == "domain":
+        if col_type == "firmable_url":
+            firmable_id = identifier.rstrip("/").split("/")[-1]
+        elif col_type == "domain":
             if identifier not in domain_cache:
                 company = client.lookup_company(identifier)
                 domain_cache[identifier] = company.get("id")
             firmable_id = domain_cache[identifier]
             if not firmable_id:
                 log.warning(f"Row {i + 1}: domain '{identifier}' not found in Firmable")
-                return {"firmable_id": None, "anz_sales_team_size": None, "sea_sales_team_size": None, "us_sales_team_size": None}
+                return _empty
         else:
             firmable_id = identifier
 
@@ -76,13 +86,17 @@ def _resolve_row(i: int, row: pd.Series, col: str, col_type: str,
             "firmable_id": firmable_id,
             "anz_sales_team_size": au + nz,
             "sea_sales_team_size": sea,
+            "sg_sales_team_size": sizes.get("sg_sales_team_size"),
+            "my_sales_team_size": sizes.get("my_sales_team_size"),
+            "hk_sales_team_size": sizes.get("hk_sales_team_size"),
+            "ph_sales_team_size": sizes.get("ph_sales_team_size"),
             "apac_sales_team_size": (au + nz) + sea,
             "us_sales_team_size": us,
         }
 
     except Exception as exc:
         log.error(f"Row {i + 1} ('{identifier}'): {exc}")
-        return {"firmable_id": None, "anz_sales_team_size": None, "sea_sales_team_size": None, "apac_sales_team_size": None, "us_sales_team_size": None}
+        return _empty
 
 
 def enrich(input_path: str) -> str:
@@ -111,11 +125,13 @@ def enrich(input_path: str) -> str:
     enrichment_df = pd.DataFrame(results)
 
     # Drop existing output cols if re-running on an already-enriched file
-    for col_name in ("firmable_id", "anz_sales_team_size", "sea_sales_team_size", "apac_sales_team_size", "us_sales_team_size"):
+    for col_name in ("firmable_id", "anz_sales_team_size", "sea_sales_team_size",
+                     "sg_sales_team_size", "my_sales_team_size", "hk_sales_team_size", "ph_sales_team_size",
+                     "apac_sales_team_size", "us_sales_team_size"):
         if col_name in df.columns:
             df = df.drop(columns=[col_name])
 
-    out_df = pd.concat([df.reset_index(drop=True), enrichment_df], axis=1)
+    out_df = pd.concat([enrichment_df, df.reset_index(drop=True)], axis=1)
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     stem = Path(input_path).stem

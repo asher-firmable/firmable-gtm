@@ -17,7 +17,11 @@ events-outbound/
 │   ├── scrape_exhibitors.py
 │   └── output/
 │       └── exhibitors.csv
-└── fhweek-2026/
+├── fhweek-2026/
+│   ├── scrape_exhibitors.py
+│   └── output/
+│       └── exhibitors.csv
+└── cemat-2026/
     ├── scrape_exhibitors.py
     └── output/
         └── exhibitors.csv
