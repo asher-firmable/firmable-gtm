@@ -498,7 +498,18 @@ def write_html_report(
         for acc_id in acc_ids:
             email = id_to_email.get(acc_id, str(acc_id))
             vendor = id_to_vendor.get(acc_id, "")
-            active = account_active_count.get(acc_id, 0)
+            active  = account_active_count.get(acc_id, 0)
+            sent    = account_active_sent.get(acc_id, 0)
+            replies = account_replies.get(acc_id, 0)
+
+            if sent > 0:
+                rate_14d = replies / sent * 100
+                rate_14d_str = f"{rate_14d:.2f}%"
+                rate_14d_cls = _reply_rate_class(rate_14d)
+            else:
+                rate_14d = -1
+                rate_14d_str = "—"
+                rate_14d_cls = "rate-none"
 
             at_sent = account_alltime_sent.get(acc_id, 0)
             at_replies = account_alltime_replies.get(acc_id, 0)
@@ -540,6 +551,7 @@ def write_html_report(
                 f'<td class="mono col-email">{email}</td>'
                 f'<td data-val="{vendor_slug}">{vendor_html}</td>'
                 f'<td class="mono num" data-val="{active}">{active}</td>'
+                f'<td class="mono num rate-cell {rate_14d_cls}" data-val="{rate_14d:.4f}">{rate_14d_str}</td>'
                 f'<td class="mono num" data-val="{int(at_sent)}">{at_sent_str}</td>'
                 f'<td class="mono num rate-cell {at_rate_cls}" data-val="{at_replies / at_sent * 100 if at_sent > 0 else -1:.4f}">{at_rate_str}</td>'
                 f'<td class="mono num rate-cell {at_bounce_cls}" data-val="{at_bounce_rate if at_bounce_rate is not None else -1:.4f}">{at_bounce_str}</td>'
@@ -551,6 +563,11 @@ def write_html_report(
 
     domain_rows_html = []
     for r in rows:
+        rate_14d = r["reply_rate"]
+        rate_14d_str = f"{rate_14d:.2f}%" if rate_14d is not None else "—"
+        rate_14d_cls = _reply_rate_class(rate_14d)
+        rate_14d_val = rate_14d if rate_14d is not None else -1
+
         at_rate = r["alltime_rate"]
         at_rate_str = f"{at_rate:.2f}%" if at_rate is not None else "—"
         at_rate_cls = _reply_rate_class(at_rate)
@@ -577,6 +594,7 @@ def write_html_report(
             f'<td data-val="{r["esp"]}"><span class="esp-badge esp-{r["esp"].lower()}">{r["esp"]}</span></td>'
             f'<td class="mono num" data-val="{r["mailboxes"]}">{r["mailboxes"]}</td>'
             f'{camp_count_cell}'
+            f'<td class="mono num rate-cell {rate_14d_cls}" data-val="{rate_14d_val}">{rate_14d_str}</td>'
             f'<td class="mono num" data-val="{r["alltime_sent"]}">{alltime_sent_str}</td>'
             f'<td class="mono num rate-cell {at_rate_cls}" data-val="{at_rate if at_rate is not None else -1}">{at_rate_str}</td>'
             f'<td class="mono num rate-cell {at_bounce_cls}" data-val="{at_bounce_rate if at_bounce_rate is not None else -1}">{at_bounce_str}</td>'
@@ -630,6 +648,7 @@ def write_html_report(
                   <th class="sortable" onclick="sortTable(this)">Mailbox <span class="sort-icon">↕</span></th>
                   <th class="sortable" onclick="sortTable(this)">Vendor <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Campaigns <span class="sort-icon">↕</span></th>
+                  <th class="num sortable" onclick="sortTable(this)">Rate (14d) <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Sent (AT) <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Reply Rate (AT) <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Bounce (AT) <span class="sort-icon">↕</span></th>
@@ -1065,6 +1084,7 @@ def write_html_report(
             <th class="sortable" onclick="sortTable(this)">ESP <span class="sort-icon">↕</span></th>
             <th class="num sortable" onclick="sortTable(this)">Mailboxes <span class="sort-icon">↕</span></th>
             <th class="num sortable" onclick="sortTable(this)">Campaigns <span class="sort-icon">↕</span></th>
+            <th class="num sortable" onclick="sortTable(this)">Rate (14d) <span class="sort-icon">↕</span></th>
             <th class="num sortable" onclick="sortTable(this)">Sent (AT) <span class="sort-icon">↕</span></th>
             <th class="num sortable" onclick="sortTable(this)">Reply Rate (AT) <span class="sort-icon">↕</span></th>
             <th class="num sortable" onclick="sortTable(this)">Bounce (AT) <span class="sort-icon">↕</span></th>
