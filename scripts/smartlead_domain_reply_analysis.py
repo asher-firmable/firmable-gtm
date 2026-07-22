@@ -631,7 +631,7 @@ def write_html_report(
                   <th class="sortable" onclick="sortTable(this)">Vendor <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Campaigns <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Sent (AT) <span class="sort-icon">↕</span></th>
-                  <th class="num sortable" onclick="sortTable(this)">Rate (AT) <span class="sort-icon">↕</span></th>
+                  <th class="num sortable" onclick="sortTable(this)">Reply Rate (AT) <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Bounce (AT) <span class="sort-icon">↕</span></th>
                   <th class="sortable" onclick="sortTable(this)">Status <span class="sort-icon">↕</span></th>
                   <th>Active Campaigns</th>
@@ -1066,7 +1066,7 @@ def write_html_report(
             <th class="num sortable" onclick="sortTable(this)">Mailboxes <span class="sort-icon">↕</span></th>
             <th class="num sortable" onclick="sortTable(this)">Campaigns <span class="sort-icon">↕</span></th>
             <th class="num sortable" onclick="sortTable(this)">Sent (AT) <span class="sort-icon">↕</span></th>
-            <th class="num sortable" onclick="sortTable(this)">Rate (AT) <span class="sort-icon">↕</span></th>
+            <th class="num sortable" onclick="sortTable(this)">Reply Rate (AT) <span class="sort-icon">↕</span></th>
             <th class="num sortable" onclick="sortTable(this)">Bounce (AT) <span class="sort-icon">↕</span></th>
             <th class="sortable" onclick="sortTable(this)">Status <span class="sort-icon">↕</span></th>
           </tr>
