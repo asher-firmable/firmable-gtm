@@ -782,6 +782,117 @@ def write_html_report(
           </ol>
         </div>"""
 
+    # ---- Mailbox-level recommendations ----
+    MBX_MIN_SENT = 500
+
+    def _mbx_signal(label, val_str, ok):
+        cls = "signal-ok" if ok else "signal-bad"
+        return f'<span class="signal-pill {cls}">{label}: {val_str}</span>'
+
+    def _mbx_rec_row(m):
+        vendor_slug = (m["vendor"] or "unknown").lower().replace(" ", "-")
+        vendor_html = (
+            f'<span class="vendor-badge vendor-{vendor_slug}">{m["vendor"]}</span>'
+            if m["vendor"] else
+            '<span class="vendor-badge vendor-unknown">—</span>'
+        )
+        at_rate_str  = f"{m['at_rate']:.2f}%"
+        bounce_str   = f"{m['bounce_rate']:.2f}%"
+        rate_14d_str = f"{m['rate_14d']:.2f}%" if m["rate_14d"] is not None else "—"
+        return (
+            f'<div class="mbx-rec-row">'
+            f'<span class="mono mbx-email">{m["email"]}</span>'
+            f'{vendor_html}'
+            f'{_mbx_signal("AT Reply", at_rate_str, m["at_rate_ok"])}'
+            f'{_mbx_signal("14d Reply", rate_14d_str, m["rate_14d_ok"])}'
+            f'{_mbx_signal("Bounce", bounce_str, m["bounce_ok"])}'
+            f'</div>'
+        )
+
+    mbx_rec_data = []
+    for acc_id in account_alltime_sent:
+        at_sent = account_alltime_sent.get(acc_id, 0)
+        if at_sent <= MBX_MIN_SENT:
+            continue
+        at_replies  = account_alltime_replies.get(acc_id, 0)
+        at_bounces  = account_alltime_bounces.get(acc_id, 0)
+        active_sent = account_active_sent.get(acc_id, 0)
+        replies_14d = account_replies.get(acc_id, 0)
+
+        at_rate     = at_replies / at_sent * 100
+        bounce_rate = at_bounces / at_sent * 100
+        rate_14d    = (replies_14d / active_sent * 100) if active_sent > 0 else None
+
+        at_rate_ok  = at_rate >= 1.0
+        bounce_ok   = bounce_rate < 3.0
+        rate_14d_ok = rate_14d is not None and rate_14d >= 1.0
+        passes      = sum([at_rate_ok, bounce_ok, rate_14d_ok])
+
+        mbx_rec_data.append({
+            "email":       id_to_email.get(acc_id, str(acc_id)),
+            "vendor":      id_to_vendor.get(acc_id, ""),
+            "at_sent":     int(at_sent),
+            "at_rate":     at_rate,
+            "bounce_rate": bounce_rate,
+            "rate_14d":    rate_14d,
+            "at_rate_ok":  at_rate_ok,
+            "bounce_ok":   bounce_ok,
+            "rate_14d_ok": rate_14d_ok,
+            "passes":      passes,
+        })
+
+    mbx_remove  = sorted([m for m in mbx_rec_data if m["passes"] == 0], key=lambda m: m["at_rate"])
+    mbx_watch   = sorted([m for m in mbx_rec_data if 1 <= m["passes"] <= 2], key=lambda m: (m["passes"], m["at_rate"]))
+    mbx_healthy = sorted([m for m in mbx_rec_data if m["passes"] == 3], key=lambda m: -m["at_rate"])
+
+    def _mbx_card_rows(mlist):
+        return "\n".join(_mbx_rec_row(m) for m in mlist)
+
+    n_eligible = len(mbx_rec_data)
+
+    card_mbx_remove = f"""
+    <div class="rec-card rec-card-danger">
+      <div class="rec-card-header">
+        <span class="rec-badge rec-badge-danger">Consider removing</span>
+        <h3>{len(mbx_remove)} mailbox{"es" if len(mbx_remove) != 1 else ""} — all three signals failing</h3>
+      </div>
+      <p>All-time reply rate below 1%, 14-day reply rate below 1%, and bounce rate above 3%. Consider removing {"these mailboxes" if len(mbx_remove) != 1 else "this mailbox"} from active campaigns.</p>
+      <div class="mbx-rec-list">{_mbx_card_rows(mbx_remove)}</div>
+    </div>""" if mbx_remove else ""
+
+    card_mbx_watch = f"""
+    <div class="rec-card rec-card-warn">
+      <div class="rec-card-header">
+        <span class="rec-badge rec-badge-warn">Watch closely</span>
+        <h3>{len(mbx_watch)} mailbox{"es" if len(mbx_watch) != 1 else ""} — one or two signals failing</h3>
+      </div>
+      <p>Not meeting all three health standards. Monitor over the next 7 days — if failing signals do not improve, consider rotating {"them" if len(mbx_watch) != 1 else "it"} out.</p>
+      <div class="mbx-rec-list">{_mbx_card_rows(mbx_watch)}</div>
+    </div>""" if mbx_watch else ""
+
+    card_mbx_healthy = f"""
+    <div class="rec-card rec-card-ok">
+      <div class="rec-card-header">
+        <span class="rec-badge rec-badge-ok">Healthy</span>
+        <h3>{len(mbx_healthy)} mailbox{"es" if len(mbx_healthy) != 1 else ""} — all three signals passing</h3>
+      </div>
+      <p>All-time reply rate above 1%, 14-day reply rate above 1%, and bounce rate below 3%. No action needed.</p>
+      <div class="mbx-rec-list">{_mbx_card_rows(mbx_healthy)}</div>
+    </div>""" if mbx_healthy else ""
+
+    mbx_rec_html = f"""
+  <div class="section">
+    <div class="section-eyebrow">Mailbox health</div>
+    <h2>Mailbox-Level Recommendations</h2>
+    <p class="section-desc">
+      {n_eligible} mailbox{"es" if n_eligible != 1 else ""} with more than {MBX_MIN_SENT} emails sent all-time.
+      Standards: all-time reply rate &ge; 1%, 14-day reply rate &ge; 1%, bounce rate &lt; 3%.
+    </p>
+    {card_mbx_remove}
+    {card_mbx_watch}
+    {card_mbx_healthy}
+  </div>"""
+
     rec_html = f"""
   <div class="section">
     <div class="section-eyebrow">Action plan</div>
@@ -1029,6 +1140,17 @@ def write_html_report(
   .rec-steps {{ padding-left:20px; color:var(--text-2); font-size:13px; line-height:1.9; max-width:680px; }}
   .rec-steps li {{ padding-left:4px; }}
 
+  /* Mailbox-level recommendation rows */
+  .mbx-rec-list {{ display:flex; flex-direction:column; gap:0; margin-top:12px; }}
+  .mbx-rec-row {{ display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding:7px 0; border-bottom:1px solid var(--border); }}
+  .mbx-rec-row:last-child {{ border-bottom:none; }}
+  .mbx-email {{ flex:1 1 200px; font-size:12px; }}
+  .signal-pill {{ display:inline-block; font-family:var(--mono); font-size:10px;
+    padding:2px 7px; border-radius:4px; font-weight:600; white-space:nowrap; }}
+  .signal-ok  {{ background:#E8F5E9; color:#1B5E20; border:1px solid #C8E6C9; }}
+  .signal-bad {{ background:#FFEBEE; color:#B71C1C; border:1px solid #FFCDD2; }}
+
   /* Footer */
   .report-footer {{ border-top:1px solid var(--border); padding-top:24px; margin-top:24px;
     font-family:var(--mono); font-size:11px; color:var(--text-3); }}
@@ -1117,6 +1239,8 @@ def write_html_report(
   </div>
 
   {rec_html}
+
+  {mbx_rec_html}
 
   <div class="report-footer">
     Generated {generated_at} &nbsp;·&nbsp; Replies window: last {lookback_days} days &nbsp;·&nbsp; {total_active_campaigns} active campaigns at time of report
