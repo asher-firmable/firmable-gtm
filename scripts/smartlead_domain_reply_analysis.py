@@ -71,6 +71,14 @@ def _reply_rate_class(rate):
     return "rate-good"
 
 
+def _bounce_rate_class(rate):
+    if rate is None: return "rate-none"
+    if rate == 0:    return "rate-good"
+    if rate < 2.0:   return "rate-good"
+    if rate < 5.0:   return "rate-mid"
+    return "rate-low"
+
+
 def _status_class(is_active: bool, replies: int) -> str:
     if not is_active:   return "status-inactive"
     if replies == 0:    return "status-alert"
@@ -165,14 +173,16 @@ def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list)
 def fetch_alltime_stats_per_account(client: SmartLeadClient, campaigns: list) -> tuple:
     """
     Process ALL campaigns (active + completed + paused) to compute all-time
-    sent and reply counts per mailbox. Uses campaign analytics reply_count,
+    sent, reply, and bounce counts per mailbox. Uses campaign analytics fields,
     apportioned evenly across mailboxes assigned to each campaign.
     Returns:
       - account_alltime_sent:    {account_id: float}
       - account_alltime_replies: {account_id: float}
+      - account_alltime_bounces: {account_id: float}
     """
     account_alltime_sent = defaultdict(float)
     account_alltime_replies = defaultdict(float)
+    account_alltime_bounces = defaultdict(float)
 
     print(f"  Fetching all-time stats across {len(campaigns)} campaigns...")
     for i, camp in enumerate(campaigns, 1):
@@ -184,6 +194,7 @@ def fetch_alltime_stats_per_account(client: SmartLeadClient, campaigns: list) ->
             analytics = client.get_campaign_analytics(camp_id)
             unique_sent = int(analytics.get("unique_sent_count") or 0)
             reply_count = int(analytics.get("reply_count") or 0)
+            bounce_count = int(analytics.get("bounce_count") or 0)
         except Exception:
             continue
 
@@ -204,9 +215,10 @@ def fetch_alltime_stats_per_account(client: SmartLeadClient, campaigns: list) ->
             if acc_id:
                 account_alltime_sent[acc_id] += unique_sent / n
                 account_alltime_replies[acc_id] += reply_count / n
+                account_alltime_bounces[acc_id] += bounce_count / n
 
     print()
-    return dict(account_alltime_sent), dict(account_alltime_replies)
+    return dict(account_alltime_sent), dict(account_alltime_replies), dict(account_alltime_bounces)
 
 
 def _get_inbox_replies_with_retry(client, offset, limit, start_iso, end_iso, max_retries=5):
@@ -256,6 +268,7 @@ def aggregate_by_domain(
     account_replies: dict,
     account_alltime_sent: dict,
     account_alltime_replies: dict,
+    account_alltime_bounces: dict,
 ) -> list:
     domain_mailboxes = defaultdict(set)
     for acc_id, domain in account_to_domain.items():
@@ -271,7 +284,9 @@ def aggregate_by_domain(
 
         alltime_sent = sum(account_alltime_sent.get(a, 0) for a in acc_ids)
         alltime_replies = sum(account_alltime_replies.get(a, 0) for a in acc_ids)
+        alltime_bounces = sum(account_alltime_bounces.get(a, 0) for a in acc_ids)
         alltime_rate = (alltime_replies / alltime_sent * 100) if alltime_sent > 0 else None
+        alltime_bounce_rate = (alltime_bounces / alltime_sent * 100) if alltime_sent > 0 else None
 
         campaign_names = sorted(set(
             name
@@ -288,7 +303,9 @@ def aggregate_by_domain(
             "reply_rate": reply_rate,
             "alltime_sent": int(alltime_sent),
             "alltime_replies": int(alltime_replies),
+            "alltime_bounces": int(alltime_bounces),
             "alltime_rate": alltime_rate,
+            "alltime_bounce_rate": alltime_bounce_rate,
             "is_active": is_active,
             "campaign_names": campaign_names,
         })
@@ -457,6 +474,7 @@ def write_html_report(
     account_replies: dict,
     account_alltime_sent: dict,
     account_alltime_replies: dict,
+    account_alltime_bounces: dict,
     lookback_days: int,
     total_active_campaigns: int,
     output_path: str,
@@ -501,13 +519,20 @@ def write_html_report(
 
             at_sent = account_alltime_sent.get(acc_id, 0)
             at_replies = account_alltime_replies.get(acc_id, 0)
+            at_bounces = account_alltime_bounces.get(acc_id, 0)
             if at_sent > 0:
                 at_rate = at_replies / at_sent * 100
                 at_rate_str = f"{at_rate:.2f}%"
                 at_rate_cls = _reply_rate_class(at_rate)
+                at_bounce_rate = at_bounces / at_sent * 100
+                at_bounce_str = f"{at_bounce_rate:.2f}%"
+                at_bounce_cls = _bounce_rate_class(at_bounce_rate)
             else:
                 at_rate_str = "—"
                 at_rate_cls = "rate-none"
+                at_bounce_rate = None
+                at_bounce_str = "—"
+                at_bounce_cls = "rate-none"
 
             if active == 0:
                 status_html = '<span class="status-badge status-inactive">Inactive</span>'
@@ -538,6 +563,7 @@ def write_html_report(
                 f'<td class="mono num rate-cell {rate_cls}" data-val="{replies / sent * 100 if sent > 0 else -1:.4f}">{rate_str}</td>'
                 f'<td class="mono num" data-val="{int(at_sent)}">{at_sent_str}</td>'
                 f'<td class="mono num rate-cell {at_rate_cls}" data-val="{at_replies / at_sent * 100 if at_sent > 0 else -1:.4f}">{at_rate_str}</td>'
+                f'<td class="mono num rate-cell {at_bounce_cls}" data-val="{at_bounce_rate if at_bounce_rate is not None else -1:.4f}">{at_bounce_str}</td>'
                 f'<td data-val="{mbx_status_sort}">{status_html}</td>'
                 f'<td class="camps-cell">{camps_html}</td>'
                 f'</tr>'
@@ -569,6 +595,9 @@ def write_html_report(
             f'<td class="mono num" data-val="{r["active_campaigns"]}">{r["active_campaigns"]}</td>'
         )
         alltime_sent_str = f"{r['alltime_sent']:,}" if r["alltime_sent"] > 0 else "—"
+        at_bounce_rate = r["alltime_bounce_rate"]
+        at_bounce_str = f"{at_bounce_rate:.2f}%" if at_bounce_rate is not None else "—"
+        at_bounce_cls = _bounce_rate_class(at_bounce_rate)
         status_sort = 0 if (r["is_active"] and r["replies_14d"] == 0) else (1 if r["is_active"] else 2)
         domain_rows_html.append(
             f'<tr data-esp="{r["esp"]}" data-active="{1 if r["is_active"] else 0}">'
@@ -585,6 +614,7 @@ def write_html_report(
             f'</td>'
             f'<td class="mono num" data-val="{r["alltime_sent"]}">{alltime_sent_str}</td>'
             f'<td class="mono num rate-cell {at_rate_cls}" data-val="{at_rate if at_rate is not None else -1}">{at_rate_str}</td>'
+            f'<td class="mono num rate-cell {at_bounce_cls}" data-val="{at_bounce_rate if at_bounce_rate is not None else -1}">{at_bounce_str}</td>'
             f'<td data-val="{status_sort}">{status_html}</td>'
             f'</tr>'
         )
@@ -643,6 +673,7 @@ def write_html_report(
                   <th class="num sortable" onclick="sortTable(this)">Rate (14d) <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Sent (AT) <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Rate (AT) <span class="sort-icon">↕</span></th>
+                  <th class="num sortable" onclick="sortTable(this)">Bounce (AT) <span class="sort-icon">↕</span></th>
                   <th class="sortable" onclick="sortTable(this)">Status <span class="sort-icon">↕</span></th>
                   <th>Active Campaigns</th>
                 </tr>
@@ -1079,6 +1110,7 @@ def write_html_report(
             <th class="sortable" onclick="sortTable(this)">Rate (14d) <span class="sort-icon">↕</span></th>
             <th class="num sortable" onclick="sortTable(this)">Sent (AT) <span class="sort-icon">↕</span></th>
             <th class="num sortable" onclick="sortTable(this)">Rate (AT) <span class="sort-icon">↕</span></th>
+            <th class="num sortable" onclick="sortTable(this)">Bounce (AT) <span class="sort-icon">↕</span></th>
             <th class="sortable" onclick="sortTable(this)">Status <span class="sort-icon">↕</span></th>
           </tr>
         </thead>
@@ -1215,7 +1247,7 @@ def main():
     account_active_count, account_active_sent, account_active_campaigns, total_active_campaigns = fetch_active_campaigns_per_account(client, campaigns)
 
     print("\nFetching all-time stats across all campaigns...")
-    account_alltime_sent, account_alltime_replies = fetch_alltime_stats_per_account(client, campaigns)
+    account_alltime_sent, account_alltime_replies, account_alltime_bounces = fetch_alltime_stats_per_account(client, campaigns)
 
     now = datetime.now(tz=timezone.utc)
     start = now - timedelta(days=LOOKBACK_DAYS)
@@ -1228,7 +1260,7 @@ def main():
     rows = aggregate_by_domain(
         account_to_domain, domain_to_esp,
         account_active_count, account_active_sent, account_active_campaigns, account_replies,
-        account_alltime_sent, account_alltime_replies,
+        account_alltime_sent, account_alltime_replies, account_alltime_bounces,
     )
     print_table(rows, LOOKBACK_DAYS)
     print_mailbox_table(
@@ -1251,6 +1283,7 @@ def main():
         account_replies=account_replies,
         account_alltime_sent=account_alltime_sent,
         account_alltime_replies=account_alltime_replies,
+        account_alltime_bounces=account_alltime_bounces,
         lookback_days=LOOKBACK_DAYS,
         total_active_campaigns=total_active_campaigns,
         output_path="docs/domain-report.html",
