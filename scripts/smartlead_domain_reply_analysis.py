@@ -527,6 +527,7 @@ def write_html_report(
                 camps_html = " ".join(f'<span class="camp-tag">{n}</span>' for n in camp_names)
             else:
                 camps_html = '<span class="camp-tag-none">—</span>'
+            at_sent_str = f"{int(at_sent):,}" if at_sent > 0 else "—"
             html.append(
                 f'<tr data-vendor="{vendor_slug}">'
                 f'<td class="mono col-email">{email}</td>'
@@ -534,6 +535,7 @@ def write_html_report(
                 f'<td class="mono num">{active}</td>'
                 f'<td class="mono num">{replies}</td>'
                 f'<td class="mono num rate-cell {rate_cls}">{rate_str}</td>'
+                f'<td class="mono num">{at_sent_str}</td>'
                 f'<td class="mono num rate-cell {at_rate_cls}">{at_rate_str}</td>'
                 f'<td>{status_html}</td>'
                 f'<td class="camps-cell">{camps_html}</td>'
@@ -565,6 +567,7 @@ def write_html_report(
             if camp_tooltip else
             f'<td class="mono num">{r["active_campaigns"]}</td>'
         )
+        alltime_sent_str = f"{r['alltime_sent']:,}" if r["alltime_sent"] > 0 else "—"
         domain_rows_html.append(
             f'<tr data-esp="{r["esp"]}" data-active="{1 if r["is_active"] else 0}">'
             f'<td class="mono col-domain">{r["domain"]}</td>'
@@ -578,6 +581,7 @@ def write_html_report(
             f'    <span class="rate-label mono">{rate_str}</span>'
             f'  </div>'
             f'</td>'
+            f'<td class="mono num">{alltime_sent_str}</td>'
             f'<td class="mono num rate-cell {at_rate_cls}">{at_rate_str}</td>'
             f'<td>{status_html}</td>'
             f'</tr>'
@@ -634,6 +638,7 @@ def write_html_report(
                   <th class="num">Active Campaigns</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate (14d)</th>
+                  <th class="num">Sent (all-time)</th>
                   <th class="num">Rate (all-time)</th>
                   <th>Status</th>
                   <th>Campaigns</th>
@@ -1062,6 +1067,7 @@ def write_html_report(
             <th class="num">Active Campaigns</th>
             <th class="num">Replies (14d)</th>
             <th>Rate (14d)</th>
+            <th class="num">Sent (all-time)</th>
             <th class="num">Rate (all-time)</th>
             <th>Status</th>
           </tr>
