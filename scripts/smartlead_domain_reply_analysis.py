@@ -635,13 +635,13 @@ def write_html_report(
                 <tr>
                   <th>Mailbox</th>
                   <th>Vendor</th>
-                  <th class="num">Active Campaigns</th>
+                  <th class="num">Campaigns</th>
                   <th class="num">Replies (14d)</th>
                   <th class="num">Rate (14d)</th>
-                  <th class="num">Sent (all-time)</th>
-                  <th class="num">Rate (all-time)</th>
+                  <th class="num">Sent (AT)</th>
+                  <th class="num">Rate (AT)</th>
                   <th>Status</th>
-                  <th>Campaigns</th>
+                  <th>Active Campaigns</th>
                 </tr>
               </thead>
               <tbody>
@@ -873,22 +873,22 @@ def write_html_report(
 
   /* Domain summary table */
   .scroll-wrap {{ overflow-x:auto; }}
-  .domain-table {{ width:100%; border-collapse:collapse; font-size:13px;
-    font-variant-numeric:tabular-nums; min-width:700px; }}
-  .domain-table th {{ font-family:var(--mono); font-size:10px; letter-spacing:.1em;
-    text-transform:uppercase; color:var(--text-3); padding:10px 14px;
+  .domain-table {{ width:100%; border-collapse:collapse; font-size:12.5px;
+    font-variant-numeric:tabular-nums; }}
+  .domain-table th {{ font-family:var(--mono); font-size:9.5px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--text-3); padding:8px 8px;
     text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }}
   .domain-table th.num {{ text-align:right; }}
-  .domain-table td {{ padding:11px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }}
+  .domain-table td {{ padding:9px 8px; border-bottom:1px solid var(--border); vertical-align:middle; }}
   .domain-table tr:last-child td {{ border-bottom:none; }}
   .domain-table tr:hover td {{ background:var(--surface-2); }}
   .mono {{ font-family:var(--mono); }}
   .num  {{ text-align:right; }}
-  .col-domain {{ font-size:13px; color:var(--text); }}
+  .col-domain {{ font-size:12.5px; color:var(--text); }}
   .col-email  {{ font-size:12px; color:var(--text-2); }}
 
   /* Rate bar in domain table */
-  .rate-cell {{ min-width:90px; }}
+  .rate-cell {{ min-width:80px; }}
   .rate-bar-wrap {{ display:flex; align-items:center; gap:8px; }}
   .rate-bar {{ height:5px; border-radius:3px; background:var(--teal); flex-shrink:0; min-width:0; }}
   .rate-good .rate-bar {{ background:var(--teal); }}
@@ -1064,11 +1064,11 @@ def write_html_report(
             <th>Domain</th>
             <th>ESP</th>
             <th class="num">Mailboxes</th>
-            <th class="num">Active Campaigns</th>
+            <th class="num">Campaigns</th>
             <th class="num">Replies (14d)</th>
             <th>Rate (14d)</th>
-            <th class="num">Sent (all-time)</th>
-            <th class="num">Rate (all-time)</th>
+            <th class="num">Sent (AT)</th>
+            <th class="num">Rate (AT)</th>
             <th>Status</th>
           </tr>
         </thead>
