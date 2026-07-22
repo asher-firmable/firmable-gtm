@@ -310,11 +310,10 @@ def aggregate_by_domain(
             "campaign_names": campaign_names,
         })
 
-    # Sort: active + no replies first, then active + replies (by rate desc), then inactive
+    # Sort: active first (by all-time rate desc), then inactive
     rows.sort(key=lambda r: (
-        0 if (r["is_active"] and r["replies_14d"] == 0) else
-        1 if r["is_active"] else 2,
-        -(r["reply_rate"] or 0)
+        0 if r["is_active"] else 1,
+        -(r["alltime_rate"] or 0)
     ))
     return rows
 
@@ -480,9 +479,8 @@ def write_html_report(
     output_path: str,
     generated_at: str,
 ):
-    active_alert = [r for r in rows if r["is_active"] and r["replies_14d"] == 0]
-    active_ok    = [r for r in rows if r["is_active"] and r["replies_14d"] > 0]
-    inactive     = [r for r in rows if not r["is_active"]]
+    active   = [r for r in rows if r["is_active"]]
+    inactive = [r for r in rows if not r["is_active"]]
 
     domain_to_acc_ids = defaultdict(list)
     for acc_id, domain in account_to_domain.items():
@@ -494,19 +492,13 @@ def write_html_report(
         acc_ids = domain_to_acc_ids.get(domain, [])
         def sort_key(a):
             active = account_active_count.get(a, 0)
-            replies = account_replies.get(a, 0)
-            if active > 0 and replies == 0:
-                return (0, -active)
-            elif active > 0:
-                return (1, -replies)
-            return (2, -replies)
+            return (0, -active) if active > 0 else (1, 0)
         acc_ids = sorted(acc_ids, key=sort_key)
         html = []
         for acc_id in acc_ids:
             email = id_to_email.get(acc_id, str(acc_id))
             vendor = id_to_vendor.get(acc_id, "")
             active = account_active_count.get(acc_id, 0)
-            replies = account_replies.get(acc_id, 0)
 
             at_sent = account_alltime_sent.get(acc_id, 0)
             at_replies = account_alltime_replies.get(acc_id, 0)
@@ -527,8 +519,6 @@ def write_html_report(
 
             if active == 0:
                 status_html = '<span class="status-badge status-inactive">Inactive</span>'
-            elif replies == 0:
-                status_html = '<span class="status-badge status-alert">No replies</span>'
             else:
                 status_html = '<span class="status-badge status-ok">Active</span>'
 
@@ -544,7 +534,7 @@ def write_html_report(
             else:
                 camps_html = '<span class="camp-tag-none">—</span>'
             at_sent_str = f"{int(at_sent):,}" if at_sent > 0 else "—"
-            mbx_status_sort = 0 if (active > 0 and replies == 0) else (1 if active > 0 else 2)
+            mbx_status_sort = 0 if active > 0 else 1
             html.append(
                 f'<tr data-vendor="{vendor_slug}">'
                 f'<td class="mono col-email">{email}</td>'
@@ -567,8 +557,6 @@ def write_html_report(
 
         if not r["is_active"]:
             status_html = '<span class="status-badge status-inactive">Inactive</span>'
-        elif r["replies_14d"] == 0:
-            status_html = '<span class="status-badge status-alert">Active · No replies</span>'
         else:
             status_html = '<span class="status-badge status-ok">Active</span>'
 
@@ -582,7 +570,7 @@ def write_html_report(
         at_bounce_rate = r["alltime_bounce_rate"]
         at_bounce_str = f"{at_bounce_rate:.2f}%" if at_bounce_rate is not None else "—"
         at_bounce_cls = _bounce_rate_class(at_bounce_rate)
-        status_sort = 0 if (r["is_active"] and r["replies_14d"] == 0) else (1 if r["is_active"] else 2)
+        status_sort = 0 if r["is_active"] else 1
         domain_rows_html.append(
             f'<tr data-esp="{r["esp"]}" data-active="{1 if r["is_active"] else 0}">'
             f'<td class="mono col-domain">{r["domain"]}</td>'
@@ -605,17 +593,13 @@ def write_html_report(
     for r in rows:
         domain = r["domain"]
         esp    = domain_to_esp.get(domain, "Other")
-        rate   = r["reply_rate"]
         if not r["is_active"]:
             pill_text  = "Inactive"
             pill_class = "rate-none"
-        elif r["replies_14d"] == 0:
-            pill_text  = "Active · No replies"
-            pill_class = "rate-low"
         else:
-            rate_display = f"{rate:.2f}%" if rate is not None else "n/a"
-            pill_text  = f"Active · {rate_display}"
-            pill_class = _reply_rate_class(rate)
+            at_rate_display = f"{r['alltime_rate']:.2f}%" if r["alltime_rate"] is not None else "n/a"
+            pill_text  = f"Active · {at_rate_display}"
+            pill_class = _reply_rate_class(r["alltime_rate"])
         domain_vendors = " ".join(sorted(set(
             (id_to_vendor.get(a, "") or "unknown").lower().replace(" ", "-")
             for a in domain_to_acc_ids.get(domain, [])
@@ -1043,20 +1027,20 @@ def write_html_report(
     </div>
     <h1>Domain Health Report</h1>
     <div class="last-updated">Last updated: {generated_at}</div>
-    <div class="header-sub">Replies: last {lookback_days} days &nbsp;·&nbsp; Reply rate = replies / sends from active campaigns (all-time) &nbsp;·&nbsp; Active = in a live campaign</div>
+    <div class="header-sub">All-time stats per domain and mailbox &nbsp;·&nbsp; Active = currently in a live SmartLead campaign</div>
   </div>
 
   <div class="hero-contrast">
     <div class="hero-stat">
-      <span class="hero-number hero-number--pass">{len(active_ok)}</span>
-      <div class="hero-label">Active &amp; getting replies</div>
-      <div class="hero-sub">in live campaigns with replies in {lookback_days}d</div>
+      <span class="hero-number hero-number--pass">{len(active)}</span>
+      <div class="hero-label">Active domains</div>
+      <div class="hero-sub">currently in at least one live campaign</div>
     </div>
     <div class="hero-divider">vs</div>
     <div class="hero-stat">
-      <span class="hero-number hero-number--fail">{len(active_alert)}</span>
-      <div class="hero-label">Active, no replies</div>
-      <div class="hero-sub">in live campaigns but silent — check these</div>
+      <span class="hero-number hero-number--fail">{len(inactive)}</span>
+      <div class="hero-label">Inactive domains</div>
+      <div class="hero-sub">not assigned to any live campaign</div>
     </div>
   </div>
 
