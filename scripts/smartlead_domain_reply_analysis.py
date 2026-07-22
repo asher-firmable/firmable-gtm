@@ -799,10 +799,16 @@ def write_html_report(
         at_rate_str  = f"{m['at_rate']:.2f}%"
         bounce_str   = f"{m['bounce_rate']:.2f}%"
         rate_14d_str = f"{m['rate_14d']:.2f}%" if m["rate_14d"] is not None else "—"
+        active_html  = (
+            '<span class="status-badge status-ok" style="font-size:10px;padding:2px 6px">Active</span>'
+            if m["is_active"] else
+            '<span class="status-badge status-inactive" style="font-size:10px;padding:2px 6px">Inactive</span>'
+        )
         return (
             f'<div class="mbx-rec-row">'
             f'<span class="mono mbx-email">{m["email"]}</span>'
             f'{vendor_html}'
+            f'{active_html}'
             f'{_mbx_signal("AT Reply", at_rate_str, m["at_rate_ok"])}'
             f'{_mbx_signal("14d Reply", rate_14d_str, m["rate_14d_ok"])}'
             f'{_mbx_signal("Bounce", bounce_str, m["bounce_ok"])}'
@@ -828,9 +834,12 @@ def write_html_report(
         rate_14d_ok = rate_14d is not None and rate_14d >= 1.0
         passes      = sum([at_rate_ok, bounce_ok, rate_14d_ok])
 
+        email = id_to_email.get(acc_id, str(acc_id))
         mbx_rec_data.append({
-            "email":       id_to_email.get(acc_id, str(acc_id)),
+            "email":       email,
+            "domain":      account_to_domain.get(acc_id, email.split("@")[-1] if "@" in email else email),
             "vendor":      id_to_vendor.get(acc_id, ""),
+            "is_active":   account_active_count.get(acc_id, 0) > 0,
             "at_sent":     int(at_sent),
             "at_rate":     at_rate,
             "bounce_rate": bounce_rate,
@@ -841,9 +850,9 @@ def write_html_report(
             "passes":      passes,
         })
 
-    mbx_remove  = sorted([m for m in mbx_rec_data if m["passes"] == 0], key=lambda m: m["at_rate"])
-    mbx_watch   = sorted([m for m in mbx_rec_data if 1 <= m["passes"] <= 2], key=lambda m: (m["passes"], m["at_rate"]))
-    mbx_healthy = sorted([m for m in mbx_rec_data if m["passes"] == 3], key=lambda m: -m["at_rate"])
+    mbx_remove  = sorted([m for m in mbx_rec_data if m["passes"] == 0], key=lambda m: (m["domain"], m["email"]))
+    mbx_watch   = sorted([m for m in mbx_rec_data if 1 <= m["passes"] <= 2], key=lambda m: (m["domain"], m["email"]))
+    mbx_healthy = sorted([m for m in mbx_rec_data if m["passes"] == 3], key=lambda m: (m["domain"], m["email"]))
 
     def _mbx_card_rows(mlist):
         return "\n".join(_mbx_rec_row(m) for m in mlist)
