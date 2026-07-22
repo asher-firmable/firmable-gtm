@@ -796,9 +796,10 @@ def write_html_report(
             if m["vendor"] else
             '<span class="vendor-badge vendor-unknown">—</span>'
         )
-        at_rate_str  = f"{m['at_rate']:.2f}%"
-        bounce_str   = f"{m['bounce_rate']:.2f}%"
-        rate_14d_str = f"{m['rate_14d']:.2f}%" if m["rate_14d"] is not None else "—"
+        at_rate_str  = f"{m['at_rate']:.3f}%"
+        bounce_str   = f"{m['bounce_rate']:.3f}%"
+        rate_14d_str = f"{m['rate_14d']:.3f}%" if m["rate_14d"] is not None else "—"
+        sent_str     = f"{m['at_sent']:,}"
         active_html  = (
             '<span class="status-badge status-ok" style="font-size:10px;padding:2px 6px">Active</span>'
             if m["is_active"] else
@@ -809,6 +810,7 @@ def write_html_report(
             f'<span class="mono mbx-email">{m["email"]}</span>'
             f'{vendor_html}'
             f'{active_html}'
+            f'<span class="mbx-sent-count">{sent_str} sent</span>'
             f'{_mbx_signal("AT Reply", at_rate_str, m["at_rate_ok"])}'
             f'{_mbx_signal("14d Reply", rate_14d_str, m["rate_14d_ok"])}'
             f'{_mbx_signal("Bounce", bounce_str, m["bounce_ok"])}'
@@ -1159,6 +1161,8 @@ def write_html_report(
     padding:2px 7px; border-radius:4px; font-weight:600; white-space:nowrap; }}
   .signal-ok  {{ background:#E8F5E9; color:#1B5E20; border:1px solid #C8E6C9; }}
   .signal-bad {{ background:#FFEBEE; color:#B71C1C; border:1px solid #FFCDD2; }}
+  .mbx-sent-count {{ font-family:var(--mono); font-size:10px; color:var(--text-3);
+    white-space:nowrap; }}
 
   /* Footer */
   .report-footer {{ border-top:1px solid var(--border); padding-top:24px; margin-top:24px;
