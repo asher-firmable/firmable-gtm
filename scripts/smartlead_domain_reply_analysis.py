@@ -528,16 +528,17 @@ def write_html_report(
             else:
                 camps_html = '<span class="camp-tag-none">—</span>'
             at_sent_str = f"{int(at_sent):,}" if at_sent > 0 else "—"
+            mbx_status_sort = 0 if (active > 0 and replies == 0) else (1 if active > 0 else 2)
             html.append(
                 f'<tr data-vendor="{vendor_slug}">'
                 f'<td class="mono col-email">{email}</td>'
-                f'<td>{vendor_html}</td>'
-                f'<td class="mono num">{active}</td>'
-                f'<td class="mono num">{replies}</td>'
-                f'<td class="mono num rate-cell {rate_cls}">{rate_str}</td>'
-                f'<td class="mono num">{at_sent_str}</td>'
-                f'<td class="mono num rate-cell {at_rate_cls}">{at_rate_str}</td>'
-                f'<td>{status_html}</td>'
+                f'<td data-val="{vendor_slug}">{vendor_html}</td>'
+                f'<td class="mono num" data-val="{active}">{active}</td>'
+                f'<td class="mono num" data-val="{replies}">{replies}</td>'
+                f'<td class="mono num rate-cell {rate_cls}" data-val="{replies / sent * 100 if sent > 0 else -1:.4f}">{rate_str}</td>'
+                f'<td class="mono num" data-val="{int(at_sent)}">{at_sent_str}</td>'
+                f'<td class="mono num rate-cell {at_rate_cls}" data-val="{at_replies / at_sent * 100 if at_sent > 0 else -1:.4f}">{at_rate_str}</td>'
+                f'<td data-val="{mbx_status_sort}">{status_html}</td>'
                 f'<td class="camps-cell">{camps_html}</td>'
                 f'</tr>'
             )
@@ -563,27 +564,28 @@ def write_html_report(
 
         camp_tooltip = " | ".join(r["campaign_names"]) if r["campaign_names"] else ""
         camp_count_cell = (
-            f'<td class="mono num" title="{camp_tooltip}" style="cursor:help">{r["active_campaigns"]}</td>'
+            f'<td class="mono num" data-val="{r["active_campaigns"]}" title="{camp_tooltip}" style="cursor:help">{r["active_campaigns"]}</td>'
             if camp_tooltip else
-            f'<td class="mono num">{r["active_campaigns"]}</td>'
+            f'<td class="mono num" data-val="{r["active_campaigns"]}">{r["active_campaigns"]}</td>'
         )
         alltime_sent_str = f"{r['alltime_sent']:,}" if r["alltime_sent"] > 0 else "—"
+        status_sort = 0 if (r["is_active"] and r["replies_14d"] == 0) else (1 if r["is_active"] else 2)
         domain_rows_html.append(
             f'<tr data-esp="{r["esp"]}" data-active="{1 if r["is_active"] else 0}">'
             f'<td class="mono col-domain">{r["domain"]}</td>'
-            f'<td><span class="esp-badge esp-{r["esp"].lower()}">{r["esp"]}</span></td>'
-            f'<td class="mono num">{r["mailboxes"]}</td>'
+            f'<td data-val="{r["esp"]}"><span class="esp-badge esp-{r["esp"].lower()}">{r["esp"]}</span></td>'
+            f'<td class="mono num" data-val="{r["mailboxes"]}">{r["mailboxes"]}</td>'
             f'{camp_count_cell}'
-            f'<td class="mono num">{r["replies_14d"]}</td>'
-            f'<td class="rate-cell {rate_cls}">'
+            f'<td class="mono num" data-val="{r["replies_14d"]}">{r["replies_14d"]}</td>'
+            f'<td class="rate-cell {rate_cls}" data-val="{rate if rate is not None else -1}">'
             f'  <div class="rate-bar-wrap">'
             f'    <div class="rate-bar" style="width:{bar_w}%"></div>'
             f'    <span class="rate-label mono">{rate_str}</span>'
             f'  </div>'
             f'</td>'
-            f'<td class="mono num">{alltime_sent_str}</td>'
-            f'<td class="mono num rate-cell {at_rate_cls}">{at_rate_str}</td>'
-            f'<td>{status_html}</td>'
+            f'<td class="mono num" data-val="{r["alltime_sent"]}">{alltime_sent_str}</td>'
+            f'<td class="mono num rate-cell {at_rate_cls}" data-val="{at_rate if at_rate is not None else -1}">{at_rate_str}</td>'
+            f'<td data-val="{status_sort}">{status_html}</td>'
             f'</tr>'
         )
 
@@ -630,17 +632,18 @@ def write_html_report(
           </summary>
           <div class="domain-group-body">
             {camp_tags_html}
+            <div class="mailbox-scroll">
             <table class="mailbox-table">
               <thead>
                 <tr>
-                  <th>Mailbox</th>
-                  <th>Vendor</th>
-                  <th class="num">Campaigns</th>
-                  <th class="num">Replies (14d)</th>
-                  <th class="num">Rate (14d)</th>
-                  <th class="num">Sent (AT)</th>
-                  <th class="num">Rate (AT)</th>
-                  <th>Status</th>
+                  <th class="sortable" onclick="sortTable(this)">Mailbox <span class="sort-icon">↕</span></th>
+                  <th class="sortable" onclick="sortTable(this)">Vendor <span class="sort-icon">↕</span></th>
+                  <th class="num sortable" onclick="sortTable(this)">Campaigns <span class="sort-icon">↕</span></th>
+                  <th class="num sortable" onclick="sortTable(this)">Replies (14d) <span class="sort-icon">↕</span></th>
+                  <th class="num sortable" onclick="sortTable(this)">Rate (14d) <span class="sort-icon">↕</span></th>
+                  <th class="num sortable" onclick="sortTable(this)">Sent (AT) <span class="sort-icon">↕</span></th>
+                  <th class="num sortable" onclick="sortTable(this)">Rate (AT) <span class="sort-icon">↕</span></th>
+                  <th class="sortable" onclick="sortTable(this)">Status <span class="sort-icon">↕</span></th>
                   <th>Active Campaigns</th>
                 </tr>
               </thead>
@@ -648,6 +651,7 @@ def write_html_report(
                 {mailbox_rows_html(domain)}
               </tbody>
             </table>
+            </div>
           </div>
         </details>""")
 
@@ -920,6 +924,7 @@ def write_html_report(
   .rate-zero {{ background:#FFEBEE; color:#B71C1C; opacity:.8; }}
   .rate-none {{ background:var(--surface-2); color:var(--text-3); }}
   .domain-group-body {{ padding:0; }}
+  .mailbox-scroll {{ overflow-x:auto; }}
 
   /* Vendor badges */
   .vendor-badge {{ display:inline-block; font-family:var(--mono); font-size:10px;
@@ -939,14 +944,19 @@ def write_html_report(
 
   /* Mailbox inner table */
   .mailbox-table {{ width:100%; border-collapse:collapse; font-size:12px;
-    font-variant-numeric:tabular-nums; }}
-  .mailbox-table th {{ font-family:var(--mono); font-size:10px; letter-spacing:.08em;
-    text-transform:uppercase; color:var(--text-3); padding:8px 16px;
-    text-align:left; border-bottom:1px solid var(--border); background:var(--surface); }}
+    font-variant-numeric:tabular-nums; min-width:700px; }}
+  .mailbox-table th {{ font-family:var(--mono); font-size:9.5px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--text-3); padding:8px 8px;
+    text-align:left; border-bottom:1px solid var(--border); background:var(--surface);
+    white-space:nowrap; }}
   .mailbox-table th.num {{ text-align:right; }}
-  .mailbox-table td {{ padding:9px 16px; border-bottom:1px solid var(--border); }}
+  .mailbox-table td {{ padding:8px 8px; border-bottom:1px solid var(--border); }}
   .mailbox-table tr:last-child td {{ border-bottom:none; }}
   .mailbox-table tr:hover td {{ background:var(--surface-2); }}
+  .sortable {{ cursor:pointer; user-select:none; }}
+  .sortable:hover {{ color:var(--text-2); }}
+  .sort-icon {{ font-size:9px; opacity:.4; margin-left:3px; }}
+  .sort-asc .sort-icon, .sort-desc .sort-icon {{ opacity:1; color:var(--teal); }}
 
   /* Mailbox section header row */
   .mailbox-section-header {{ display:flex; align-items:flex-start; justify-content:space-between;
@@ -1061,15 +1071,15 @@ def write_html_report(
       <table class="domain-table">
         <thead>
           <tr>
-            <th>Domain</th>
-            <th>ESP</th>
-            <th class="num">Mailboxes</th>
-            <th class="num">Campaigns</th>
-            <th class="num">Replies (14d)</th>
-            <th>Rate (14d)</th>
-            <th class="num">Sent (AT)</th>
-            <th class="num">Rate (AT)</th>
-            <th>Status</th>
+            <th class="sortable" onclick="sortTable(this)">Domain <span class="sort-icon">↕</span></th>
+            <th class="sortable" onclick="sortTable(this)">ESP <span class="sort-icon">↕</span></th>
+            <th class="num sortable" onclick="sortTable(this)">Mailboxes <span class="sort-icon">↕</span></th>
+            <th class="num sortable" onclick="sortTable(this)">Campaigns <span class="sort-icon">↕</span></th>
+            <th class="num sortable" onclick="sortTable(this)">Replies (14d) <span class="sort-icon">↕</span></th>
+            <th class="sortable" onclick="sortTable(this)">Rate (14d) <span class="sort-icon">↕</span></th>
+            <th class="num sortable" onclick="sortTable(this)">Sent (AT) <span class="sort-icon">↕</span></th>
+            <th class="num sortable" onclick="sortTable(this)">Rate (AT) <span class="sort-icon">↕</span></th>
+            <th class="sortable" onclick="sortTable(this)">Status <span class="sort-icon">↕</span></th>
           </tr>
         </thead>
         <tbody>
@@ -1123,6 +1133,37 @@ def write_html_report(
         || row.dataset.esp === esp;
       row.style.display = show ? '' : 'none';
     }});
+  }}
+
+  function sortTable(th) {{
+    var table = th.closest('table');
+    var tbody = table.querySelector('tbody');
+    var col = Array.from(th.parentElement.children).indexOf(th);
+    var asc = th.classList.contains('sort-desc') || !th.classList.contains('sort-asc');
+    th.parentElement.querySelectorAll('th').forEach(function(h) {{
+      h.classList.remove('sort-asc', 'sort-desc');
+      var icon = h.querySelector('.sort-icon');
+      if (icon) icon.textContent = '↕';
+    }});
+    th.classList.add(asc ? 'sort-asc' : 'sort-desc');
+    var icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = asc ? '↑' : '↓';
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort(function(a, b) {{
+      var aCell = a.children[col], bCell = b.children[col];
+      if (!aCell || !bCell) return 0;
+      var aRaw = aCell.dataset.val;
+      var bRaw = bCell.dataset.val;
+      if (aRaw !== undefined && bRaw !== undefined) {{
+        var aNum = parseFloat(aRaw), bNum = parseFloat(bRaw);
+        if (!isNaN(aNum) && !isNaN(bNum)) return asc ? aNum - bNum : bNum - aNum;
+        return asc ? aRaw.localeCompare(bRaw) : bRaw.localeCompare(aRaw);
+      }}
+      var aText = aCell.textContent.trim().toLowerCase();
+      var bText = bCell.textContent.trim().toLowerCase();
+      return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+    }});
+    rows.forEach(function(row) {{ tbody.appendChild(row); }});
   }}
 
   function filterMailboxes(vendor, btn) {{
