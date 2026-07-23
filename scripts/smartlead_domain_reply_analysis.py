@@ -859,13 +859,24 @@ def write_html_report(
     def _mbx_card_rows(mlist):
         return "\n".join(_mbx_rec_row(m) for m in mlist)
 
+    def _domain_count(mlist):
+        return len(set(m["domain"] for m in mlist))
+
     n_eligible = len(mbx_rec_data)
+
+    def _mbx_counts(mlist):
+        nd = _domain_count(mlist)
+        nm = len(mlist)
+        return (
+            f'{nm} mailbox{"es" if nm != 1 else ""} across '
+            f'{nd} domain{"s" if nd != 1 else ""}'
+        )
 
     card_mbx_remove = f"""
     <div class="rec-card rec-card-danger">
       <div class="rec-card-header">
         <span class="rec-badge rec-badge-danger">Consider removing</span>
-        <h3>{len(mbx_remove)} mailbox{"es" if len(mbx_remove) != 1 else ""} — all three signals failing</h3>
+        <h3>{_mbx_counts(mbx_remove)} — all three signals failing</h3>
       </div>
       <p>All-time reply rate below 1%, 14-day reply rate below 1%, and bounce rate above 3%. Consider removing {"these mailboxes" if len(mbx_remove) != 1 else "this mailbox"} from active campaigns.</p>
       <div class="mbx-rec-list">{_mbx_card_rows(mbx_remove)}</div>
@@ -875,7 +886,7 @@ def write_html_report(
     <div class="rec-card rec-card-warn">
       <div class="rec-card-header">
         <span class="rec-badge rec-badge-warn">Watch closely</span>
-        <h3>{len(mbx_watch)} mailbox{"es" if len(mbx_watch) != 1 else ""} — one or two signals failing</h3>
+        <h3>{_mbx_counts(mbx_watch)} — one or two signals failing</h3>
       </div>
       <p>Not meeting all three health standards. Monitor over the next 7 days — if failing signals do not improve, consider rotating {"them" if len(mbx_watch) != 1 else "it"} out.</p>
       <div class="mbx-rec-list">{_mbx_card_rows(mbx_watch)}</div>
@@ -885,7 +896,7 @@ def write_html_report(
     <div class="rec-card rec-card-ok">
       <div class="rec-card-header">
         <span class="rec-badge rec-badge-ok">Healthy</span>
-        <h3>{len(mbx_healthy)} mailbox{"es" if len(mbx_healthy) != 1 else ""} — all three signals passing</h3>
+        <h3>{_mbx_counts(mbx_healthy)} — all three signals passing</h3>
       </div>
       <p>All-time reply rate above 1%, 14-day reply rate above 1%, and bounce rate below 3%. No action needed.</p>
       <div class="mbx-rec-list">{_mbx_card_rows(mbx_healthy)}</div>
