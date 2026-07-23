@@ -21,11 +21,15 @@ Run from repo root:
     PYTHONPATH=. python3 scripts/smartlead_domain_reply_analysis.py
 """
 
+import os
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from scripts.smartlead_client import SmartLeadClient
 
@@ -478,6 +482,7 @@ def write_html_report(
     total_active_campaigns: int,
     output_path: str,
     generated_at: str,
+    porkbun_data: dict = None,
 ):
     active   = [r for r in rows if r["is_active"]]
     inactive = [r for r in rows if not r["is_active"]]
@@ -981,6 +986,53 @@ def write_html_report(
     {card_process}
   </div>"""
 
+    # ---- Porkbun domain inventory ----
+    if porkbun_data:
+        def _pb_domain_list(domains):
+            return "".join(
+                f'<span class="pb-domain-chip">{d}</span>' for d in domains
+            )
+
+        n_in_use   = len(porkbun_data["in_use"])
+        n_avail    = len(porkbun_data["available"])
+        n_burned   = len(porkbun_data["burned"])
+        n_total    = porkbun_data["total"]
+
+        porkbun_html = f"""
+  <div class="section">
+    <div class="section-eyebrow">Domain Registry</div>
+    <h2>Porkbun Domain Inventory</h2>
+    <p class="section-desc">{n_total} domains in account, grouped by Porkbun label.</p>
+    <div class="pb-grid">
+      <div class="pb-col pb-col-inuse">
+        <div class="pb-col-header">
+          <span class="pb-count">{n_in_use}</span>
+          <span class="pb-label-title">In Use</span>
+        </div>
+        <p class="pb-col-desc">No label — currently assigned to active campaigns.</p>
+        <div class="pb-chips">{_pb_domain_list(porkbun_data["in_use"])}</div>
+      </div>
+      <div class="pb-col pb-col-reserve">
+        <div class="pb-col-header">
+          <span class="pb-count">{n_avail}</span>
+          <span class="pb-label-title">Available for Swapping</span>
+        </div>
+        <p class="pb-col-desc">Reserve pool — warmed up and ready to rotate in.</p>
+        <div class="pb-chips">{_pb_domain_list(porkbun_data["available"])}</div>
+      </div>
+      <div class="pb-col pb-col-burned">
+        <div class="pb-col-header">
+          <span class="pb-count">{n_burned}</span>
+          <span class="pb-label-title">Burned</span>
+        </div>
+        <p class="pb-col-desc">Will not be renewed — retired from outreach.</p>
+        <div class="pb-chips">{_pb_domain_list(porkbun_data["burned"])}</div>
+      </div>
+    </div>
+  </div>"""
+    else:
+        porkbun_html = ""
+
     html = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -1232,6 +1284,27 @@ def write_html_report(
     color:var(--text); padding:8px 0 4px; border-bottom:1px solid var(--border); margin-top:8px; }}
   .mbx-domain-count {{ font-weight:400; color:var(--text-3); }}
 
+  /* Porkbun domain inventory */
+  .pb-grid {{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:16px; }}
+  @media(max-width:700px) {{ .pb-grid {{ grid-template-columns:1fr; }} }}
+  .pb-col {{ background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:18px; }}
+  .pb-col-inuse   {{ border-top:4px solid var(--border); }}
+  .pb-col-reserve {{ border-top:4px solid #3B82F6; }}
+  .pb-col-burned  {{ border-top:4px solid var(--danger); }}
+  .pb-col-header  {{ display:flex; align-items:baseline; gap:10px; margin-bottom:8px; }}
+  .pb-count {{ font-family:var(--mono); font-size:28px; font-weight:700; color:var(--text); }}
+  .pb-col-inuse   .pb-count {{ color:var(--text-2); }}
+  .pb-col-reserve .pb-count {{ color:#1E40AF; }}
+  .pb-col-burned  .pb-count {{ color:var(--danger); }}
+  .pb-label-title {{ font-family:var(--mono); font-size:12px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.08em; color:var(--text-2); }}
+  .pb-col-desc {{ font-size:12px; color:var(--text-3); margin-bottom:12px; }}
+  .pb-chips {{ display:flex; flex-wrap:wrap; gap:4px; }}
+  .pb-domain-chip {{ font-family:var(--mono); font-size:11px; padding:2px 7px;
+    border-radius:4px; background:var(--surface-2); color:var(--text-2);
+    border:1px solid var(--border); }}
+
   /* Footer */
   .report-footer {{ border-top:1px solid var(--border); padding-top:24px; margin-top:24px;
     font-family:var(--mono); font-size:11px; color:var(--text-3); }}
@@ -1322,6 +1395,8 @@ def write_html_report(
   {rec_html}
 
   {mbx_rec_html}
+
+  {porkbun_html}
 
   <div class="report-footer">
     Generated {generated_at} &nbsp;·&nbsp; Replies window: last {lookback_days} days &nbsp;·&nbsp; {total_active_campaigns} active campaigns at time of report
@@ -1416,6 +1491,61 @@ def write_html_report(
 # Main
 # ---------------------------------------------------------------------------
 
+def fetch_porkbun_domains() -> dict:
+    """
+    Fetch all domains from Porkbun with their labels.
+    Returns dict with keys 'in_use', 'available', 'burned', each a sorted list of domain strings.
+    Returns None if API keys are missing or the call fails.
+    """
+    api_key    = os.getenv("PORKBUN_API_KEY")
+    secret_key = os.getenv("PORKBUN_SECRET_API_KEY")
+    if not api_key or not secret_key:
+        print("  Porkbun API keys not set — skipping domain inventory.")
+        return None
+
+    all_domains = []
+    start = 0
+    while True:
+        try:
+            resp = requests.post(
+                "https://api.porkbun.com/api/json/v3/domain/listAll",
+                json={"apikey": api_key, "secretapikey": secret_key,
+                      "includeLabels": "yes", "start": start},
+                timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            print(f"  Porkbun fetch failed: {e}")
+            return None
+
+        batch = data.get("domains", [])
+        if not batch:
+            break
+        all_domains.extend(batch)
+        if len(batch) < 1000:
+            break
+        start += len(batch)
+
+    in_use, available, burned = [], [], []
+    for d in all_domains:
+        name   = d["domain"]
+        labels = [l["title"] for l in d.get("labels", [])]
+        if "Burned" in labels:
+            burned.append(name)
+        elif "Available for Swapping" in labels:
+            available.append(name)
+        else:
+            in_use.append(name)
+
+    return {
+        "in_use":    sorted(in_use),
+        "available": sorted(available),
+        "burned":    sorted(burned),
+        "total":     len(all_domains),
+    }
+
+
 def main():
     client = SmartLeadClient()
 
@@ -1451,7 +1581,14 @@ def main():
         rows, LOOKBACK_DAYS,
     )
 
-    import os
+    print("\nFetching Porkbun domain inventory...")
+    porkbun_data = fetch_porkbun_domains()
+    if porkbun_data:
+        print(f"  {porkbun_data['total']} domains — "
+              f"{len(porkbun_data['in_use'])} in use, "
+              f"{len(porkbun_data['available'])} available, "
+              f"{len(porkbun_data['burned'])} burned")
+
     os.makedirs("docs", exist_ok=True)
     write_html_report(
         rows=rows,
@@ -1470,6 +1607,7 @@ def main():
         total_active_campaigns=total_active_campaigns,
         output_path="docs/domain-report.html",
         generated_at=now.strftime("%d %b %Y"),
+        porkbun_data=porkbun_data,
     )
 
 
