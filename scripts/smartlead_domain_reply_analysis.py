@@ -856,8 +856,10 @@ def write_html_report(
     mbx_watch   = sorted([m for m in mbx_rec_data if 1 <= m["passes"] <= 2], key=lambda m: (m["domain"], m["email"]))
     mbx_healthy = sorted([m for m in mbx_rec_data if m["passes"] == 3], key=lambda m: (m["domain"], m["email"]))
 
-    def _mbx_card_rows(mlist):
-        return "\n".join(_mbx_rec_row(m) for m in mlist)
+    # domain → all qualifying mailboxes (used to determine full vs partial domain issue)
+    domain_to_eligible = defaultdict(list)
+    for m in mbx_rec_data:
+        domain_to_eligible[m["domain"]].append(m)
 
     def _domain_count(mlist):
         return len(set(m["domain"] for m in mlist))
@@ -872,6 +874,55 @@ def write_html_report(
             f'{nd} domain{"s" if nd != 1 else ""}'
         )
 
+    def _render_scoped(bucket):
+        """Split bucket into domain-level (all qualifying mailboxes failing) vs mailbox-level (only some)."""
+        domain_groups = defaultdict(list)
+        for m in bucket:
+            domain_groups[m["domain"]].append(m)
+
+        full_domains = []    # all qualifying mailboxes on this domain are in the bucket
+        partial_domains = [] # only some qualifying mailboxes are in the bucket
+
+        for domain in sorted(domain_groups.keys()):
+            in_bucket = domain_groups[domain]
+            total_eligible = len(domain_to_eligible[domain])
+            if len(in_bucket) == total_eligible:
+                full_domains.append((domain, in_bucket))
+            else:
+                partial_domains.append((domain, in_bucket, total_eligible))
+
+        parts = []
+
+        if full_domains:
+            parts.append('<div class="mbx-scope-label">Domain-level issue — consider removing the entire domain</div>')
+            parts.append('<div class="mbx-rec-list">')
+            for domain, mailboxes in full_domains:
+                n = len(mailboxes)
+                parts.append(
+                    f'<div class="mbx-domain-header">'
+                    f'{domain} &nbsp;<span class="mbx-domain-count">{n} mailbox{"es" if n != 1 else ""}</span>'
+                    f'</div>'
+                )
+                parts.extend(_mbx_rec_row(m) for m in sorted(mailboxes, key=lambda m: m["email"]))
+            parts.append('</div>')
+
+        if partial_domains:
+            if full_domains:
+                parts.append('<div class="mbx-scope-divider"></div>')
+            parts.append('<div class="mbx-scope-label">Mailbox-level issue — remove specific mailboxes only, not the whole domain</div>')
+            parts.append('<div class="mbx-rec-list">')
+            for domain, mailboxes, total in partial_domains:
+                n = len(mailboxes)
+                parts.append(
+                    f'<div class="mbx-domain-header">'
+                    f'{domain} &nbsp;<span class="mbx-domain-count">{n} of {total} mailbox{"es" if total != 1 else ""}</span>'
+                    f'</div>'
+                )
+                parts.extend(_mbx_rec_row(m) for m in sorted(mailboxes, key=lambda m: m["email"]))
+            parts.append('</div>')
+
+        return "\n".join(parts)
+
     card_mbx_remove = f"""
     <div class="rec-card rec-card-danger">
       <div class="rec-card-header">
@@ -879,7 +930,7 @@ def write_html_report(
         <h3>{_mbx_counts(mbx_remove)} — all three signals failing</h3>
       </div>
       <p>All-time reply rate below 1%, 14-day reply rate below 1%, and bounce rate above 3%. Consider removing {"these mailboxes" if len(mbx_remove) != 1 else "this mailbox"} from active campaigns.</p>
-      <div class="mbx-rec-list">{_mbx_card_rows(mbx_remove)}</div>
+      {_render_scoped(mbx_remove)}
     </div>""" if mbx_remove else ""
 
     card_mbx_watch = f"""
@@ -889,7 +940,7 @@ def write_html_report(
         <h3>{_mbx_counts(mbx_watch)} — one or two signals failing</h3>
       </div>
       <p>Not meeting all three health standards. Monitor over the next 7 days — if failing signals do not improve, consider rotating {"them" if len(mbx_watch) != 1 else "it"} out.</p>
-      <div class="mbx-rec-list">{_mbx_card_rows(mbx_watch)}</div>
+      {_render_scoped(mbx_watch)}
     </div>""" if mbx_watch else ""
 
     card_mbx_healthy = f"""
@@ -1174,6 +1225,12 @@ def write_html_report(
   .signal-bad {{ background:#FFEBEE; color:#B71C1C; border:1px solid #FFCDD2; }}
   .mbx-sent-count {{ font-family:var(--mono); font-size:10px; color:var(--text-3);
     white-space:nowrap; }}
+  .mbx-scope-label {{ font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--text-3); margin:16px 0 8px; }}
+  .mbx-scope-divider {{ border-top:1px solid var(--border); margin:20px 0 4px; }}
+  .mbx-domain-header {{ font-family:var(--mono); font-size:12px; font-weight:700;
+    color:var(--text); padding:8px 0 4px; border-bottom:1px solid var(--border); margin-top:8px; }}
+  .mbx-domain-count {{ font-weight:400; color:var(--text-3); }}
 
   /* Footer */
   .report-footer {{ border-top:1px solid var(--border); padding-top:24px; margin-top:24px;
