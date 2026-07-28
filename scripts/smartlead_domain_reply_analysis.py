@@ -93,6 +93,7 @@ def build_account_domain_map(client: SmartLeadClient) -> tuple:
     id_to_domain = {}
     id_to_email = {}
     id_to_vendor = {}
+    id_to_tag_ids = {}
     domain_type_votes = defaultdict(lambda: defaultdict(int))
     offset = 0
     while True:
@@ -104,7 +105,9 @@ def build_account_domain_map(client: SmartLeadClient) -> tuple:
             domain = email.split("@")[-1] if email else f"unknown-{acc['id']}"
             id_to_domain[acc["id"]] = domain
             id_to_email[acc["id"]] = email or f"unknown-{acc['id']}"
-            id_to_vendor[acc["id"]] = _extract_vendor(acc.get("tags") or [])
+            acc_tags = acc.get("tags") or []
+            id_to_vendor[acc["id"]] = _extract_vendor(acc_tags)
+            id_to_tag_ids[acc["id"]] = {t["tag_id"] for t in acc_tags}
             acc_type = acc.get("type", "").upper()
             if acc_type == "GMAIL":
                 domain_type_votes[domain]["Google"] += 1
@@ -120,7 +123,7 @@ def build_account_domain_map(client: SmartLeadClient) -> tuple:
         domain: max(votes, key=votes.get)
         for domain, votes in domain_type_votes.items()
     }
-    return id_to_domain, id_to_email, id_to_vendor, domain_to_esp
+    return id_to_domain, id_to_email, id_to_vendor, domain_to_esp, id_to_tag_ids
 
 
 def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list) -> tuple:
@@ -483,7 +486,11 @@ def write_html_report(
     output_path: str,
     generated_at: str,
     porkbun_data: dict = None,
+    id_to_tag_ids: dict = None,
 ):
+    US_CAMPAIGNS_TAG_ID = 365624
+    id_to_tag_ids = id_to_tag_ids or {}
+
     active   = [r for r in rows if r["is_active"]]
     inactive = [r for r in rows if not r["is_active"]]
 
@@ -787,6 +794,9 @@ def write_html_report(
           </ol>
         </div>"""
 
+    def _mbx_card_rows(mlist):
+        return "".join(_mbx_rec_row(m) for m in mlist)
+
     # ---- Mailbox-level recommendations ----
     MBX_MIN_SENT = 500
 
@@ -843,6 +853,54 @@ def write_html_report(
 
         email = id_to_email.get(acc_id, str(acc_id))
         mbx_rec_data.append({
+            "email":            email,
+            "domain":           account_to_domain.get(acc_id, email.split("@")[-1] if "@" in email else email),
+            "vendor":           id_to_vendor.get(acc_id, ""),
+            "is_active":        account_active_count.get(acc_id, 0) > 0,
+            "at_sent":          int(at_sent),
+            "at_rate":          at_rate,
+            "bounce_rate":      bounce_rate,
+            "rate_14d":         rate_14d,
+            "at_rate_ok":       at_rate_ok,
+            "bounce_ok":        bounce_ok,
+            "rate_14d_ok":      rate_14d_ok,
+            "passes":           passes,
+            "has_us_campaigns": US_CAMPAIGNS_TAG_ID in id_to_tag_ids.get(acc_id, set()),
+        })
+
+    mbx_remove      = sorted([m for m in mbx_rec_data if m["passes"] == 0], key=lambda m: (m["domain"], m["email"]))
+    mbx_watch       = sorted([m for m in mbx_rec_data if 1 <= m["passes"] <= 2], key=lambda m: (m["domain"], m["email"]))
+    mbx_healthy     = sorted([m for m in mbx_rec_data if m["passes"] == 3], key=lambda m: (m["domain"], m["email"]))
+    # US Campaigns: all tagged accounts with >= 2 signals passing, no send minimum
+    us_mbx_data = []
+    for acc_id, tag_ids in id_to_tag_ids.items():
+        if US_CAMPAIGNS_TAG_ID not in tag_ids:
+            continue
+        at_sent     = account_alltime_sent.get(acc_id, 0)
+        at_replies  = account_alltime_replies.get(acc_id, 0)
+        at_bounces  = account_alltime_bounces.get(acc_id, 0)
+        active_sent = account_active_sent.get(acc_id, 0)
+        replies_14d = account_replies.get(acc_id, 0)
+
+        if at_sent > 0:
+            at_rate     = at_replies / at_sent * 100
+            bounce_rate = at_bounces / at_sent * 100
+        else:
+            at_rate     = 0.0
+            bounce_rate = 0.0
+
+        rate_14d = (replies_14d / active_sent * 100) if active_sent > 0 else None
+
+        at_rate_ok  = at_sent > 0 and at_rate >= 1.0
+        bounce_ok   = at_sent > 0 and bounce_rate < 3.0
+        rate_14d_ok = rate_14d is not None and rate_14d >= 1.0
+        passes      = sum([at_rate_ok, bounce_ok, rate_14d_ok])
+
+        if passes < 2:
+            continue
+
+        email = id_to_email.get(acc_id, str(acc_id))
+        us_mbx_data.append({
             "email":       email,
             "domain":      account_to_domain.get(acc_id, email.split("@")[-1] if "@" in email else email),
             "vendor":      id_to_vendor.get(acc_id, ""),
@@ -855,11 +913,9 @@ def write_html_report(
             "bounce_ok":   bounce_ok,
             "rate_14d_ok": rate_14d_ok,
             "passes":      passes,
+            "has_us_campaigns": True,
         })
-
-    mbx_remove  = sorted([m for m in mbx_rec_data if m["passes"] == 0], key=lambda m: (m["domain"], m["email"]))
-    mbx_watch   = sorted([m for m in mbx_rec_data if 1 <= m["passes"] <= 2], key=lambda m: (m["domain"], m["email"]))
-    mbx_healthy = sorted([m for m in mbx_rec_data if m["passes"] == 3], key=lambda m: (m["domain"], m["email"]))
+    us_mbx_data.sort(key=lambda m: (m["domain"], m["email"]))
 
     # domain → all qualifying mailboxes (used to determine full vs partial domain issue)
     domain_to_eligible = defaultdict(list)
@@ -984,6 +1040,40 @@ def write_html_report(
     {card_healthy}
     {card_reserve}
     {card_process}
+  </div>"""
+
+    # ---- US Campaigns mailbox health ----
+    us_mbx_3 = [m for m in us_mbx_data if m["passes"] == 3]
+    us_mbx_2 = [m for m in us_mbx_data if m["passes"] == 2]
+
+    us_cards = ""
+    if us_mbx_3:
+        us_cards += f"""<div class="rec-card rec-card-ok" style="margin-bottom:12px">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-ok">All signals passing</span>
+            <h3>{_mbx_counts(us_mbx_3)} — 3 of 3 signals passing</h3>
+          </div>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in us_mbx_3)}</div>
+        </div>"""
+    if us_mbx_2:
+        us_cards += f"""<div class="rec-card rec-card-warn" style="margin-bottom:0">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-warn">Watch closely</span>
+            <h3>{_mbx_counts(us_mbx_2)} — 2 of 3 signals passing</h3>
+          </div>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in us_mbx_2)}</div>
+        </div>"""
+    if not us_cards:
+        us_cards = '<p style="color:var(--text-3);font-size:13px;margin-bottom:0">No US Campaigns tagged mailboxes are currently passing 2 or more health signals.</p>'
+
+    us_healthy_html = f"""
+  <div class="section">
+    <div class="section-eyebrow">US Campaigns</div>
+    <h2>US Campaign Mailbox Health</h2>
+    <p class="section-desc">
+      Mailboxes tagged "US Campaigns" in SmartLead passing at least 2 of 3 health signals: all-time reply rate &ge; 1%, 14-day reply rate &ge; 1%, bounce rate &lt; 3%. No minimum send threshold.
+    </p>
+    {us_cards}
   </div>"""
 
     # ---- Porkbun domain inventory ----
@@ -1398,6 +1488,8 @@ def write_html_report(
 
   {porkbun_html}
 
+  {us_healthy_html}
+
   <div class="report-footer">
     Generated {generated_at} &nbsp;·&nbsp; Replies window: last {lookback_days} days &nbsp;·&nbsp; {total_active_campaigns} active campaigns at time of report
   </div>
@@ -1550,7 +1642,7 @@ def main():
     client = SmartLeadClient()
 
     print("Loading email accounts...")
-    account_to_domain, id_to_email, id_to_vendor, domain_to_esp = build_account_domain_map(client)
+    account_to_domain, id_to_email, id_to_vendor, domain_to_esp, id_to_tag_ids = build_account_domain_map(client)
     domain_count = len(set(account_to_domain.values()))
     print(f"  {len(account_to_domain)} mailboxes across {domain_count} domains\n")
 
@@ -1608,6 +1700,7 @@ def main():
         output_path="docs/domain-report.html",
         generated_at=now.strftime("%d %b %Y"),
         porkbun_data=porkbun_data,
+        id_to_tag_ids=id_to_tag_ids,
     )
 
 
