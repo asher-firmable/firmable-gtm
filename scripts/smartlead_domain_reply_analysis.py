@@ -871,8 +871,8 @@ def write_html_report(
     mbx_remove      = sorted([m for m in mbx_rec_data if m["passes"] == 0], key=lambda m: (m["domain"], m["email"]))
     mbx_watch       = sorted([m for m in mbx_rec_data if 1 <= m["passes"] <= 2], key=lambda m: (m["domain"], m["email"]))
     mbx_healthy     = sorted([m for m in mbx_rec_data if m["passes"] == 3], key=lambda m: (m["domain"], m["email"]))
-    # US Campaigns: all tagged accounts with >= 2 signals passing, no send minimum
-    us_mbx_data = []
+    # US Campaigns: all tagged accounts, all pass counts, no send minimum
+    us_mbx_all = []
     for acc_id, tag_ids in id_to_tag_ids.items():
         if US_CAMPAIGNS_TAG_ID not in tag_ids:
             continue
@@ -896,11 +896,8 @@ def write_html_report(
         rate_14d_ok = rate_14d is not None and rate_14d >= 1.0
         passes      = sum([at_rate_ok, bounce_ok, rate_14d_ok])
 
-        if passes < 2:
-            continue
-
         email = id_to_email.get(acc_id, str(acc_id))
-        us_mbx_data.append({
+        us_mbx_all.append({
             "email":       email,
             "domain":      account_to_domain.get(acc_id, email.split("@")[-1] if "@" in email else email),
             "vendor":      id_to_vendor.get(acc_id, ""),
@@ -915,7 +912,9 @@ def write_html_report(
             "passes":      passes,
             "has_us_campaigns": True,
         })
-    us_mbx_data.sort(key=lambda m: (m["domain"], m["email"]))
+    us_mbx_all.sort(key=lambda m: (m["domain"], m["email"]))
+
+    us_mbx_data = [m for m in us_mbx_all if m["passes"] >= 2]
 
     # domain → all qualifying mailboxes (used to determine full vs partial domain issue)
     domain_to_eligible = defaultdict(list)
@@ -1043,8 +1042,11 @@ def write_html_report(
   </div>"""
 
     # ---- US Campaigns mailbox health ----
-    us_mbx_3 = [m for m in us_mbx_data if m["passes"] == 3]
-    us_mbx_2 = [m for m in us_mbx_data if m["passes"] == 2]
+    us_mbx_3        = [m for m in us_mbx_data if m["passes"] == 3]
+    us_mbx_2        = [m for m in us_mbx_data if m["passes"] == 2]
+    us_rest_1       = sorted([m for m in us_mbx_all if m["passes"] == 1], key=lambda m: (m["domain"], m["email"]))
+    us_rest_fresh   = sorted([m for m in us_mbx_all if m["at_sent"] == 0 and m["passes"] == 0], key=lambda m: (m["domain"], m["email"]))
+    us_rest_caution = sorted([m for m in us_mbx_all if m["at_sent"] > 0 and m["passes"] == 0], key=lambda m: (m["domain"], m["email"]))
 
     us_cards = ""
     if us_mbx_3:
@@ -1056,7 +1058,7 @@ def write_html_report(
           <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in us_mbx_3)}</div>
         </div>"""
     if us_mbx_2:
-        us_cards += f"""<div class="rec-card rec-card-warn" style="margin-bottom:0">
+        us_cards += f"""<div class="rec-card rec-card-warn" style="margin-bottom:12px">
           <div class="rec-card-header">
             <span class="rec-badge rec-badge-warn">Watch closely</span>
             <h3>{_mbx_counts(us_mbx_2)} — 2 of 3 signals passing</h3>
@@ -1064,16 +1066,60 @@ def write_html_report(
           <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in us_mbx_2)}</div>
         </div>"""
     if not us_cards:
-        us_cards = '<p style="color:var(--text-3);font-size:13px;margin-bottom:0">No US Campaigns tagged mailboxes are currently passing 2 or more health signals.</p>'
+        us_cards = ""
+
+    us_rest_cards = ""
+    if us_rest_1:
+        us_rest_cards += f"""<div class="rec-card rec-card-neutral" style="margin-bottom:12px">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-neutral">Borderline</span>
+            <h3>{_mbx_counts(us_rest_1)} — 1 of 3 signals passing</h3>
+          </div>
+          <p>One signal passing. Usable but monitor closely — check bounce rate before adding to a live campaign.</p>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in us_rest_1)}</div>
+        </div>"""
+    if us_rest_fresh:
+        # fresh mailboxes: show domain chips rather than full rows (no signal data to show)
+        fresh_domains = sorted(set(m["domain"] for m in us_rest_fresh))
+        fresh_chips = "".join(
+            f'<span class="rec-chip rec-chip-neutral" style="margin-top:8px">'
+            f'{m["email"]}'
+            f'</span>'
+            for m in us_rest_fresh
+        )
+        us_rest_cards += f"""<div class="rec-card rec-card-info" style="margin-bottom:12px">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-info">Fresh</span>
+            <h3>{len(us_rest_fresh)} mailbox{"es" if len(us_rest_fresh) != 1 else ""} across {len(fresh_domains)} domain{"s" if len(fresh_domains) != 1 else ""} — no send history</h3>
+          </div>
+          <p>No all-time sends recorded. These are unused mailboxes — verify warm-up status in SmartLead before adding to a campaign.</p>
+          <div class="rec-chips">{fresh_chips}</div>
+        </div>"""
+    if us_rest_caution:
+        us_rest_cards += f"""<div class="rec-card rec-card-danger" style="margin-bottom:0">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-danger">Caution</span>
+            <h3>{_mbx_counts(us_rest_caution)} — 0 of 3 signals passing, has send history</h3>
+          </div>
+          <p>Has sent emails before but failing all three health signals. Avoid using until signals improve.</p>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in us_rest_caution)}</div>
+        </div>"""
+
+    us_no_pass_note = '<p style="color:var(--text-3);font-size:13px">No US Campaign mailboxes passing 2 or more signals yet.</p>' if not us_cards else ""
+    us_divider = '<div class="us-rest-divider"><span>Other US Campaign mailboxes</span></div>' if us_rest_cards else ""
 
     us_healthy_html = f"""
   <div class="section">
     <div class="section-eyebrow">US Campaigns</div>
     <h2>US Campaign Mailbox Health</h2>
     <p class="section-desc">
-      Mailboxes tagged "US Campaigns" in SmartLead passing at least 2 of 3 health signals: all-time reply rate &ge; 1%, 14-day reply rate &ge; 1%, bounce rate &lt; 3%. No minimum send threshold.
+      All {len(us_mbx_all)} mailboxes tagged "US Campaigns" in SmartLead, grouped by health signal status.
+      Standards: all-time reply rate &ge; 1%, 14-day reply rate &ge; 1%, bounce rate &lt; 3%.
     </p>
     {us_cards}
+    {us_no_pass_note}
+    {us_divider}
+    {us_rest_cards}
   </div>"""
 
     # ---- Porkbun domain inventory ----
@@ -1313,6 +1359,13 @@ def write_html_report(
     background:#EFF6FF; color:#1E40AF; white-space:nowrap; border:1px solid #BFDBFE; }}
   .camp-tag-none {{ font-family:var(--mono); font-size:11px; color:var(--text-3); }}
   .camps-cell {{ max-width:320px; }}
+
+  /* US Campaigns section divider */
+  .us-rest-divider {{ display:flex; align-items:center; gap:12px; margin:28px 0 16px;
+    font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--text-3); }}
+  .us-rest-divider::before, .us-rest-divider::after {{ content:""; flex:1;
+    height:1px; background:var(--border); }}
 
   /* Recommendation cards */
   .rec-card {{ background:var(--surface); border:1px solid var(--border); border-radius:4px;
