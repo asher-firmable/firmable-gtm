@@ -1,0 +1,94 @@
+{
+  "source": "Notion doc \"For Asher\" (https://app.notion.com/p/firmable/For-Asher-3aad5c6ffd8780c0aaedde39b1357216), read 2026-07-27",
+  "note": "Classification must pick from these predefined use cases and pull example_detections verbatim from the matched row. Do not invent new detection lists.",
+  "use_cases": [
+    {
+      "key": "ai_adopters",
+      "name": "AI adopters and self-hosted AI",
+      "weight": "High",
+      "description": "The companies genuinely running AI in production, including the ones self-hosting models on their own kit.",
+      "buyer": "AI security and governance vendors (e.g. TrendAI, Cranium, Reco, Noma, Straiker, Zenity)",
+      "example_detections": ["Hugging Face", "Ollama", "vLLM", "Anthropic", "OpenAI", "Qdrant"]
+    },
+    {
+      "key": "appsec_supply_chain",
+      "name": "AppSec and software supply chain",
+      "weight": "High",
+      "description": "The companies shipping software on a given stack and tooling, the ones with real dev pipelines.",
+      "buyer": "AppSec / DevSecOps / supply-chain vendors (e.g. Snyk, Veracode, Semgrep, Checkmarx, Chainguard, Black Duck)",
+      "example_detections": ["GitLab", "Jenkins", "Kubernetes", "Docker", "nginx"]
+    },
+    {
+      "key": "legacy_identity",
+      "name": "Legacy, self-managed identity",
+      "weight": "High",
+      "description": "Companies still on their own directory and self-managed login instead of cloud sign-on. The front door to every SSO, PAM and identity sale.",
+      "buyer": "Identity / IAM / PAM vendors (e.g. 1Password, BeyondTrust, Delinea, Saviynt, Semperis, SpyCloud)",
+      "example_detections": ["Okta", "Microsoft Entra", "Ping", "Keycloak", "HashiCorp Vault"]
+    },
+    {
+      "key": "firewall_network_gear",
+      "name": "Firewall and network-gear displacement",
+      "weight": "Medium",
+      "description": "Every company we can see running a given firewall or network brand, by vendor. A switch campaign ready to run.",
+      "buyer": "Network security / SASE vendors and channel (e.g. Fortinet, Zscaler, Check Point, Netskope, Cato, Corelight)",
+      "example_detections": ["FortiGate", "SonicWall", "Palo Alto", "Cisco", "Imperva"]
+    },
+    {
+      "key": "cloud_security_posture",
+      "name": "Cloud security and posture",
+      "weight": "Medium",
+      "description": "Companies by their real cloud footprint and provider mix, read off the estate rather than guessed off a job ad.",
+      "buyer": "CNAPP / CSPM / cloud-workload vendors (e.g. Wiz, Orca, Sysdig, Upwind, Oligo)",
+      "example_detections": ["AWS", "Azure", "Google Cloud", "VMware", "Proxmox"]
+    },
+    {
+      "key": "data_security_exposed_stores",
+      "name": "Data security and exposed data stores",
+      "weight": "Medium",
+      "description": "Companies by the data stores and admin surfaces they run: who has databases and object stores worth protecting, and who has left an admin panel showing.",
+      "buyer": "DSPM / DLP / data-security vendors (e.g. Varonis, Cyera, Rubrik, Cohesity, Cyberhaven)",
+      "example_detections": ["MySQL", "PostgreSQL", "MongoDB", "Redis", "phpMyAdmin"]
+    },
+    {
+      "key": "endpoint_undermanaged",
+      "name": "Endpoint and the under-managed estate",
+      "weight": "Medium",
+      "description": "Estates that look unmanaged: ageing operating systems, remote access wide open, devices sprawling. The managed-takeover list.",
+      "buyer": "Endpoint / EDR, and MDR / MSSP (e.g. SentinelOne, ThreatLocker, Huntress, Rapid7, Arctic Wolf)",
+      "example_detections": ["Windows Server", "TeamViewer", "RDP", "Hikvision", "Synology"]
+    },
+    {
+      "key": "email_domain_security",
+      "name": "Email and domain security",
+      "weight": "Low",
+      "description": "Companies by the mail gateway and domain posture they run.",
+      "buyer": "Email security / anti-phishing vendors (e.g. Sublime Security, Mimecast, Proofpoint, Abnormal, Material)",
+      "example_detections": ["Proofpoint", "Barracuda", "Mimecast", "Microsoft 365", "DMARC"]
+    },
+    {
+      "key": "ot_industrial_control",
+      "name": "OT and industrial control",
+      "weight": "Low",
+      "description": "Companies with internet-visible industrial control systems. Their exact target list, not a guess off an industry code.",
+      "buyer": "OT / cyber-physical security vendors (e.g. Claroty, Dragos, TXOne, OPSWAT, Dispel)",
+      "example_detections": ["Siemens S7", "Modbus", "BACnet", "Tridium Niagara", "WAGO"]
+    },
+    {
+      "key": "machine_identity_certs",
+      "name": "Machine identity and certificates",
+      "weight": "Low",
+      "description": "Companies by the certificate and secrets tooling they run, the ones with a renewal problem coming.",
+      "buyer": "PKI / certificate-lifecycle / secrets vendors (e.g. Keyfactor, Smallstep, wolfSSL, Infisical)",
+      "example_detections": ["Let's Encrypt", "DigiCert", "HashiCorp Vault", "Infisical"]
+    },
+    {
+      "key": "exposure_attack_surface",
+      "name": "Exposure and attack surface",
+      "weight": "Back pocket",
+      "description": "Companies with exposed, vulnerable or misconfigured infrastructure. Not yet resolved to companies (observation-level only) — use as a back-pocket talking point, not a hard detection claim.",
+      "buyer": "ASM / vuln management / pentest / BAS vendors (e.g. Qualys, Tenable, Cymulate, Pentera, Axonius, HackerOne)",
+      "example_detections": []
+    }
+  ]
+}
