@@ -238,9 +238,9 @@
   .rec-steps li { padding-left:4px; }
 
   /* Mailbox-level recommendation rows */
-  .mbx-rec-list { display:flex; flex-direction:column; gap:0; margin-top:12px; }
-  .mbx-rec-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap;
-    padding:7px 0; border-bottom:1px solid var(--border); }
+  .mbx-rec-list { overflow-x:auto; margin-top:12px; }
+  .mbx-rec-row { display:flex; align-items:center; gap:8px; flex-wrap:nowrap;
+    padding:7px 0; border-bottom:1px solid var(--border); min-width:max-content; }
   .mbx-rec-row:last-child { border-bottom:none; }
   .mbx-email { flex:1 1 200px; font-size:12px; }
   .signal-pill { display:inline-block; font-family:var(--mono); font-size:10px;
