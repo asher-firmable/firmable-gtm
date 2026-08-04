@@ -89,11 +89,28 @@ def _status_class(is_active: bool, replies: int) -> str:
     return "status-ok"
 
 
+def _parse_warmup_rep(value) -> float:
+    if not value:
+        return None
+    try:
+        return float(str(value).strip().rstrip('%'))
+    except ValueError:
+        return None
+
+
+def _warmup_class(rep):
+    if rep is None: return "rate-none"
+    if rep >= 90:   return "rate-good"
+    if rep >= 70:   return "rate-mid"
+    return "rate-low"
+
+
 def build_account_domain_map(client: SmartLeadClient) -> tuple:
     id_to_domain = {}
     id_to_email = {}
     id_to_vendor = {}
     id_to_tag_ids = {}
+    id_to_warmup_rep = {}
     domain_type_votes = defaultdict(lambda: defaultdict(int))
     offset = 0
     while True:
@@ -108,6 +125,8 @@ def build_account_domain_map(client: SmartLeadClient) -> tuple:
             acc_tags = acc.get("tags") or []
             id_to_vendor[acc["id"]] = _extract_vendor(acc_tags)
             id_to_tag_ids[acc["id"]] = {t["tag_id"] for t in acc_tags}
+            warmup = acc.get("warmup_details") or {}
+            id_to_warmup_rep[acc["id"]] = _parse_warmup_rep(warmup.get("warmup_reputation"))
             acc_type = acc.get("type", "").upper()
             if acc_type == "GMAIL":
                 domain_type_votes[domain]["Google"] += 1
@@ -123,7 +142,7 @@ def build_account_domain_map(client: SmartLeadClient) -> tuple:
         domain: max(votes, key=votes.get)
         for domain, votes in domain_type_votes.items()
     }
-    return id_to_domain, id_to_email, id_to_vendor, domain_to_esp, id_to_tag_ids
+    return id_to_domain, id_to_email, id_to_vendor, domain_to_esp, id_to_tag_ids, id_to_warmup_rep
 
 
 def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list) -> tuple:
@@ -487,9 +506,11 @@ def write_html_report(
     generated_at: str,
     porkbun_data: dict = None,
     id_to_tag_ids: dict = None,
+    id_to_warmup_rep: dict = None,
 ):
     US_CAMPAIGNS_TAG_ID = 365624
-    id_to_tag_ids = id_to_tag_ids or {}
+    id_to_tag_ids    = id_to_tag_ids or {}
+    id_to_warmup_rep = id_to_warmup_rep or {}
 
     active   = [r for r in rows if r["is_active"]]
     inactive = [r for r in rows if not r["is_active"]]
@@ -558,6 +579,15 @@ def write_html_report(
                 camps_html = '<span class="camp-tag-none">—</span>'
             at_sent_str = f"{int(at_sent):,}" if at_sent > 0 else "—"
             mbx_status_sort = 0 if active > 0 else 1
+            warmup_rep = id_to_warmup_rep.get(acc_id)
+            if warmup_rep is not None:
+                warmup_str = f"{warmup_rep:.0f}%"
+                warmup_cls = _warmup_class(warmup_rep)
+                warmup_val = warmup_rep
+            else:
+                warmup_str = "—"
+                warmup_cls = "rate-none"
+                warmup_val = -1
             html.append(
                 f'<tr data-vendor="{vendor_slug}">'
                 f'<td class="mono col-email">{email}</td>'
@@ -567,6 +597,7 @@ def write_html_report(
                 f'<td class="mono num" data-val="{int(at_sent)}">{at_sent_str}</td>'
                 f'<td class="mono num rate-cell {at_rate_cls}" data-val="{at_replies / at_sent * 100 if at_sent > 0 else -1:.4f}">{at_rate_str}</td>'
                 f'<td class="mono num rate-cell {at_bounce_cls}" data-val="{at_bounce_rate if at_bounce_rate is not None else -1:.4f}">{at_bounce_str}</td>'
+                f'<td class="mono num rate-cell {warmup_cls}" data-val="{warmup_val:.1f}">{warmup_str}</td>'
                 f'<td data-val="{mbx_status_sort}">{status_html}</td>'
                 f'<td class="camps-cell">{camps_html}</td>'
                 f'</tr>'
@@ -664,6 +695,7 @@ def write_html_report(
                   <th class="num sortable" onclick="sortTable(this)">Sent (AT) <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Reply Rate (AT) <span class="sort-icon">↕</span></th>
                   <th class="num sortable" onclick="sortTable(this)">Bounce (AT) <span class="sort-icon">↕</span></th>
+                  <th class="num sortable" onclick="sortTable(this)">Warmup <span class="sort-icon">↕</span></th>
                   <th class="sortable" onclick="sortTable(this)">Status <span class="sort-icon">↕</span></th>
                   <th>Active Campaigns</th>
                 </tr>
@@ -820,6 +852,13 @@ def write_html_report(
             if m["is_active"] else
             '<span class="status-badge status-inactive" style="font-size:10px;padding:2px 6px">Inactive</span>'
         )
+        warmup_rep = m.get("warmup_rep")
+        if warmup_rep is not None:
+            warmup_str = f"{warmup_rep:.0f}%"
+            warmup_ok  = warmup_rep >= 80
+        else:
+            warmup_str = "—"
+            warmup_ok  = False
         return (
             f'<div class="mbx-rec-row">'
             f'<span class="mono mbx-email">{m["email"]}</span>'
@@ -829,6 +868,7 @@ def write_html_report(
             f'{_mbx_signal("AT Reply", at_rate_str, m["at_rate_ok"])}'
             f'{_mbx_signal("14d Reply", rate_14d_str, m["rate_14d_ok"])}'
             f'{_mbx_signal("Bounce", bounce_str, m["bounce_ok"])}'
+            f'{_mbx_signal("Warmup", warmup_str, warmup_ok)}'
             f'</div>'
         )
 
@@ -866,6 +906,7 @@ def write_html_report(
             "rate_14d_ok":      rate_14d_ok,
             "passes":           passes,
             "has_us_campaigns": US_CAMPAIGNS_TAG_ID in id_to_tag_ids.get(acc_id, set()),
+            "warmup_rep":       id_to_warmup_rep.get(acc_id),
         })
 
     mbx_remove      = sorted([m for m in mbx_rec_data if m["passes"] == 0], key=lambda m: (m["domain"], m["email"]))
@@ -911,6 +952,7 @@ def write_html_report(
             "rate_14d_ok": rate_14d_ok,
             "passes":      passes,
             "has_us_campaigns": True,
+            "warmup_rep":  id_to_warmup_rep.get(acc_id),
         })
     us_mbx_all.sort(key=lambda m: (m["domain"], m["email"]))
 
@@ -1695,7 +1737,7 @@ def main():
     client = SmartLeadClient()
 
     print("Loading email accounts...")
-    account_to_domain, id_to_email, id_to_vendor, domain_to_esp, id_to_tag_ids = build_account_domain_map(client)
+    account_to_domain, id_to_email, id_to_vendor, domain_to_esp, id_to_tag_ids, id_to_warmup_rep = build_account_domain_map(client)
     domain_count = len(set(account_to_domain.values()))
     print(f"  {len(account_to_domain)} mailboxes across {domain_count} domains\n")
 
@@ -1754,6 +1796,7 @@ def main():
         generated_at=now.strftime("%d %b %Y"),
         porkbun_data=porkbun_data,
         id_to_tag_ids=id_to_tag_ids,
+        id_to_warmup_rep=id_to_warmup_rep,
     )
 
 
