@@ -100,8 +100,8 @@ def _parse_warmup_rep(value) -> float:
 
 def _warmup_class(rep):
     if rep is None: return "rate-none"
-    if rep >= 90:   return "rate-good"
-    if rep >= 70:   return "rate-mid"
+    if rep >= 95:   return "rate-good"
+    if rep >= 90:   return "rate-mid"
     return "rate-low"
 
 
@@ -855,7 +855,7 @@ def write_html_report(
         warmup_rep = m.get("warmup_rep")
         if warmup_rep is not None:
             warmup_str = f"{warmup_rep:.0f}%"
-            warmup_ok  = warmup_rep >= 80
+            warmup_ok  = warmup_rep >= 95
         else:
             warmup_str = "—"
             warmup_ok  = False
