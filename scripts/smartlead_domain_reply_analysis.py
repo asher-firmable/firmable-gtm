@@ -1087,80 +1087,103 @@ def write_html_report(
   </div>"""
 
     # ---- Per-region mailbox health sections ----
+    # Classification mirrors rotation_check.py exactly:
+    #   RETIRE        — both reply signals have data and both < 1%
+    #   MOVE_TO_WARMUP — warmup rep < 95% (and not retiring)
+    #   MONITOR       — at least one reply signal passing but not all 3 healthy
+    #   NO_ACTION     — all signals healthy
+    #   FRESH         — < 10 all-time sends, cannot classify
+    REGION_MIN_SENDS = 10
+
+    def _region_classify(m):
+        if m["at_sent"] < REGION_MIN_SENDS:
+            return "fresh"
+        at_ok   = m["at_rate"] >= 1.0
+        r14d_ok = m["rate_14d"] is not None and m["rate_14d"] >= 1.0
+        bounce_ok = m["bounce_rate"] < 3.0
+        either_reply_ok = at_ok or r14d_ok
+        warmup_rep = m.get("warmup_rep")
+        if not either_reply_ok and m["rate_14d"] is not None:
+            return "retire"
+        if warmup_rep is not None and warmup_rep < 95:
+            return "move_to_warmup"
+        if not (at_ok and r14d_ok and bounce_ok):
+            return "monitor"
+        return "no_action"
+
     def _build_region_section_html(region_name, mbx_all):
-        mbx_3       = [m for m in mbx_all if m["passes"] == 3]
-        mbx_2       = [m for m in mbx_all if m["passes"] == 2]
-        rest_1      = [m for m in mbx_all if m["passes"] == 1]
-        rest_fresh  = [m for m in mbx_all if m["at_sent"] == 0 and m["passes"] == 0]
-        rest_caution= [m for m in mbx_all if m["at_sent"] > 0  and m["passes"] == 0]
+        retire      = [m for m in mbx_all if _region_classify(m) == "retire"]
+        move_warmup = [m for m in mbx_all if _region_classify(m) == "move_to_warmup"]
+        monitor     = [m for m in mbx_all if _region_classify(m) == "monitor"]
+        no_action   = [m for m in mbx_all if _region_classify(m) == "no_action"]
+        fresh       = [m for m in mbx_all if _region_classify(m) == "fresh"]
 
-        top_cards = ""
-        if mbx_3:
-            top_cards += f"""<div class="rec-card rec-card-ok" style="margin-bottom:12px">
+        cards = ""
+
+        if retire:
+            cards += f"""<div class="rec-card rec-card-danger" style="margin-bottom:12px">
           <div class="rec-card-header">
-            <span class="rec-badge rec-badge-ok">All signals passing</span>
-            <h3>{_mbx_counts(mbx_3)} — 3 of 3 signals passing</h3>
+            <span class="rec-badge rec-badge-danger">Retire</span>
+            <h3>{_mbx_counts(retire)} — both reply signals failing</h3>
           </div>
-          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in mbx_3)}</div>
-        </div>"""
-        if mbx_2:
-            top_cards += f"""<div class="rec-card rec-card-warn" style="margin-bottom:12px">
-          <div class="rec-card-header">
-            <span class="rec-badge rec-badge-warn">Watch closely</span>
-            <h3>{_mbx_counts(mbx_2)} — 2 of 3 signals passing</h3>
-          </div>
-          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in mbx_2)}</div>
+          <p>AT reply rate and 14-day reply rate both below 1%. Remove from active campaigns — do not re-enter rotation.</p>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in retire)}</div>
         </div>"""
 
-        rest_cards = ""
-        if rest_1:
-            rest_cards += f"""<div class="rec-card rec-card-neutral" style="margin-bottom:12px">
+        if move_warmup:
+            cards += f"""<div class="rec-card rec-card-warn" style="margin-bottom:12px">
           <div class="rec-card-header">
-            <span class="rec-badge rec-badge-neutral">Borderline</span>
-            <h3>{_mbx_counts(rest_1)} — 1 of 3 signals passing</h3>
+            <span class="rec-badge rec-badge-warn">Move to warmup</span>
+            <h3>{_mbx_counts(move_warmup)} — warmup reputation below 95%</h3>
           </div>
-          <p>One signal passing. Usable but monitor closely — check bounce rate before adding to a live campaign.</p>
-          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in rest_1)}</div>
+          <p>Pull from campaigns and let SmartLead warmup recover to &ge;95% before re-adding.</p>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in move_warmup)}</div>
         </div>"""
-        if rest_fresh:
-            fresh_domains = sorted(set(m["domain"] for m in rest_fresh))
+
+        if monitor:
+            cards += f"""<div class="rec-card rec-card-warn" style="margin-bottom:12px">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-warn">Monitor</span>
+            <h3>{_mbx_counts(monitor)} — one or more signals below threshold</h3>
+          </div>
+          <p>At least one reply signal is passing but not all three health standards are met. Review in 7 days — if failing signals do not improve, retire.</p>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in monitor)}</div>
+        </div>"""
+
+        if no_action:
+            cards += f"""<div class="rec-card rec-card-ok" style="margin-bottom:12px">
+          <div class="rec-card-header">
+            <span class="rec-badge rec-badge-ok">Healthy</span>
+            <h3>{_mbx_counts(no_action)} — all signals passing</h3>
+          </div>
+          <p>AT reply rate &ge; 1%, 14-day reply rate &ge; 1%, bounce rate &lt; 3%, warmup &ge; 95%. No action needed.</p>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in no_action)}</div>
+        </div>"""
+
+        if fresh:
+            fresh_domains = sorted(set(m["domain"] for m in fresh))
             fresh_chips = "".join(
                 f'<span class="rec-chip rec-chip-neutral" style="margin-top:8px">{m["email"]}</span>'
-                for m in rest_fresh
+                for m in fresh
             )
-            rest_cards += f"""<div class="rec-card rec-card-info" style="margin-bottom:12px">
+            cards += f"""<div class="rec-card rec-card-info" style="margin-bottom:0">
           <div class="rec-card-header">
             <span class="rec-badge rec-badge-info">Fresh</span>
-            <h3>{len(rest_fresh)} mailbox{"es" if len(rest_fresh) != 1 else ""} across {len(fresh_domains)} domain{"s" if len(fresh_domains) != 1 else ""} — no send history</h3>
+            <h3>{len(fresh)} mailbox{"es" if len(fresh) != 1 else ""} across {len(fresh_domains)} domain{"s" if len(fresh_domains) != 1 else ""} — no send history</h3>
           </div>
-          <p>No all-time sends recorded. Verify warm-up status in SmartLead before adding to a campaign.</p>
+          <p>Under {REGION_MIN_SENDS} all-time sends — cannot classify yet. Verify warm-up status in SmartLead before adding to a campaign.</p>
           <div class="rec-chips">{fresh_chips}</div>
         </div>"""
-        if rest_caution:
-            rest_cards += f"""<div class="rec-card rec-card-danger" style="margin-bottom:0">
-          <div class="rec-card-header">
-            <span class="rec-badge rec-badge-danger">Caution</span>
-            <h3>{_mbx_counts(rest_caution)} — 0 of 3 signals passing, has send history</h3>
-          </div>
-          <p>Has sent emails before but failing all three health signals. Avoid using until signals improve.</p>
-          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in rest_caution)}</div>
-        </div>"""
-
-        no_pass_note = f'<p style="color:var(--text-3);font-size:13px">No {region_name} mailboxes passing 2 or more signals yet.</p>' if not top_cards else ""
-        divider      = f'<div class="us-rest-divider"><span>Other {region_name} mailboxes</span></div>' if rest_cards else ""
 
         return f"""
   <div class="section">
     <div class="section-eyebrow">{region_name}</div>
     <h2>{region_name} Mailbox Health</h2>
     <p class="section-desc">
-      All {len(mbx_all)} mailboxes tagged "{region_name}" in SmartLead, grouped by health signal status.
-      Standards: all-time reply rate &ge; 1%, 14-day reply rate &ge; 1%, bounce rate &lt; 3%.
+      All {len(mbx_all)} mailboxes tagged "{region_name}" in SmartLead, grouped by rotation recommendation.
+      Retire: both reply signals &lt; 1% (with data). Move to warmup: warmup rep &lt; 95%. Monitor: one signal below threshold. Healthy: all signals passing.
     </p>
-    {top_cards}
-    {no_pass_note}
-    {divider}
-    {rest_cards}
+    {cards if cards else '<p style="color:var(--text-3);font-size:13px">No mailboxes found for this region.</p>'}
   </div>"""
 
     region_sections_html = "\n".join(
