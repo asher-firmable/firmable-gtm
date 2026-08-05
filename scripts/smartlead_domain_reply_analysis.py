@@ -904,59 +904,62 @@ def write_html_report(
             "at_rate_ok":       at_rate_ok,
             "bounce_ok":        bounce_ok,
             "rate_14d_ok":      rate_14d_ok,
-            "passes":           passes,
-            "has_us_campaigns": US_CAMPAIGNS_TAG_ID in id_to_tag_ids.get(acc_id, set()),
-            "warmup_rep":       id_to_warmup_rep.get(acc_id),
+            "passes":     passes,
+            "warmup_rep": id_to_warmup_rep.get(acc_id),
         })
 
     mbx_remove      = sorted([m for m in mbx_rec_data if m["passes"] == 0], key=lambda m: (m["domain"], m["email"]))
     mbx_watch       = sorted([m for m in mbx_rec_data if 1 <= m["passes"] <= 2], key=lambda m: (m["domain"], m["email"]))
     mbx_healthy     = sorted([m for m in mbx_rec_data if m["passes"] == 3], key=lambda m: (m["domain"], m["email"]))
-    # US Campaigns: all tagged accounts, all pass counts, no send minimum
-    us_mbx_all = []
-    for acc_id, tag_ids in id_to_tag_ids.items():
-        if US_CAMPAIGNS_TAG_ID not in tag_ids:
-            continue
-        at_sent     = account_alltime_sent.get(acc_id, 0)
-        at_replies  = account_alltime_replies.get(acc_id, 0)
-        at_bounces  = account_alltime_bounces.get(acc_id, 0)
-        active_sent = account_active_sent.get(acc_id, 0)
-        replies_14d = account_replies.get(acc_id, 0)
+    REGION_TAGS = [
+        ("US Campaigns",  365624),
+        ("SEA Campaigns", 354236),
+        ("ANZ Campaigns", 354235),
+    ]
 
-        if at_sent > 0:
-            at_rate     = at_replies / at_sent * 100
-            bounce_rate = at_bounces / at_sent * 100
-        else:
-            at_rate     = 0.0
-            bounce_rate = 0.0
+    def _build_region_mbx(tag_id):
+        """Build mailbox list for all accounts tagged with tag_id."""
+        mbx_list = []
+        for acc_id, acc_tag_ids in id_to_tag_ids.items():
+            if tag_id not in acc_tag_ids:
+                continue
+            at_sent     = account_alltime_sent.get(acc_id, 0)
+            at_replies  = account_alltime_replies.get(acc_id, 0)
+            at_bounces  = account_alltime_bounces.get(acc_id, 0)
+            active_sent = account_active_sent.get(acc_id, 0)
+            replies_14d = account_replies.get(acc_id, 0)
 
-        rate_14d = (replies_14d / active_sent * 100) if active_sent > 0 else None
+            if at_sent > 0:
+                at_rate     = at_replies / at_sent * 100
+                bounce_rate = at_bounces / at_sent * 100
+            else:
+                at_rate     = 0.0
+                bounce_rate = 0.0
 
-        at_rate_ok  = at_sent > 0 and at_rate >= 1.0
-        bounce_ok   = at_sent > 0 and bounce_rate < 3.0
-        rate_14d_ok = rate_14d is not None and rate_14d >= 1.0
-        passes      = sum([at_rate_ok, bounce_ok, rate_14d_ok])
+            rate_14d    = (replies_14d / active_sent * 100) if active_sent > 0 else None
+            at_rate_ok  = at_sent > 0 and at_rate >= 1.0
+            bounce_ok   = at_sent > 0 and bounce_rate < 3.0
+            rate_14d_ok = rate_14d is not None and rate_14d >= 1.0
+            passes      = sum([at_rate_ok, bounce_ok, rate_14d_ok])
 
-        email = id_to_email.get(acc_id, str(acc_id))
-        us_mbx_all.append({
-            "email":       email,
-            "domain":      account_to_domain.get(acc_id, email.split("@")[-1] if "@" in email else email),
-            "vendor":      id_to_vendor.get(acc_id, ""),
-            "is_active":   account_active_count.get(acc_id, 0) > 0,
-            "at_sent":     int(at_sent),
-            "at_rate":     at_rate,
-            "bounce_rate": bounce_rate,
-            "rate_14d":    rate_14d,
-            "at_rate_ok":  at_rate_ok,
-            "bounce_ok":   bounce_ok,
-            "rate_14d_ok": rate_14d_ok,
-            "passes":      passes,
-            "has_us_campaigns": True,
-            "warmup_rep":  id_to_warmup_rep.get(acc_id),
-        })
-    us_mbx_all.sort(key=lambda m: (m["domain"], m["email"]))
-
-    us_mbx_data = [m for m in us_mbx_all if m["passes"] >= 2]
+            email = id_to_email.get(acc_id, str(acc_id))
+            mbx_list.append({
+                "email":       email,
+                "domain":      account_to_domain.get(acc_id, email.split("@")[-1] if "@" in email else email),
+                "vendor":      id_to_vendor.get(acc_id, ""),
+                "is_active":   account_active_count.get(acc_id, 0) > 0,
+                "at_sent":     int(at_sent),
+                "at_rate":     at_rate,
+                "bounce_rate": bounce_rate,
+                "rate_14d":    rate_14d,
+                "at_rate_ok":  at_rate_ok,
+                "bounce_ok":   bounce_ok,
+                "rate_14d_ok": rate_14d_ok,
+                "passes":      passes,
+                "warmup_rep":  id_to_warmup_rep.get(acc_id),
+            })
+        mbx_list.sort(key=lambda m: (m["domain"], m["email"]))
+        return mbx_list
 
     # domain → all qualifying mailboxes (used to determine full vs partial domain issue)
     domain_to_eligible = defaultdict(list)
@@ -1083,86 +1086,87 @@ def write_html_report(
     {card_process}
   </div>"""
 
-    # ---- US Campaigns mailbox health ----
-    us_mbx_3        = [m for m in us_mbx_data if m["passes"] == 3]
-    us_mbx_2        = [m for m in us_mbx_data if m["passes"] == 2]
-    us_rest_1       = sorted([m for m in us_mbx_all if m["passes"] == 1], key=lambda m: (m["domain"], m["email"]))
-    us_rest_fresh   = sorted([m for m in us_mbx_all if m["at_sent"] == 0 and m["passes"] == 0], key=lambda m: (m["domain"], m["email"]))
-    us_rest_caution = sorted([m for m in us_mbx_all if m["at_sent"] > 0 and m["passes"] == 0], key=lambda m: (m["domain"], m["email"]))
+    # ---- Per-region mailbox health sections ----
+    def _build_region_section_html(region_name, mbx_all):
+        mbx_3       = [m for m in mbx_all if m["passes"] == 3]
+        mbx_2       = [m for m in mbx_all if m["passes"] == 2]
+        rest_1      = [m for m in mbx_all if m["passes"] == 1]
+        rest_fresh  = [m for m in mbx_all if m["at_sent"] == 0 and m["passes"] == 0]
+        rest_caution= [m for m in mbx_all if m["at_sent"] > 0  and m["passes"] == 0]
 
-    us_cards = ""
-    if us_mbx_3:
-        us_cards += f"""<div class="rec-card rec-card-ok" style="margin-bottom:12px">
+        top_cards = ""
+        if mbx_3:
+            top_cards += f"""<div class="rec-card rec-card-ok" style="margin-bottom:12px">
           <div class="rec-card-header">
             <span class="rec-badge rec-badge-ok">All signals passing</span>
-            <h3>{_mbx_counts(us_mbx_3)} — 3 of 3 signals passing</h3>
+            <h3>{_mbx_counts(mbx_3)} — 3 of 3 signals passing</h3>
           </div>
-          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in us_mbx_3)}</div>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in mbx_3)}</div>
         </div>"""
-    if us_mbx_2:
-        us_cards += f"""<div class="rec-card rec-card-warn" style="margin-bottom:12px">
+        if mbx_2:
+            top_cards += f"""<div class="rec-card rec-card-warn" style="margin-bottom:12px">
           <div class="rec-card-header">
             <span class="rec-badge rec-badge-warn">Watch closely</span>
-            <h3>{_mbx_counts(us_mbx_2)} — 2 of 3 signals passing</h3>
+            <h3>{_mbx_counts(mbx_2)} — 2 of 3 signals passing</h3>
           </div>
-          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in us_mbx_2)}</div>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in mbx_2)}</div>
         </div>"""
-    if not us_cards:
-        us_cards = ""
 
-    us_rest_cards = ""
-    if us_rest_1:
-        us_rest_cards += f"""<div class="rec-card rec-card-neutral" style="margin-bottom:12px">
+        rest_cards = ""
+        if rest_1:
+            rest_cards += f"""<div class="rec-card rec-card-neutral" style="margin-bottom:12px">
           <div class="rec-card-header">
             <span class="rec-badge rec-badge-neutral">Borderline</span>
-            <h3>{_mbx_counts(us_rest_1)} — 1 of 3 signals passing</h3>
+            <h3>{_mbx_counts(rest_1)} — 1 of 3 signals passing</h3>
           </div>
           <p>One signal passing. Usable but monitor closely — check bounce rate before adding to a live campaign.</p>
-          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in us_rest_1)}</div>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in rest_1)}</div>
         </div>"""
-    if us_rest_fresh:
-        # fresh mailboxes: show domain chips rather than full rows (no signal data to show)
-        fresh_domains = sorted(set(m["domain"] for m in us_rest_fresh))
-        fresh_chips = "".join(
-            f'<span class="rec-chip rec-chip-neutral" style="margin-top:8px">'
-            f'{m["email"]}'
-            f'</span>'
-            for m in us_rest_fresh
-        )
-        us_rest_cards += f"""<div class="rec-card rec-card-info" style="margin-bottom:12px">
+        if rest_fresh:
+            fresh_domains = sorted(set(m["domain"] for m in rest_fresh))
+            fresh_chips = "".join(
+                f'<span class="rec-chip rec-chip-neutral" style="margin-top:8px">{m["email"]}</span>'
+                for m in rest_fresh
+            )
+            rest_cards += f"""<div class="rec-card rec-card-info" style="margin-bottom:12px">
           <div class="rec-card-header">
             <span class="rec-badge rec-badge-info">Fresh</span>
-            <h3>{len(us_rest_fresh)} mailbox{"es" if len(us_rest_fresh) != 1 else ""} across {len(fresh_domains)} domain{"s" if len(fresh_domains) != 1 else ""} — no send history</h3>
+            <h3>{len(rest_fresh)} mailbox{"es" if len(rest_fresh) != 1 else ""} across {len(fresh_domains)} domain{"s" if len(fresh_domains) != 1 else ""} — no send history</h3>
           </div>
-          <p>No all-time sends recorded. These are unused mailboxes — verify warm-up status in SmartLead before adding to a campaign.</p>
+          <p>No all-time sends recorded. Verify warm-up status in SmartLead before adding to a campaign.</p>
           <div class="rec-chips">{fresh_chips}</div>
         </div>"""
-    if us_rest_caution:
-        us_rest_cards += f"""<div class="rec-card rec-card-danger" style="margin-bottom:0">
+        if rest_caution:
+            rest_cards += f"""<div class="rec-card rec-card-danger" style="margin-bottom:0">
           <div class="rec-card-header">
             <span class="rec-badge rec-badge-danger">Caution</span>
-            <h3>{_mbx_counts(us_rest_caution)} — 0 of 3 signals passing, has send history</h3>
+            <h3>{_mbx_counts(rest_caution)} — 0 of 3 signals passing, has send history</h3>
           </div>
           <p>Has sent emails before but failing all three health signals. Avoid using until signals improve.</p>
-          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in us_rest_caution)}</div>
+          <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in rest_caution)}</div>
         </div>"""
 
-    us_no_pass_note = '<p style="color:var(--text-3);font-size:13px">No US Campaign mailboxes passing 2 or more signals yet.</p>' if not us_cards else ""
-    us_divider = '<div class="us-rest-divider"><span>Other US Campaign mailboxes</span></div>' if us_rest_cards else ""
+        no_pass_note = f'<p style="color:var(--text-3);font-size:13px">No {region_name} mailboxes passing 2 or more signals yet.</p>' if not top_cards else ""
+        divider      = f'<div class="us-rest-divider"><span>Other {region_name} mailboxes</span></div>' if rest_cards else ""
 
-    us_healthy_html = f"""
+        return f"""
   <div class="section">
-    <div class="section-eyebrow">US Campaigns</div>
-    <h2>US Campaign Mailbox Health</h2>
+    <div class="section-eyebrow">{region_name}</div>
+    <h2>{region_name} Mailbox Health</h2>
     <p class="section-desc">
-      All {len(us_mbx_all)} mailboxes tagged "US Campaigns" in SmartLead, grouped by health signal status.
+      All {len(mbx_all)} mailboxes tagged "{region_name}" in SmartLead, grouped by health signal status.
       Standards: all-time reply rate &ge; 1%, 14-day reply rate &ge; 1%, bounce rate &lt; 3%.
     </p>
-    {us_cards}
-    {us_no_pass_note}
-    {us_divider}
-    {us_rest_cards}
+    {top_cards}
+    {no_pass_note}
+    {divider}
+    {rest_cards}
   </div>"""
+
+    region_sections_html = "\n".join(
+        _build_region_section_html(name, _build_region_mbx(tag_id))
+        for name, tag_id in REGION_TAGS
+    )
 
     # ---- Porkbun domain inventory ----
     if porkbun_data:
@@ -1583,7 +1587,7 @@ def write_html_report(
 
   {porkbun_html}
 
-  {us_healthy_html}
+  {region_sections_html}
 
   <div class="report-footer">
     Generated {generated_at} &nbsp;·&nbsp; Replies window: last {lookback_days} days &nbsp;·&nbsp; {total_active_campaigns} active campaigns at time of report
