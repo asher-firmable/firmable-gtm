@@ -1093,11 +1093,11 @@ def write_html_report(
     #   MONITOR       — at least one reply signal passing but not all 3 healthy
     #   NO_ACTION     — all signals healthy
     #   FRESH         — < 10 all-time sends, cannot classify
-    REGION_MIN_SENDS = 10
+    REGION_MIN_SENDS = 500
 
     def _region_classify(m):
         if m["at_sent"] < REGION_MIN_SENDS:
-            return "fresh"
+            return "monitor"
         at_ok   = m["at_rate"] >= 1.0
         r14d_ok = m["rate_14d"] is not None and m["rate_14d"] >= 1.0
         bounce_ok = m["bounce_rate"] < 3.0
@@ -1116,7 +1116,6 @@ def write_html_report(
         move_warmup = [m for m in mbx_all if _region_classify(m) == "move_to_warmup"]
         monitor     = [m for m in mbx_all if _region_classify(m) == "monitor"]
         no_action   = [m for m in mbx_all if _region_classify(m) == "no_action"]
-        fresh       = [m for m in mbx_all if _region_classify(m) == "fresh"]
 
         cards = ""
 
@@ -1126,7 +1125,7 @@ def write_html_report(
             <span class="rec-badge rec-badge-danger">Retire</span>
             <h3>{_mbx_counts(retire)} — both reply signals failing</h3>
           </div>
-          <p>AT reply rate and 14-day reply rate both below 1%. Remove from active campaigns — do not re-enter rotation.</p>
+          <p>AT reply rate and 14-day reply rate both below 1% (500+ sends). Remove from active campaigns — do not re-enter rotation.</p>
           <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in retire)}</div>
         </div>"""
 
@@ -1144,35 +1143,20 @@ def write_html_report(
             cards += f"""<div class="rec-card rec-card-warn" style="margin-bottom:12px">
           <div class="rec-card-header">
             <span class="rec-badge rec-badge-warn">Monitor</span>
-            <h3>{_mbx_counts(monitor)} — one or more signals below threshold</h3>
+            <h3>{_mbx_counts(monitor)} — one or more signals below threshold, or under {REGION_MIN_SENDS} sends</h3>
           </div>
-          <p>At least one reply signal is passing but not all three health standards are met. Review in 7 days — if failing signals do not improve, retire.</p>
+          <p>Either a signal is failing (but not ready to retire) or fewer than {REGION_MIN_SENDS} emails sent — not enough data to classify. Review in 7 days.</p>
           <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in monitor)}</div>
         </div>"""
 
         if no_action:
             cards += f"""<div class="rec-card rec-card-ok" style="margin-bottom:12px">
           <div class="rec-card-header">
-            <span class="rec-badge rec-badge-ok">Healthy</span>
+            <span class="rec-badge rec-badge-ok">No action</span>
             <h3>{_mbx_counts(no_action)} — all signals passing</h3>
           </div>
           <p>AT reply rate &ge; 1%, 14-day reply rate &ge; 1%, bounce rate &lt; 3%, warmup &ge; 95%. No action needed.</p>
           <div class="mbx-rec-list">{"".join(_mbx_rec_row(m) for m in no_action)}</div>
-        </div>"""
-
-        if fresh:
-            fresh_domains = sorted(set(m["domain"] for m in fresh))
-            fresh_chips = "".join(
-                f'<span class="rec-chip rec-chip-neutral" style="margin-top:8px">{m["email"]}</span>'
-                for m in fresh
-            )
-            cards += f"""<div class="rec-card rec-card-info" style="margin-bottom:0">
-          <div class="rec-card-header">
-            <span class="rec-badge rec-badge-info">Fresh</span>
-            <h3>{len(fresh)} mailbox{"es" if len(fresh) != 1 else ""} across {len(fresh_domains)} domain{"s" if len(fresh_domains) != 1 else ""} — no send history</h3>
-          </div>
-          <p>Under {REGION_MIN_SENDS} all-time sends — cannot classify yet. Verify warm-up status in SmartLead before adding to a campaign.</p>
-          <div class="rec-chips">{fresh_chips}</div>
         </div>"""
 
         return f"""
@@ -1181,7 +1165,7 @@ def write_html_report(
     <h2>{region_name} Mailbox Health</h2>
     <p class="section-desc">
       All {len(mbx_all)} mailboxes tagged "{region_name}" in SmartLead, grouped by rotation recommendation.
-      Retire: both reply signals &lt; 1% (with data). Move to warmup: warmup rep &lt; 95%. Monitor: one signal below threshold. Healthy: all signals passing.
+      Retire: both reply signals &lt; 1% (min {REGION_MIN_SENDS} sends). Move to warmup: warmup rep &lt; 95%. Monitor: signal below threshold or under {REGION_MIN_SENDS} sends. No action: all signals passing.
     </p>
     {cards if cards else '<p style="color:var(--text-3);font-size:13px">No mailboxes found for this region.</p>'}
   </div>"""

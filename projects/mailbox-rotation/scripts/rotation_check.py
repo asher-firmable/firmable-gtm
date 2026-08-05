@@ -44,7 +44,7 @@ from scripts.smartlead_domain_reply_analysis import (
 REGION_TAGS = {365624: "US", 354236: "SEA", 354235: "ANZ"}
 LOOKBACK_DAYS = 14
 SUPABASE_TABLE = "mailbox_rotation"
-MIN_SENDS_FOR_CLASSIFICATION = 10
+MIN_SENDS_FOR_CLASSIFICATION = 500
 ROTATION_DAYS = 30
 
 
@@ -62,7 +62,7 @@ def classify(warmup_rep, at_reply_rate, reply_14d_rate, bounce_rate, alltime_sen
     If 14d is unavailable (inactive mailbox), fall through to monitor.
     """
     if not alltime_sent or alltime_sent < MIN_SENDS_FOR_CLASSIFICATION:
-        return "no_action", "No send history yet", None
+        return "monitor", f"Under {MIN_SENDS_FOR_CLASSIFICATION} emails sent — not enough data to classify", None
 
     at_ok = at_reply_rate is not None and at_reply_rate >= 1.0
     r14d_ok = reply_14d_rate is not None and reply_14d_rate >= 1.0
