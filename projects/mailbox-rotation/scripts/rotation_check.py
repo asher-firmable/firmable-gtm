@@ -162,20 +162,12 @@ def _build_slack_message(mailboxes: dict, prev_recs: dict, prev_rotation_due: di
 
     lines = [f"📊 *Mailbox Rotation Check — {now.strftime('%Y-%m-%d')}*\n"]
 
-    # RETIRE — grouped by domain
+    # RETIRE — individual mailboxes
     lines.append(f"⛔ *RETIRE ({len(retire)} mailboxes)* — remove from campaigns permanently")
     if retire:
-        by_domain = defaultdict(list)
-        for m in retire:
-            domain = m["email"].split("@")[1] if "@" in m["email"] else m["email"]
-            by_domain[domain].append(m)
-        for domain, mbxs in sorted(by_domain.items(), key=lambda x: (x[1][0]["region"] or "zzz", x[0])):
-            region = mbxs[0]["region"] or "?"
-            count = len(mbxs)
-            reason = mbxs[0]["recommendation_reason"]
-            active_count = sum(1 for x in mbxs if x["is_active"])
-            active_note = f", {active_count} active" if active_count else ""
-            lines.append(f"  • `{domain}` ({region}, {count} mbx{active_note}) — {reason}")
+        for m in sorted(retire, key=lambda x: (x["region"] or "zzz", x["email"])):
+            active_note = " ✉" if m["is_active"] else ""
+            lines.append(f"  • `{m['email']}` ({m['region'] or '?'}){active_note} — {m['recommendation_reason']}")
     else:
         lines.append("  _none_")
 

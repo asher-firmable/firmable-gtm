@@ -1031,27 +1031,27 @@ def write_html_report(
     card_mbx_remove = f"""
     <div class="rec-card rec-card-danger">
       <div class="rec-card-header">
-        <span class="rec-badge rec-badge-danger">Consider removing</span>
+        <span class="rec-badge rec-badge-danger">Retire</span>
         <h3>{_mbx_counts(mbx_remove)} — all three signals failing</h3>
       </div>
-      <p>All-time reply rate below 1%, 14-day reply rate below 1%, and bounce rate above 3%. Consider removing {"these mailboxes" if len(mbx_remove) != 1 else "this mailbox"} from active campaigns.</p>
+      <p>All-time reply rate below 1%, 14-day reply rate below 1%, and bounce rate above 3%. Retire {"these mailboxes" if len(mbx_remove) != 1 else "this mailbox"} — remove from active campaigns permanently.</p>
       {_render_scoped(mbx_remove)}
     </div>""" if mbx_remove else ""
 
     card_mbx_watch = f"""
     <div class="rec-card rec-card-warn">
       <div class="rec-card-header">
-        <span class="rec-badge rec-badge-warn">Watch closely</span>
+        <span class="rec-badge rec-badge-warn">Monitor</span>
         <h3>{_mbx_counts(mbx_watch)} — one or two signals failing</h3>
       </div>
-      <p>Not meeting all three health standards. Monitor over the next 7 days — if failing signals do not improve, consider rotating {"them" if len(mbx_watch) != 1 else "it"} out.</p>
+      <p>Not meeting all three health standards. Monitor over the next 7 days — if failing signals do not improve, retire {"them" if len(mbx_watch) != 1 else "it"}.</p>
       {_render_scoped(mbx_watch)}
     </div>""" if mbx_watch else ""
 
     card_mbx_healthy = f"""
     <div class="rec-card rec-card-ok">
       <div class="rec-card-header">
-        <span class="rec-badge rec-badge-ok">Healthy</span>
+        <span class="rec-badge rec-badge-ok">No action</span>
         <h3>{_mbx_counts(mbx_healthy)} — all three signals passing</h3>
       </div>
       <p>All-time reply rate above 1%, 14-day reply rate above 1%, and bounce rate below 3%. No action needed.</p>
