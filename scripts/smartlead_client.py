@@ -69,6 +69,27 @@ class SmartLeadClient:
         result = self._get("/email-accounts", params={"limit": limit, "offset": offset})
         return result if isinstance(result, list) else result.get("data", [])
 
+    def _delete_with_body(self, endpoint, payload):
+        url = f"{self.BASE_URL}{endpoint}"
+        response = requests.delete(url, params={"api_key": self.api_key}, json=payload)
+        response.raise_for_status()
+        return response.json() if response.content else {}
+
+    def list_email_account_tags(self) -> list:
+        result = self._get("/email-accounts/tags")
+        return result if isinstance(result, list) else result.get("data", [])
+
+    def create_email_account_tag(self, name: str, color: str = "#6366f1") -> dict:
+        return self._post("/tags", {"name": name, "color": color})
+
+    def assign_tags_to_email_accounts(self, email_account_ids: list, tag_ids: list) -> dict:
+        """Bulk assign tags to email accounts. Max 25 accounts per call."""
+        return self._post("/email-accounts/tag-mapping", {"email_account_ids": email_account_ids, "tag_ids": tag_ids})
+
+    def remove_tags_from_email_accounts(self, email_account_ids: list, tag_ids: list) -> dict:
+        """Bulk remove tags from email accounts."""
+        return self._delete_with_body("/email-accounts/tag-mapping", {"email_account_ids": email_account_ids, "tag_ids": tag_ids})
+
     def get_inbox_replies(self, offset: int = 0, limit: int = 20,
                           start_date: str = None, end_date: str = None) -> dict:
         """Fetch from the main master inbox (POST /master-inbox/inbox-replies).
