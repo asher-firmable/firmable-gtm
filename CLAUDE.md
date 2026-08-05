@@ -205,19 +205,30 @@ firmable-gtm-engineering/
 │   │       ├── enrich_and_classify.py   ← Claude multi-label classifier (product_feedback / warm_intro / influencer)
 │   │       └── generate_copy.py         ← Personalised first-draft copy per bucket
 │   │
-│   └── supabase-enrichment/            ← Parallel company enrichment pipeline: CSV → Supabase → Trigger.dev agents → results
-│       ├── CLAUDE.md                    ← Sub-agent: upload, trigger, monitor conventions
+│   ├── supabase-enrichment/            ← Parallel company enrichment pipeline: CSV → Supabase → Trigger.dev agents → results
+│   │   ├── CLAUDE.md                    ← Sub-agent: upload, trigger, monitor conventions
+│   │   ├── scripts/
+│   │   │   └── upload.py               ← CSV → Supabase upsert (sets status='pending')
+│   │   ├── supabase/migrations/
+│   │   │   └── 001_create_companies.sql ← Master companies table schema
+│   │   └── trigger/                     ← Trigger.dev TypeScript tasks
+│   │       ├── trigger.config.ts
+│   │       ├── package.json
+│   │       └── src/tasks/
+│   │           ├── enrichBatch.ts       ← Entry point: fan-out via batchTrigger
+│   │           ├── classifyCompany.ts   ← Agent 1: SaaS/MSP/IT Services/Other B2B
+│   │           └── classifyPersona.ts   ← Agent 2: target persona (who they sell to)
+│   │
+│   ├── firmable-signal-webhook/        ← Deepline webhook Play: Firmable BDR/SDR job-posting signal → ICP check (TypeScript, not Python)
+│   │   ├── CLAUDE.md                    ← Sub-agent: payload shape, HMAC/secrets, deepline CLI commands
+│   │   └── firmable-bdr-signal-icp-check.play.ts ← Enrich via firmable_company_lookup → ai_inference ICP score → persist to customer_db
+│   │
+│   └── mailbox-rotation/               ← Mailbox rotation health check: SmartLead signals → Supabase recommendations
+│       ├── CLAUDE.md                    ← Sub-agent: recommendation logic, how to run, Supabase schema
 │       ├── scripts/
-│       │   └── upload.py               ← CSV → Supabase upsert (sets status='pending')
-│       ├── supabase/migrations/
-│       │   └── 001_create_companies.sql ← Master companies table schema
-│       └── trigger/                     ← Trigger.dev TypeScript tasks
-│           ├── trigger.config.ts
-│           ├── package.json
-│           └── src/tasks/
-│               ├── enrichBatch.ts       ← Entry point: fan-out via batchTrigger
-│               ├── classifyCompany.ts   ← Agent 1: SaaS/MSP/IT Services/Other B2B
-│               └── classifyPersona.ts   ← Agent 2: target persona (who they sell to)
+│       │   └── rotation_check.py        ← Fetch SmartLead signals, classify each mailbox, upsert Supabase, print report
+│       └── supabase/
+│           └── 001_create_mailbox_rotation.sql ← Run once in Supabase SQL editor
 │
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
@@ -296,6 +307,8 @@ firmable-gtm-engineering/
 | Black Hat US 2026 sponsor scrape | `campaigns/us/events-outbound/blackhat-us-2026/` |
 | ZoomInfo displacement two-email sequence for US startups + mid-market | `.claude/skills/us-competitor-displacement/SKILL.md` |
 | Run ZoomInfo displacement copy generation for US contacts | `campaigns/us/zoominfo-displacement/` |
+| React to Firmable BDR/SDR job-posting signals with a webhook-triggered ICP check | `projects/firmable-signal-webhook/` |
+| Mailbox rotation health check (SmartLead signals → Supabase → action recommendations) | `projects/mailbox-rotation/` |
 
 ---
 

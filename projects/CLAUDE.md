@@ -10,6 +10,8 @@ All production bots, pipelines, and internal tools live here. Each sub-folder ha
 | `signal-contact-activation/contacts-new-role/` | Classify new-role contacts (Firmable export) against ICP definition; surfaces managerial-level buyers for activation | `PYTHONPATH=. python3 projects/signal-contact-activation/contacts-new-role/scripts/classify_new_roles.py --input data/input/<file>.csv` |
 | `slack-bots/event-scraper/` | Event sponsor outreach pipeline (scrape → enrich → score → personalise → upload) | `PYTHONPATH=. python3 projects/slack-bots/event-scraper/scripts/bot.py` |
 | `slack-bots/find-contacts/` | Firmable contact lookups — Slack bot + batch enrichment | `PYTHONPATH=. python3 projects/slack-bots/find-contacts/scripts/bot.py` |
+| `firmable-signal-webhook/` | Deepline webhook Play: on a Firmable BDR/SDR job-posting signal, enrich + ICP-score the company, log the verdict (TypeScript/Deepline, not Python) | `deepline plays run --file projects/firmable-signal-webhook/firmable-bdr-signal-icp-check.play.ts --input '{...}' --json` |
+| `mailbox-rotation/` | Mailbox rotation health check: read SmartLead signals per mailbox, apply rotation logic, upsert recommendations to Supabase, print action report | `PYTHONPATH=. python3 projects/mailbox-rotation/scripts/rotation_check.py` |
 | `outbound/` | Email copy generation + SmartLead campaign upload | `PYTHONPATH=. python3 projects/outbound/account-pipeline/scripts/run_all.py --input data/input/accounts.xlsx` |
 | `call-analysis/` | Call transcript processing and knowledge base maintenance | See `call-analysis/CLAUDE.md` |
 | `n8n/` | Create and edit n8n workflows via REST API | See `n8n/CLAUDE.md` |
