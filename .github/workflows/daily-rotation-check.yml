@@ -2,7 +2,7 @@ name: Daily Mailbox Rotation Check
 
 on:
   schedule:
-    - cron: '0 1 * * *'   # 9am AEST (UTC+10 approx)
+    - cron: '0 23 * * *'  # 9am AEST (UTC+10) = 11pm UTC
   workflow_dispatch:        # allow manual trigger from GitHub Actions UI
 
 jobs:
