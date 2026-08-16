@@ -111,6 +111,7 @@ def build_account_domain_map(client: SmartLeadClient) -> tuple:
     id_to_vendor = {}
     id_to_tag_ids = {}
     id_to_warmup_rep = {}
+    id_to_from_name = {}
     domain_type_votes = defaultdict(lambda: defaultdict(int))
     offset = 0
     while True:
@@ -127,6 +128,7 @@ def build_account_domain_map(client: SmartLeadClient) -> tuple:
             id_to_tag_ids[acc["id"]] = {t["tag_id"] for t in acc_tags}
             warmup = acc.get("warmup_details") or {}
             id_to_warmup_rep[acc["id"]] = _parse_warmup_rep(warmup.get("warmup_reputation"))
+            id_to_from_name[acc["id"]] = (acc.get("from_name") or "").strip() or None
             acc_type = acc.get("type", "").upper()
             if acc_type == "GMAIL":
                 domain_type_votes[domain]["Google"] += 1
@@ -142,7 +144,7 @@ def build_account_domain_map(client: SmartLeadClient) -> tuple:
         domain: max(votes, key=votes.get)
         for domain, votes in domain_type_votes.items()
     }
-    return id_to_domain, id_to_email, id_to_vendor, domain_to_esp, id_to_tag_ids, id_to_warmup_rep
+    return id_to_domain, id_to_email, id_to_vendor, domain_to_esp, id_to_tag_ids, id_to_warmup_rep, id_to_from_name
 
 
 def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list) -> tuple:

@@ -266,7 +266,7 @@ def main():
 
     # 1. Fetch SmartLead data
     print("Fetching account data...")
-    id_to_domain, id_to_email, id_to_vendor, _, id_to_tag_ids, id_to_warmup_rep = (
+    id_to_domain, id_to_email, id_to_vendor, _, id_to_tag_ids, id_to_warmup_rep, id_to_from_name = (
         build_account_domain_map(sl)
     )
     print(f"  {len(id_to_email)} mailboxes found")
@@ -337,6 +337,7 @@ def main():
 
         mailboxes[email] = {
             "email": email,
+            "from_name": id_to_from_name.get(acc_id),
             "region": _get_region(id_to_tag_ids.get(acc_id, set())),
             "vendor": id_to_vendor.get(acc_id, "") or "",
             "is_active": is_active,
