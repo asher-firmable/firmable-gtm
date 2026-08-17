@@ -1750,7 +1750,7 @@ def main():
     client = SmartLeadClient()
 
     print("Loading email accounts...")
-    account_to_domain, id_to_email, id_to_vendor, domain_to_esp, id_to_tag_ids, id_to_warmup_rep = build_account_domain_map(client)
+    account_to_domain, id_to_email, id_to_vendor, domain_to_esp, id_to_tag_ids, id_to_warmup_rep, _ = build_account_domain_map(client)
     domain_count = len(set(account_to_domain.values()))
     print(f"  {len(account_to_domain)} mailboxes across {domain_count} domains\n")
 
