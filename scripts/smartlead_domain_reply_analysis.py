@@ -521,6 +521,9 @@ def write_html_report(
     for acc_id, domain in account_to_domain.items():
         domain_to_acc_ids[domain].append(acc_id)
 
+    mailboxes_active   = sum(1 for acc_id in account_to_domain if account_active_count.get(acc_id, 0) > 0)
+    mailboxes_inactive = sum(1 for acc_id in account_to_domain if account_active_count.get(acc_id, 0) == 0)
+
     all_vendors = sorted(set(v for v in id_to_vendor.values() if v))
 
     def mailbox_rows_html(domain):
@@ -1534,6 +1537,20 @@ def write_html_report(
       <span class="hero-number hero-number--fail">{len(inactive)}</span>
       <div class="hero-label">Inactive domains</div>
       <div class="hero-sub">not assigned to any live campaign</div>
+    </div>
+  </div>
+
+  <div class="hero-contrast">
+    <div class="hero-stat">
+      <span class="hero-number hero-number--pass">{mailboxes_active}</span>
+      <div class="hero-label">Active mailboxes</div>
+      <div class="hero-sub">assigned to at least one live campaign</div>
+    </div>
+    <div class="hero-divider">vs</div>
+    <div class="hero-stat">
+      <span class="hero-number hero-number--fail">{mailboxes_inactive}</span>
+      <div class="hero-label">Inactive mailboxes</div>
+      <div class="hero-sub">not in any live campaign</div>
     </div>
   </div>
 
