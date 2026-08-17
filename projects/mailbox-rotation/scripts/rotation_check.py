@@ -160,7 +160,11 @@ def _build_slack_message(mailboxes: dict, prev_recs: dict, prev_rotation_due: di
     monitor = [m for m in mailboxes.values() if m["recommendation"] == "monitor"]
     no_action = [m for m in mailboxes.values() if m["recommendation"] == "no_action"]
 
+    active_count   = sum(1 for m in mailboxes.values() if m["is_active"])
+    inactive_count = sum(1 for m in mailboxes.values() if not m["is_active"])
+
     lines = [f"📊 *Mailbox Rotation Check — {now.strftime('%Y-%m-%d')}*\n"]
+    lines.append(f"📬 *{active_count} mailboxes active in campaigns* · *{inactive_count} inactive*\n")
 
     # RETIRE — individual mailboxes
     lines.append(f"⛔ *RETIRE ({len(retire)} mailboxes)* — remove from campaigns permanently")
