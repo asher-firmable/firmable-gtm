@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from dotenv import load_dotenv
 
@@ -7,24 +8,45 @@ load_dotenv()
 
 class SmartLeadClient:
     BASE_URL = "https://server.smartlead.ai/api/v1"
+    MAX_RETRIES = 3
+    RETRY_BACKOFF_SECONDS = 2  # doubles each retry: 2s, 4s
 
     def __init__(self):
         self.api_key = os.getenv("SMARTLEAD_API_KEY")
         if not self.api_key:
             raise ValueError("SMARTLEAD_API_KEY is not set in .env")
 
+    def _request_with_retry(self, method, url, **kwargs):
+        """SmartLead intermittently returns transient 5xx errors; retry those with backoff.
+
+        4xx errors and non-retryable failures raise immediately.
+        """
+        for attempt in range(1, self.MAX_RETRIES + 1):
+            try:
+                response = requests.request(method, url, **kwargs)
+            except requests.exceptions.ConnectionError:
+                if attempt == self.MAX_RETRIES:
+                    raise
+                time.sleep(self.RETRY_BACKOFF_SECONDS * attempt)
+                continue
+
+            if response.status_code >= 500 and attempt < self.MAX_RETRIES:
+                time.sleep(self.RETRY_BACKOFF_SECONDS * attempt)
+                continue
+
+            response.raise_for_status()
+            return response
+
     def _post(self, endpoint, payload):
         url = f"{self.BASE_URL}{endpoint}"
-        response = requests.post(url, params={"api_key": self.api_key}, json=payload)
-        response.raise_for_status()
+        response = self._request_with_retry("POST", url, params={"api_key": self.api_key}, json=payload)
         return response.json()
 
     def _get(self, endpoint, params=None):
         url = f"{self.BASE_URL}{endpoint}"
         params = params or {}
         params["api_key"] = self.api_key
-        response = requests.get(url, params=params)
-        response.raise_for_status()
+        response = self._request_with_retry("GET", url, params=params)
         return response.json()
 
     def list_campaigns(self) -> list:
@@ -65,14 +87,20 @@ class SmartLeadClient:
     def get_campaign_analytics(self, campaign_id: str) -> dict:
         return self._get(f"/campaigns/{campaign_id}/analytics")
 
+    def get_campaign_email_accounts(self, campaign_id: str) -> list:
+        return self._get(f"/campaigns/{campaign_id}/email-accounts")
+
+    def remove_email_accounts_from_campaign(self, campaign_id: str, email_account_ids: list) -> dict:
+        """DELETE /campaigns/{id}/email-accounts. SmartLead rejects removing the last account from an active campaign."""
+        return self._delete_with_body(f"/campaigns/{campaign_id}/email-accounts", {"email_account_ids": email_account_ids})
+
     def get_email_accounts(self, limit: int = 100, offset: int = 0) -> list:
         result = self._get("/email-accounts", params={"limit": limit, "offset": offset})
         return result if isinstance(result, list) else result.get("data", [])
 
     def _delete_with_body(self, endpoint, payload):
         url = f"{self.BASE_URL}{endpoint}"
-        response = requests.delete(url, params={"api_key": self.api_key}, json=payload)
-        response.raise_for_status()
+        response = self._request_with_retry("DELETE", url, params={"api_key": self.api_key}, json=payload)
         return response.json() if response.content else {}
 
     def list_email_account_tags(self) -> list:
@@ -103,6 +131,7 @@ class SmartLeadClient:
             filters["replyTimeBetween"] = [start_date, end_date]
         payload = {"offset": offset, "limit": limit, "sortBy": "REPLY_TIME_DESC", "filters": filters}
         url = f"{self.BASE_URL}/master-inbox/inbox-replies"
-        resp = requests.post(url, params={"api_key": self.api_key, "fetch_message_history": "false"}, json=payload)
-        resp.raise_for_status()
+        resp = self._request_with_retry(
+            "POST", url, params={"api_key": self.api_key, "fetch_message_history": "false"}, json=payload
+        )
         return resp.json()

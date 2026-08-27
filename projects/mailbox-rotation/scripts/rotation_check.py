@@ -390,10 +390,14 @@ def main():
         buckets[k].sort(key=lambda m: (not m["is_active"], m["region"] or "zzz", m["email"]))
     rotation_due_list.sort(key=lambda m: -m.get("days_in_pool", 0))
 
+    active_count = sum(1 for m in mailboxes.values() if m["is_active"])
+    inactive_count = sum(1 for m in mailboxes.values() if not m["is_active"])
+
     divider = "=" * 110
     print(f"\n{divider}")
     print("ROTATION RECOMMENDATIONS")
     print(divider)
+    print(f"\n  {active_count} mailboxes active in campaigns · {inactive_count} inactive\n")
 
     if buckets["retire"]:
         print(f"\n  RETIRE ({len(buckets['retire'])})")
