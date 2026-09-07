@@ -16,6 +16,8 @@ Mailbox rotation health check. Reads signal data from SmartLead for every mailbo
 | File | Role |
 |---|---|
 | `scripts/rotation_check.py` | Main script: fetch SmartLead data, classify each mailbox, upsert Supabase, print report, send Slack notification |
+| `scripts/tag_pools.py` | Rebalances Active/Standby/Retire SmartLead tags from Supabase recommendations (`--apply` to write) |
+| `scripts/retire_mailboxes.py` | Permanently retires specific mailboxes: removes them from ACTIVE/PAUSED SmartLead campaigns and swaps Active tag → Retire tag (`--apply` to write, `--emails` comma-separated) |
 | `supabase/001_create_mailbox_rotation.sql` | Run once in Supabase SQL editor to create the table |
 | `supabase/002_add_rotation_due.sql` | Run once to add `rotation_due` and `days_in_pool` columns |
 
@@ -59,6 +61,11 @@ Requires these secrets set in GitHub repo settings:
 ### Rotation due (independent of health)
 - `rotation_due = true` when `pool = 'sending'` and `days_in_pool >= 30`
 - Shown as a separate section — healthy mailboxes can still be rotation-due
+
+### Retire is permanent (sticky)
+- Once a mailbox's `recommendation` is `retire` in Supabase, it stays `retire` on every subsequent run — the daily classifier never reclassifies it back to `monitor`/`move_to_warmup`/`no_action`, even if new signals would otherwise look better (e.g. it goes inactive and its 14-day reply rate becomes unavailable, which would normally fall through to `monitor`)
+- `recommendation_reason` is preserved from the original retire decision, not overwritten
+- Reactivating a retired mailbox is a manual decision (edit the Supabase row directly) — the script will not do it automatically
 
 ## Supabase table: `mailbox_rotation`
 

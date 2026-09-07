@@ -295,7 +295,7 @@ def main():
     existing = {}
     try:
         resp = sb.table(SUPABASE_TABLE).select(
-            "email,pool,pool_since,recommendation,rotation_due"
+            "email,pool,pool_since,recommendation,recommendation_reason,rotation_due"
         ).execute()
         for row in (resp.data or []):
             existing[row["email"]] = row
@@ -329,8 +329,16 @@ def main():
 
         rec, reason, signals_passing = classify(warmup, at_rate, r14d_rate, bounce_rate, a_sent)
 
-        new_pool = "sending" if is_active else "not_sending"
         old = existing.get(email, {})
+        if old.get("recommendation") == "retire":
+            # Retire is permanent — once flagged, a mailbox stays retired even if its
+            # signals look better later (e.g. it goes inactive and 14d data disappears).
+            # Reactivating a retired mailbox is a manual decision, not something the
+            # daily classifier should undo on its own.
+            rec = "retire"
+            reason = old.get("recommendation_reason") or reason
+
+        new_pool = "sending" if is_active else "not_sending"
         if old.get("pool") == new_pool and old.get("pool_since"):
             pool_since = old["pool_since"]
         else:
