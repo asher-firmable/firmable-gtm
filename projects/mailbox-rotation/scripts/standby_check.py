@@ -3,7 +3,7 @@ Standby pool check.
 
 Reads the mailbox_rotation Supabase table (populated by rotation_check.py)
 and reports which mailboxes are available to swap IN per region:
-  - Currently inactive (pool = not_sending)
+  - Currently inactive (is_active = false)
   - Tagged US / SEA / ANZ
   - Warmup reputation >= 95%
   - Not already flagged retire or move_to_warmup
@@ -49,10 +49,10 @@ def main():
         sb.table(SUPABASE_TABLE)
         .select(
             "email, region, vendor, warmup_rep, recommendation, recommendation_reason, "
-            "at_reply_rate, reply_14d_rate, bounce_rate, days_in_pool, last_checked_at"
+            "at_reply_rate, reply_14d_rate, bounce_rate, total_sent, last_checked_at"
         )
         .in_("region", REGIONS)
-        .eq("pool", "not_sending")
+        .eq("is_active", False)
         .gte("warmup_rep", WARMUP_THRESHOLD)
         .not_.in_("recommendation", ["retire", "move_to_warmup"])
         .execute()
@@ -126,8 +126,8 @@ def main():
                 warmup  = f"Warmup: {row['warmup_rep']:.0f}%" if row.get("warmup_rep") is not None else "Warmup: —"
                 at      = f"AT: {row['at_reply_rate']:.2f}%"  if row.get("at_reply_rate")  is not None else "AT: —"
                 r14     = f"14d: {row['reply_14d_rate']:.2f}%" if row.get("reply_14d_rate") is not None else "14d: —"
-                days    = f"{row['days_in_pool']}d in pool" if row.get("days_in_pool") is not None else ""
-                print(f"    {email:<44}  {vendor}  {warmup:<14}  {at:<12}  {r14:<14}  {days}")
+                sent    = f"Sent: {row['total_sent']}" if row.get("total_sent") is not None else ""
+                print(f"    {email:<44}  {vendor}  {warmup:<14}  {at:<12}  {r14:<14}  {sent}")
         else:
             print(f"    (none available)")
 

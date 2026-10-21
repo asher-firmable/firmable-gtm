@@ -30,7 +30,7 @@ class SmartLeadClient:
                 time.sleep(self.RETRY_BACKOFF_SECONDS * attempt)
                 continue
 
-            if response.status_code >= 500 and attempt < self.MAX_RETRIES:
+            if (response.status_code >= 500 or response.status_code == 429) and attempt < self.MAX_RETRIES:
                 time.sleep(self.RETRY_BACKOFF_SECONDS * attempt)
                 continue
 

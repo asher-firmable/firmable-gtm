@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS mailbox_rotation (
     email                   text primary key,
     region                  text,                                    -- US | SEA | ANZ | NULL
-    vendor                  text,                                    -- InboxKit | ScaledMail | empty
+    vendor                  text,                                    -- InboxKit | ScaledMail | sending.ac | empty
 
     is_active               boolean not null default false,          -- currently assigned to at least one campaign
     pool                    text not null default 'not_sending',     -- sending | not_sending

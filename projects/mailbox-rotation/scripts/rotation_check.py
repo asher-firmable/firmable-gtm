@@ -7,15 +7,13 @@ action report, and sends a Slack summary.
 
 Does NOT write to SmartLead — read-only from SmartLead, write to Supabase only.
 
-Recommendation rules:
+Recommendation rules (only evaluated once a mailbox has sent more than
+MIN_SENDS_FOR_CLASSIFICATION emails all-time — below that there isn't enough
+data for reply/bounce rates to mean anything):
   RETIRE         — both reply signals below 1% (AT and 14d both failing, with data)
   MOVE_TO_WARMUP — warmup reputation < 95% (and not retiring)
   MONITOR        — at least one reply signal passing but not all 3 healthy
   NO_ACTION      — all signals healthy
-
-Rotation due (independent of health):
-  ROTATION_DUE   — mailbox has been in the sending pool for 30+ days
-                   shown as a separate flag alongside health recommendation
 
 Run from repo root:
     PYTHONPATH=. python3 projects/mailbox-rotation/scripts/rotation_check.py
@@ -44,8 +42,7 @@ from scripts.smartlead_domain_reply_analysis import (
 REGION_TAGS = {365624: "US", 354236: "SEA", 354235: "ANZ"}
 LOOKBACK_DAYS = 14
 SUPABASE_TABLE = "mailbox_rotation"
-MIN_SENDS_FOR_CLASSIFICATION = 500
-ROTATION_DAYS = 30
+MIN_SENDS_FOR_CLASSIFICATION = 100
 
 
 # ---------------------------------------------------------------------------
@@ -106,14 +103,6 @@ def _get_region(tag_ids: set) -> str:
     return None
 
 
-def _days_in_pool(pool_since_str: str, now: datetime) -> int:
-    try:
-        dt = datetime.fromisoformat(pool_since_str.replace("Z", "+00:00"))
-        return max(0, (now - dt).days)
-    except (ValueError, AttributeError):
-        return 0
-
-
 # ---------------------------------------------------------------------------
 # Terminal output helpers
 # ---------------------------------------------------------------------------
@@ -134,29 +123,24 @@ def _fmt_warmup(rep):
     return f"Warmup: {rep:.0f}% [{mark}]".ljust(16)
 
 
-def _signal_line(m, show_days=False):
+def _signal_line(m):
     region = (m["region"] or "?").ljust(3)
     active_tag = "ACTIVE" if m["is_active"] else "      "
     at_s = _fmt_signal("AT", m["at_reply_rate"], lambda v: v >= 1.0)
     r14_s = _fmt_signal("14d", m["reply_14d_rate"], lambda v: v >= 1.0)
     b_s = _fmt_signal("Bounce", m["bounce_rate"], lambda v: v < 3.0)
     w_s = _fmt_warmup(m["warmup_rep"])
-    days_s = f"  ({m.get('days_in_pool', 0)}d active)" if show_days else ""
-    return f"  {m['email']:<42} {region} {active_tag}  {at_s}{r14_s}{b_s}{w_s}{days_s}"
+    sent_s = f"  Sent: {m.get('total_sent', 0)}"
+    return f"  {m['email']:<42} {region} {active_tag}  {at_s}{r14_s}{b_s}{w_s}{sent_s}"
 
 
 # ---------------------------------------------------------------------------
 # Slack notification
 # ---------------------------------------------------------------------------
 
-def _build_slack_message(mailboxes: dict, prev_recs: dict, prev_rotation_due: dict, now: datetime) -> str:
+def _build_slack_message(mailboxes: dict, prev_recs: dict, now: datetime, fetch_failures: list = None) -> str:
     retire = [m for m in mailboxes.values() if m["recommendation"] == "retire"]
     warmup = [m for m in mailboxes.values() if m["recommendation"] == "move_to_warmup"]
-    # Rotation-due shown separately only when not already being retired/warmed
-    rotation_due = [
-        m for m in mailboxes.values()
-        if m["rotation_due"] and m["recommendation"] not in ("retire", "move_to_warmup")
-    ]
     monitor = [m for m in mailboxes.values() if m["recommendation"] == "monitor"]
     no_action = [m for m in mailboxes.values() if m["recommendation"] == "no_action"]
 
@@ -164,6 +148,16 @@ def _build_slack_message(mailboxes: dict, prev_recs: dict, prev_rotation_due: di
     inactive_count = sum(1 for m in mailboxes.values() if not m["is_active"])
 
     lines = [f"📊 *Mailbox Rotation Check — {now.strftime('%Y-%m-%d')}*\n"]
+
+    if fetch_failures:
+        lines.append(
+            f"⚠️ *{len(fetch_failures)} SmartLead fetch failure(s) this run* — "
+            f"activity data below may be incomplete for the affected campaigns:"
+        )
+        for f in fetch_failures:
+            lines.append(f"  • {f}")
+        lines.append("")
+
     lines.append(f"📬 *{active_count} mailboxes active in campaigns* · *{inactive_count} inactive*\n")
 
     # RETIRE — individual mailboxes
@@ -186,19 +180,6 @@ def _build_slack_message(mailboxes: dict, prev_recs: dict, prev_rotation_due: di
         lines.append("  _none_")
 
     lines.append("")
-
-    # DUE FOR ROTATION
-    lines.append(f"🔄 *DUE FOR ROTATION ({len(rotation_due)})* — healthy but active {ROTATION_DAYS}+ days, time to cycle out")
-    if rotation_due:
-        for m in sorted(rotation_due, key=lambda x: -x.get("days_in_pool", 0)):
-            days = m.get("days_in_pool", 0)
-            at = f"{m['at_reply_rate']:.2f}%" if m["at_reply_rate"] is not None else "—"
-            r14 = f"{m['reply_14d_rate']:.2f}%" if m["reply_14d_rate"] is not None else "—"
-            lines.append(f"  • `{m['email']}` ({m['region'] or '?'}) — {days}d active | AT {at} ✅ 14d {r14} ✅")
-    else:
-        lines.append("  _none_")
-
-    lines.append("")
     lines.append(f"👀 *MONITOR ({len(monitor)})* — one signal below threshold, no action yet")
     lines.append(f"✅ *NO ACTION ({len(no_action)})* — all signals healthy")
     lines.append("")
@@ -209,11 +190,6 @@ def _build_slack_message(mailboxes: dict, prev_recs: dict, prev_rotation_due: di
         if m["recommendation"] == "retire" and prev_recs.get(e) != "retire"
         and prev_recs.get(e) is not None  # skip first-run (no prior state)
     ]
-    newly_rotation_due = [
-        e for e, m in mailboxes.items()
-        if m["rotation_due"] and not prev_rotation_due.get(e, False)
-        and e in prev_recs  # skip first-run
-    ]
     newly_resolved = [
         e for e, m in mailboxes.items()
         if m["recommendation"] == "no_action"
@@ -222,7 +198,6 @@ def _build_slack_message(mailboxes: dict, prev_recs: dict, prev_rotation_due: di
 
     lines.append("🆕 *Changes since last run*")
     lines.append(f"  • {len(newly_retired)} newly flagged for retirement")
-    lines.append(f"  • {len(newly_rotation_due)} newly due for rotation")
     lines.append(f"  • {len(newly_resolved)} resolved (back to healthy)")
 
     return "\n".join(lines)
@@ -280,10 +255,16 @@ def main():
     print(f"  {len(campaigns)} campaigns")
 
     print("Fetching all-time stats per mailbox...")
-    alltime_sent, alltime_replies, alltime_bounces = fetch_alltime_stats_per_account(sl, campaigns)
+    alltime_sent, alltime_replies, alltime_bounces, alltime_failures = fetch_alltime_stats_per_account(sl, campaigns)
 
     print("Fetching active campaign assignments...")
-    active_count, active_sent, active_campaigns, n_active = fetch_active_campaigns_per_account(sl, campaigns)
+    active_count, active_sent, active_campaigns, n_active, active_failures = fetch_active_campaigns_per_account(sl, campaigns)
+
+    fetch_failures = alltime_failures + active_failures
+    if fetch_failures:
+        print(f"\n  {len(fetch_failures)} SmartLead fetch failure(s) this run — activity data may be incomplete for affected campaigns:")
+        for f in fetch_failures:
+            print(f"    - {f}")
 
     print(f"Fetching {LOOKBACK_DAYS}-day replies...")
     start_iso = (now - timedelta(days=LOOKBACK_DAYS)).strftime("%Y-%m-%d")
@@ -295,7 +276,7 @@ def main():
     existing = {}
     try:
         resp = sb.table(SUPABASE_TABLE).select(
-            "email,pool,pool_since,recommendation,recommendation_reason,rotation_due"
+            "email,recommendation,recommendation_reason"
         ).execute()
         for row in (resp.data or []):
             existing[row["email"]] = row
@@ -304,7 +285,6 @@ def main():
         print(f"  WARNING: Could not read existing state ({e})")
 
     prev_recs = {e: r.get("recommendation") for e, r in existing.items()}
-    prev_rotation_due = {e: r.get("rotation_due", False) for e, r in existing.items()}
 
     # 3. Classify each mailbox
     now_iso = now.isoformat()
@@ -338,25 +318,13 @@ def main():
             rec = "retire"
             reason = old.get("recommendation_reason") or reason
 
-        new_pool = "sending" if is_active else "not_sending"
-        if old.get("pool") == new_pool and old.get("pool_since"):
-            pool_since = old["pool_since"]
-        else:
-            pool_since = now_iso
-
-        days = _days_in_pool(pool_since, now)
-        rotation_due = (new_pool == "sending") and (days >= ROTATION_DAYS)
-
         mailboxes[email] = {
             "email": email,
             "from_name": id_to_from_name.get(acc_id),
             "region": _get_region(id_to_tag_ids.get(acc_id, set())),
             "vendor": id_to_vendor.get(acc_id, "") or "",
             "is_active": is_active,
-            "pool": new_pool,
-            "pool_since": pool_since,
-            "days_in_pool": days,
-            "rotation_due": rotation_due,
+            "total_sent": int(round(a_sent)),
             "warmup_rep": warmup,
             "at_reply_rate": round(at_rate, 4) if at_rate is not None else None,
             "reply_14d_rate": round(r14d_rate, 4) if r14d_rate is not None else None,
@@ -380,23 +348,13 @@ def main():
         written += len(rows[i:i + batch_size])
     print(f"  {written} rows upserted")
 
-    pool_transitions = sum(
-        1 for m in mailboxes.values()
-        if existing.get(m["email"], {}).get("pool") != m["pool"]
-    )
-    if pool_transitions:
-        print(f"  {pool_transitions} pool transition(s) detected — pool_since updated")
-
     # 5. Print terminal report
     buckets = {"retire": [], "move_to_warmup": [], "monitor": [], "no_action": []}
     for m in mailboxes.values():
         buckets[m["recommendation"]].append(m)
-    rotation_due_list = [m for m in mailboxes.values()
-                         if m["rotation_due"] and m["recommendation"] not in ("retire", "move_to_warmup")]
 
     for k in buckets:
         buckets[k].sort(key=lambda m: (not m["is_active"], m["region"] or "zzz", m["email"]))
-    rotation_due_list.sort(key=lambda m: -m.get("days_in_pool", 0))
 
     active_count = sum(1 for m in mailboxes.values() if m["is_active"])
     inactive_count = sum(1 for m in mailboxes.values() if not m["is_active"])
@@ -421,12 +379,6 @@ def main():
             print(f"    {_signal_line(m)}")
             print(f"      Reason: {m['recommendation_reason']}")
 
-    if rotation_due_list:
-        print(f"\n  DUE FOR ROTATION ({len(rotation_due_list)})")
-        print(f"  Signals are healthy but mailbox has been active for {ROTATION_DAYS}+ days. Time to cycle out.")
-        for m in rotation_due_list:
-            print(_signal_line(m, show_days=True))
-
     if buckets["monitor"]:
         print(f"\n  MONITOR ({len(buckets['monitor'])})")
         print("  One signal below threshold. No action yet — review next check.")
@@ -441,7 +393,7 @@ def main():
 
     # 6. Send Slack notification
     print("Sending Slack notification...")
-    slack_msg = _build_slack_message(mailboxes, prev_recs, prev_rotation_due, now)
+    slack_msg = _build_slack_message(mailboxes, prev_recs, now, fetch_failures)
     _send_slack(slack_msg)
     if not os.getenv("SLACK_MAILBOX_WEBHOOK_URL"):
         print("  (SLACK_MAILBOX_WEBHOOK_URL not set — skipped)")

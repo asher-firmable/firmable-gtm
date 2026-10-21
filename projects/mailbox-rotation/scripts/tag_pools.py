@@ -15,8 +15,8 @@ are never touched. Only the three status tags above are managed by this script.
 US split: all US mailboxes are currently in active campaigns, so non-retiring US
 mailboxes are split 50/50 alphabetically — first half Active, second half Standby.
 
-SEA/ANZ split: based on actual pool status from Supabase
-(pool=sending → Active, pool=not_sending → Standby).
+SEA/ANZ split: based on actual campaign assignment from Supabase
+(is_active=true → Active, is_active=false → Standby).
 
 Usage:
     PYTHONPATH=. python3 projects/mailbox-rotation/scripts/tag_pools.py          # dry run
@@ -51,7 +51,7 @@ RATE_LIMIT_DELAY = 0.2
 def _fetch_supabase_data(sb):
     resp = (
         sb.table(SUPABASE_TABLE)
-        .select("email, region, pool, recommendation, last_checked_at")
+        .select("email, region, is_active, recommendation, last_checked_at")
         .in_("region", REGIONS)
         .execute()
     )
@@ -78,7 +78,7 @@ def _compute_desired_tags(rows):
                 desired[row["email"]] = "Active" if i < half else "Standby"
         else:
             for row in non_retiring:
-                desired[row["email"]] = "Active" if row["pool"] == "sending" else "Standby"
+                desired[row["email"]] = "Active" if row["is_active"] else "Standby"
 
     return desired
 

@@ -64,6 +64,9 @@ def _extract_vendor(tags: list) -> str:
     for name in names:
         if name.startswith("ScaledMail"):
             return "ScaledMail"
+    for name in names:
+        if name == "sending.ac":
+            return "sending.ac"
     return ""
 
 
@@ -155,11 +158,13 @@ def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list)
       - account_active_sent:      {account_id: float}  — apportioned all-time sends from active campaigns
       - account_active_campaigns: {account_id: [name]} — list of active campaign names per account
       - total_active: int
+      - failures: list[str]       — human-readable description of any campaign fetch that failed
     """
     account_active_count = defaultdict(int)
     account_active_sent = defaultdict(float)
     account_active_campaigns = defaultdict(list)
     active = [c for c in campaigns if c.get("status") == "ACTIVE"]
+    failures = []
 
     print(f"  {len(active)} active campaigns (of {len(campaigns)} total)")
 
@@ -173,15 +178,23 @@ def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list)
         try:
             analytics = client.get_campaign_analytics(camp_id)
             unique_sent = int(analytics.get("unique_sent_count") or 0)
-        except Exception:
+        except Exception as e:
+            msg = f"analytics fetch failed for active campaign {camp_name!r} ({camp_id}): {e}"
+            print(f"\n  WARNING: {msg}")
+            failures.append(msg)
             unique_sent = 0
 
         try:
             camp_accounts = client._get(f"/campaigns/{camp_id}/email-accounts")
-        except Exception:
+        except Exception as e:
+            msg = f"email-accounts fetch failed for active campaign {camp_name!r} ({camp_id}): {e}"
+            print(f"\n  WARNING: {msg}")
+            failures.append(msg)
+            time.sleep(0.2)
             continue
 
         if not camp_accounts:
+            time.sleep(0.2)
             continue
 
         per_account = unique_sent / len(camp_accounts) if unique_sent else 0
@@ -192,10 +205,12 @@ def fetch_active_campaigns_per_account(client: SmartLeadClient, campaigns: list)
                 account_active_sent[acc_id] += per_account
                 account_active_campaigns[acc_id].append(camp_name)
 
+        time.sleep(0.2)
+
     if active:
         print()
 
-    return dict(account_active_count), dict(account_active_sent), dict(account_active_campaigns), len(active)
+    return dict(account_active_count), dict(account_active_sent), dict(account_active_campaigns), len(active), failures
 
 
 def fetch_alltime_stats_per_account(client: SmartLeadClient, campaigns: list) -> tuple:
@@ -207,10 +222,12 @@ def fetch_alltime_stats_per_account(client: SmartLeadClient, campaigns: list) ->
       - account_alltime_sent:    {account_id: float}
       - account_alltime_replies: {account_id: float}
       - account_alltime_bounces: {account_id: float}
+      - failures: list[str]      — human-readable description of any campaign fetch that failed
     """
     account_alltime_sent = defaultdict(float)
     account_alltime_replies = defaultdict(float)
     account_alltime_bounces = defaultdict(float)
+    failures = []
 
     print(f"  Fetching all-time stats across {len(campaigns)} campaigns...")
     for i, camp in enumerate(campaigns, 1):
@@ -223,18 +240,28 @@ def fetch_alltime_stats_per_account(client: SmartLeadClient, campaigns: list) ->
             unique_sent = int(analytics.get("unique_sent_count") or 0)
             reply_count = int(analytics.get("reply_count") or 0)
             bounce_count = int(analytics.get("bounce_count") or 0)
-        except Exception:
+        except Exception as e:
+            msg = f"analytics fetch failed for campaign {camp_name!r} ({camp_id}): {e}"
+            print(f"\n  WARNING: {msg}")
+            failures.append(msg)
+            time.sleep(0.2)
             continue
 
         if unique_sent == 0:
+            time.sleep(0.2)
             continue
 
         try:
             camp_accounts = client._get(f"/campaigns/{camp_id}/email-accounts")
-        except Exception:
+        except Exception as e:
+            msg = f"email-accounts fetch failed for campaign {camp_name!r} ({camp_id}): {e}"
+            print(f"\n  WARNING: {msg}")
+            failures.append(msg)
+            time.sleep(0.2)
             continue
 
         if not camp_accounts:
+            time.sleep(0.2)
             continue
 
         n = len(camp_accounts)
@@ -245,8 +272,10 @@ def fetch_alltime_stats_per_account(client: SmartLeadClient, campaigns: list) ->
                 account_alltime_replies[acc_id] += reply_count / n
                 account_alltime_bounces[acc_id] += bounce_count / n
 
+        time.sleep(0.2)
+
     print()
-    return dict(account_alltime_sent), dict(account_alltime_replies), dict(account_alltime_bounces)
+    return dict(account_alltime_sent), dict(account_alltime_replies), dict(account_alltime_bounces), failures
 
 
 def _get_inbox_replies_with_retry(client, offset, limit, start_iso, end_iso, max_retries=5):
