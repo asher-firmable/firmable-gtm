@@ -230,6 +230,15 @@ firmable-gtm-engineering/
 │       └── supabase/
 │           └── 001_create_mailbox_rotation.sql ← Run once in Supabase SQL editor
 │
+├── marketing/                       ← Marketing team data work (ad audiences, segments) — not SDR outbound
+│   ├── CLAUDE.md                    ← Sub-agent: audience folder conventions
+│   └── audiences/
+│       └── g2-marketing-automation/ ← Every G2 Marketing Automation product (~734) with vendor domains
+│           ├── CLAUDE.md            ← Sub-agent: Deepline/Apify scrape command, cost, output columns
+│           ├── scripts/
+│           │   └── build_audience.py ← Apify dataset (via Deepline) → output/g2_marketing_automation.csv
+│           └── output/              ← Audience CSVs (gitignored)
+│
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
     │   ├── account-qualification/   ← ICP scoring against icp-definition.md
@@ -309,6 +318,7 @@ firmable-gtm-engineering/
 | Run ZoomInfo displacement copy generation for US contacts | `campaigns/us/zoominfo-displacement/` |
 | React to Firmable BDR/SDR job-posting signals with a webhook-triggered ICP check | `projects/firmable-signal-webhook/` |
 | Mailbox rotation health check (SmartLead signals → Supabase → action recommendations) | `projects/mailbox-rotation/` |
+| Build a marketing ad audience (e.g. all G2 Marketing Automation vendors with domains) | `marketing/audiences/` |
 
 ---
 
