@@ -1,7 +1,7 @@
 # Firmable API Reference
 
 Source: https://docs.firmable.com/api-reference/overview
-Last updated: 2026-03-15
+Last updated: 2026-11-10
 
 ---
 
@@ -31,6 +31,15 @@ Authorization: Bearer fbl_xxx
 
 Retrieve your API key from:
 https://app.firmable.com/dashboard/profile?selected=integrations&connection=api
+
+### Two keys, same endpoints
+
+| `.env` variable | Prefix | Credits spent | Where to get it |
+|---|---|---|---|
+| `FIRMABLE_API_KEY` | `fbl_` | Subscription credits, then add-on credits | App dashboard (link above) |
+| `FIRMABLE_DATAAPI_KEY` | `fbl_dev_` | Developer credits (separate pool: 40 free/month, bought credits never expire) | https://app.firmable.com/developer |
+
+Both keys hit the same base URL and endpoints with the same responses. Pick the key with `FirmableClient(use_developer_key=True)`; the default is `FIRMABLE_API_KEY`. Developer credits: 1 credit per new company or person profile, paid once per org; reveals of an already-paid profile and all searches are free. Developer balance is under Usage at https://app.firmable.com/developer.
 
 ---
 
@@ -75,10 +84,10 @@ Retrieve full company profile by any one identifier.
   "description": "...",
   "tagline": "...",
   "linkedin": "https://www.linkedin.com/company/example",
-  "au_employee_count": 120,
-  "founding_year": 2010,
-  "headquarters": "Sydney, NSW",
-  "country": "AU",
+  "employee_count": 120,
+  "year_founded": 2010,
+  "hq_location": "Sydney, NSW, AU",
+  "hq_country": "AU",
   "company_size": "51-200",
   "company_type": "Private",
   "abn": "...",
@@ -227,6 +236,32 @@ Search contacts at a known company, with optional filters.
 ```
 > Note: `find_contacts()` in `utils/firmable.py` automatically unwraps `records` and returns the array directly.
 
+### 5. GET /tech-intel — Technologies a Company Uses
+
+Docs: https://docs.firmable.com/api-reference/tech-intelligence
+
+Pass exactly one of `id`, `ln_url`, `ln_slug`, `fqdn`, `website`, `abn` (first wins in that order if several are sent). Returns no company profile. Tech Intelligence must be on the plan, otherwise `403`. Costs up to 5 credits per company, once; later pages and repeats are free. A known company with no tech data returns `200`, `total: 0`, free.
+
+Response:
+```json
+{
+  "id": "f000000740279",
+  "total": 558,
+  "tech_intelligence": [
+    {"product": "Claude (Anthropic)", "product_slug": "anthropic", "vendor": "Anthropic",
+     "filter": "LLM APIs & apps", "category": "AI & Machine Learning", "pillar_slug": "ai-machine-learning",
+     "confidence": "high", "recency": "30d", "last_observed": "2026-10-28", "nature": "direct"}
+  ],
+  "next_cursor": "..."
+}
+```
+- Up to 100 technologies per page; pass `next_cursor` back as `cursor` with the same identifier. No `next_cursor` = last page.
+- `confidence`: high / medium / low. `recency`: 30d / 90d / older. `nature`: direct / derived.
+
+### 6. GET /filter-options — Filter Option Codes
+
+Free. Query params: `identifiers` (comma-separated, e.g. `seniority,department`; all filters if omitted), `search` and `offset` (only with exactly one of industry, location, hq_location, people_location; pages of 20), `levelOne` (e.g. `l1:J`, lists second-level industry codes). Response: `{markets: [...], filters: {...}}`.
+
 ---
 
 ## Usage Patterns
@@ -316,3 +351,7 @@ Always call via `FirmableClient.get_sales_team_size(company_id)` — never write
 | `get_person(**kwargs)`            | `GET /people`             | Pass one of: id, ln_url, work_email, etc.          |
 | `find_contacts(...)`              | `POST /people/search`     | Requires Firmable company ID                       |
 | `get_sales_team_size(company_id)` | OS Search API             | Requires `FIRMABLE_OS_API_KEY`; returns regional headcount |
+| `get_tech_intel(**kwargs)`        | `GET /tech-intel`         | One identifier; follows all pages by default; up to 5 credits once |
+| `get_filter_options(...)`         | `GET /filter-options`     | Free; option codes for seniority, department, industry, etc. |
+
+`FirmableClient(use_developer_key=True)` switches every method above (except `get_sales_team_size`) to `FIRMABLE_DATAAPI_KEY`.
