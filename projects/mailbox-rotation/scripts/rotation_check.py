@@ -243,6 +243,31 @@ def main():
     now = datetime.now(timezone.utc)
     print(f"\n=== MAILBOX ROTATION CHECK — {now.strftime('%Y-%m-%d %H:%M UTC')} ===\n")
 
+    # 0. Read existing Supabase state first. This is fatal on failure: without it the
+    # sticky-retire rows would be overwritten by the upsert, and there's no point
+    # spending minutes on SmartLead calls if Supabase is unreachable (e.g. project paused).
+    print("Reading existing Supabase state...")
+    # Paginate: Supabase caps a single select at 1000 rows, and there are 3000+ mailboxes.
+    existing = {}
+    page_size = 1000
+    offset = 0
+    try:
+        while True:
+            resp = sb.table(SUPABASE_TABLE).select(
+                "email,recommendation,recommendation_reason"
+            ).order("email").range(offset, offset + page_size - 1).execute()
+            page = resp.data or []
+            for row in page:
+                existing[row["email"]] = row
+            if len(page) < page_size:
+                break
+            offset += page_size
+    except Exception as e:
+        print(f"ERROR: Could not reach Supabase at {sb_url} ({e}).")
+        print("  If the host doesn't resolve, the project is likely paused; restore it in the Supabase dashboard.")
+        sys.exit(1)
+    print(f"  {len(existing)} existing rows")
+
     # 1. Fetch SmartLead data
     print("Fetching account data...")
     id_to_domain, id_to_email, id_to_vendor, _, id_to_tag_ids, id_to_warmup_rep, id_to_from_name = (
@@ -270,19 +295,6 @@ def main():
     start_iso = (now - timedelta(days=LOOKBACK_DAYS)).strftime("%Y-%m-%d")
     end_iso = now.strftime("%Y-%m-%d")
     replies_14d = fetch_replies_per_account(sl, start_iso, end_iso)
-
-    # 2. Read existing Supabase state
-    print("Reading existing Supabase state...")
-    existing = {}
-    try:
-        resp = sb.table(SUPABASE_TABLE).select(
-            "email,recommendation,recommendation_reason"
-        ).execute()
-        for row in (resp.data or []):
-            existing[row["email"]] = row
-        print(f"  {len(existing)} existing rows")
-    except Exception as e:
-        print(f"  WARNING: Could not read existing state ({e})")
 
     prev_recs = {e: r.get("recommendation") for e, r in existing.items()}
 

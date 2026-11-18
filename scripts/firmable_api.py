@@ -8,21 +8,24 @@ load_dotenv()
 class FirmableClient:
     BASE_URL = "https://api.firmable.com"
 
-    def __init__(self):
-        self.api_key = os.getenv("FIRMABLE_API_KEY")
+    def __init__(self, use_developer_key: bool = False):
+        """use_developer_key=True uses FIRMABLE_DATAAPI_KEY (fbl_dev_, spends developer credits)
+        instead of FIRMABLE_API_KEY (fbl_, spends subscription credits). Same endpoints either way."""
+        key_name = "FIRMABLE_DATAAPI_KEY" if use_developer_key else "FIRMABLE_API_KEY"
+        self.api_key = os.getenv(key_name)
         if not self.api_key:
-            raise ValueError("FIRMABLE_API_KEY is not set in .env")
+            raise ValueError(f"{key_name} is not set in .env")
         self.headers = {"Authorization": f"Bearer {self.api_key}"}
 
     def _get(self, endpoint, params=None):
         url = f"{self.BASE_URL}{endpoint}"
-        response = requests.get(url, headers=self.headers, params=params)
+        response = requests.get(url, headers=self.headers, params=params, timeout=30)
         response.raise_for_status()
         return response.json()
 
     def _post(self, endpoint, body=None):
         url = f"{self.BASE_URL}{endpoint}"
-        response = requests.post(url, headers=self.headers, json=body)
+        response = requests.post(url, headers=self.headers, json=body, timeout=30)
         response.raise_for_status()
         return response.json()
 
@@ -77,6 +80,43 @@ class FirmableClient:
         if isinstance(result, dict):
             return result.get("records", [])
         return result or []
+
+    def get_tech_intel(self, id: str = None, fqdn: str = None, ln_url: str = None,
+                       ln_slug: str = None, website: str = None, abn: str = None,
+                       all_pages: bool = True) -> dict:
+        """Technologies a company uses. Pass one identifier. Returns {id, total, tech_intelligence: [...]}.
+
+        Pages are 100 technologies; all_pages=True follows next_cursor until done. Costs up to
+        5 credits per company once (later pages and repeats free). 403 if not on your plan.
+        """
+        params = {k: v for k, v in {"id": id, "ln_url": ln_url, "ln_slug": ln_slug,
+                                    "fqdn": fqdn, "website": website, "abn": abn}.items() if v}
+        if not params:
+            raise ValueError("Provide one identifier: id, fqdn, ln_url, ln_slug, website, or abn")
+        result = self._get("/tech-intel", params=params)
+        while all_pages and result.get("next_cursor"):
+            page = self._get("/tech-intel", params={**params, "cursor": result["next_cursor"]})
+            result["tech_intelligence"].extend(page.get("tech_intelligence", []))
+            result["next_cursor"] = page.get("next_cursor")
+        return result
+
+    def get_filter_options(self, identifiers: str = None, search: str = None,
+                           offset: int = 0, level_one: str = None) -> dict:
+        """Option codes for filters (e.g. identifiers="seniority,department"). Free.
+
+        search/offset only work with exactly one of industry, location, hq_location, people_location.
+        level_one (e.g. "l1:J") lists second-level industry codes.
+        """
+        params = {}
+        if identifiers:
+            params["identifiers"] = identifiers
+        if search:
+            params["search"] = search
+        if offset:
+            params["offset"] = offset
+        if level_one:
+            params["levelOne"] = level_one
+        return self._get("/filter-options", params=params)
 
     def get_sales_team_size(self, company_id: str) -> dict:
         """Return sales team headcount by region for a Firmable company ID.
