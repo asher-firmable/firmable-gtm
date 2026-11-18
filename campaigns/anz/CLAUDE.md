@@ -39,3 +39,4 @@ Must have `email` (or `primary_work_email`) and `domain` (or `company_website`) 
 | Folder | Description |
 |---|---|
 | `ANZ_SMB_SaaS/Software_General_Outreach/` | ANZ SMB SaaS/Software general outreach (sales team ≤4) |
+| `tech-intel-outbound/` | Review sheet: competitors + integration partners per company with Firmable US and APAC tech counts (any company type, e.g. energy) |

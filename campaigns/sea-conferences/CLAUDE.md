@@ -24,11 +24,21 @@ sea-conferences/
 │   ├── run_pipeline.py
 │   └── output/
 │       └── exhibitors.csv
-└── asia-business-show-2026/
+├── asia-business-show-2026/
+│   ├── CLAUDE.md
+│   ├── scrape_exhibitors.py
+│   └── output/
+│       └── exhibitors.csv
+├── govware-singapore-2026/
+│   ├── CLAUDE.md
+│   └── output/
+│       └── govware_sponsor_tech_intel.html  ← SDR/AE battlecard (211 sponsors)
+└── singapore-fintech-festival-2026/
     ├── CLAUDE.md
-    ├── scrape_exhibitors.py
-    └── output/
-        └── exhibitors.csv
+    ├── scrape_exhibitors.py             ← list page + detail pages → output/exhibitors.csv (~466)
+    ├── research_tech_intel.py           ← eligible exhibitors → bucket, description, competitor/integration picks
+    ├── build_tech_intel_page.py         ← research + Firmable MCP counts → tech intel battlecard HTML
+    └── output/                          ← exhibitors.csv, hubspot_check.csv, eligible_companies.csv, xlsx, tech intel HTML
 ```
 
 ## Scripts / tools
