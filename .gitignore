@@ -13,6 +13,9 @@ projects/*/*/input/
 # Campaign outputs (scraped/processed data)
 campaigns/**/output/
 
+# Marketing audience outputs
+marketing/**/output/
+
 # Campaign data
 campaigns/**/input/*.csv
 campaigns/**/input/*.xlsx

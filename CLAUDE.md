@@ -230,6 +230,21 @@ firmable-gtm-engineering/
 │       └── supabase/
 │           └── 001_create_mailbox_rotation.sql ← Run once in Supabase SQL editor
 │
+├── marketing/                       ← Marketing team data work (ad audiences, segments) — not SDR outbound
+│   ├── CLAUDE.md                    ← Sub-agent: audience folder conventions
+│   └── audiences/
+│       └── g2-marketing-automation/ ← Every G2 Marketing Automation product (~734) with vendor domains
+│           ├── CLAUDE.md            ← Sub-agent: Deepline/Apify scrape command, cost, output columns
+│           ├── scripts/
+│           │   └── build_audience.py ← Apify dataset (via Deepline) → output/g2_marketing_automation.csv
+│           └── output/              ← Audience CSVs (gitignored)
+│
+├── GTM-Outreach-Developer-API/      ← Outreach for Firmable's data/developer API (AI adoption, tech intel, decision engine)
+│   ├── CLAUDE.md                    ← Sub-agent: purpose, inputs/outputs, 200 rule, home-market counts
+│   └── skills/
+│       └── data-api-one-liner/
+│           └── SKILL.md             ← Domain → competitors + integrations → Firmable counts → 3 API statements + recommended line
+│
 └── .claude/                         ← Claude Code skills and slash commands
     ├── skills/                      ← Reusable AI capabilities (auto-triggered by task type)
     │   ├── account-qualification/   ← ICP scoring against icp-definition.md
@@ -244,6 +259,7 @@ firmable-gtm-engineering/
     │   ├── creative-ideas-campaign-anz-short/ ← Short form A/B variant: same slots, ideas as 15-25 word phrases, curiosity bridge line
     │   ├── creative-ideas-campaign-sea/ ← Clay table + AI column prompts for wide SEA SMB outbound (coverage + AU/SG HQ angle)
     │   ├── creative-ideas-campaign-us/ ← Clay table + AI column prompts for wide US SMB outbound (co-build angle, weekly-verified contacts)
+    │   ├── data-api-one-liner/      ← Symlink → GTM-Outreach-Developer-API/skills/data-api-one-liner (domain → data API outreach line)
     │   └── us-competitor-displacement/ ← ZoomInfo displacement two-email sequence for US startups + mid-market (demo → trial)
     └── commands/                    ← Slash commands
         ├── new-campaign.md                    ← /new-campaign — campaign setup wizard
@@ -309,6 +325,8 @@ firmable-gtm-engineering/
 | Run ZoomInfo displacement copy generation for US contacts | `campaigns/us/zoominfo-displacement/` |
 | React to Firmable BDR/SDR job-posting signals with a webhook-triggered ICP check | `projects/firmable-signal-webhook/` |
 | Mailbox rotation health check (SmartLead signals → Supabase → action recommendations) | `projects/mailbox-rotation/` |
+| Build a marketing ad audience (e.g. all G2 Marketing Automation vendors with domains) | `marketing/audiences/` |
+| Data/developer API outreach: one domain → AI adoption, tech intel and decision engine statements + recommended line | `GTM-Outreach-Developer-API/skills/data-api-one-liner/SKILL.md` |
 
 ---
 
