@@ -35,3 +35,5 @@ __pycache__/
 venv/
 projects/find-contacts/scripts/sessions.json
 .claude/settings.local.json
+.deepline/
+deepline/data/

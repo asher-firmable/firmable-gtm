@@ -26,3 +26,14 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SLACK_MAILBOX_WEBHOOK_URL: ${{ secrets.SLACK_MAILBOX_WEBHOOK_URL }}
+
+      - name: Alert Slack on failure
+        if: failure()
+        env:
+          SLACK_MAILBOX_WEBHOOK_URL: ${{ secrets.SLACK_MAILBOX_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -z "$SLACK_MAILBOX_WEBHOOK_URL" ] && exit 0
+          curl -sS -X POST -H 'Content-Type: application/json' \
+            -d "{\"text\":\":rotating_light: Daily mailbox rotation check FAILED. Logs: ${RUN_URL}\"}" \
+            "$SLACK_MAILBOX_WEBHOOK_URL"

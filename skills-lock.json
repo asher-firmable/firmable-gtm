@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "skills": {
+    "build-tam": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "69ac46c885ae4ea177c81f18271522be73a232e0838fbb78229f49cb18d23f64",
+      "wellKnownDigest": "sha256:517cc1cf6ca9f6c76d9ccf284e4e04becddfbc30f7e816550ca94799ae5fad58"
+    },
+    "clay-to-deepline": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "b17294bd95de1285cfa1d0ba562f011417ff24eebcb2d80ffb0b8ca3158f7465",
+      "wellKnownDigest": "sha256:80719ba459c5a4a931daed4cbb49b36c9549852f1300aa87d3879fd5fccf684d"
+    },
+    "deepline-ads-audiences": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "98ca143d5eac9d1d27beaf969db8dad043bfe281f0f420679e445d105cad8cdb",
+      "wellKnownDigest": "sha256:742170bf29242e03a0fabf947e995e401951128e045e3e72c4a4e8d015af8dba"
+    },
+    "deepline-analytics": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "0b6e772b8cd57a9249543f537f389bff95f436a8518f47142bc81e1f322b5473",
+      "wellKnownDigest": "sha256:61b947842c7b9abab21b76c289c4bc27d7dbde7a90d66189ff86a604d9422994"
+    },
+    "deepline-feedback": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "88e88428ed6bd422bc77e27d028d0a228a06eb4cfc38ff7e673b42f20c02b868",
+      "wellKnownDigest": "sha256:69e3832e2ded67e93f16914f33e533e55ca5c8274b160e62b21a2eb0a4e2378a"
+    },
+    "deepline-gtm": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "c3efc9ecf80eae659d7472c5f25bc739577a22bee12d1ef97210eb822665ef97",
+      "wellKnownDigest": "sha256:4170719e1ee502733daf395e53bb46a553d110e897d66883888f4c4a25f677d4"
+    },
+    "deepline-monitors": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "ec3bd3a22d2cf001764014522a26f028226c887e38823c47968d849788a1199f",
+      "wellKnownDigest": "sha256:f6016abb588275c6104fed617ae85b532182793ea4167a116bbfa9ae6a269b65"
+    },
+    "deepline-plays": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "e5549eb6cd32d49f6da228784e3bab731fb1055f3e3fa7b1207f7ac2a497f50d",
+      "wellKnownDigest": "sha256:1d780fb692a283d1517cf1974aa9b15a0a527698e77f60838a6a112f0ad1e2b4"
+    },
+    "deepline-plays-review": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "e222c81118945509d238bd920a8e6daf67dd356738f4895dda34f0b1addcd85d",
+      "wellKnownDigest": "sha256:507ef583c971f3a450d96ecb464ec5ef6f0a8593d41a1801cc93514a0fd7c189"
+    },
+    "deepline-pre-research": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "dea990217f40f1f7bfc72754451b3aff1eba972e9f9e2af0f2ce73b9d6109dd0",
+      "wellKnownDigest": "sha256:fea69ecce46c3422632cc50bf9df671b3f4f82b2d3edc8b4b52f445e7e635796"
+    },
+    "deepline-quickstart": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "2bbb24f828c9bebb4c0059a15343b86f6bd5b0400e73e836cda30aef7005265f",
+      "wellKnownDigest": "sha256:078160384aad69ab7f3f7ca681030f2d311e6ae03f07b12c807158825310c4c8"
+    },
+    "find-qualified-titles": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "d888d27b888d37840956dbb7b9669e29624fe976b9bd71d1798476f3e352b45c",
+      "wellKnownDigest": "sha256:cd2c5d4e10baac64c930adfd88213b1f82f5973527aef162c301b9603c88e37a"
+    },
+    "linkedin-url-lookup": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "24e4cc501e1100676b0d15e335c207bb47fccdce2ad5c6eaec8974f83ea64f67",
+      "wellKnownDigest": "sha256:0af57ec8802f818c54b89a0dad3b5686c96a88defbbbdd7b30d763060556f00f"
+    },
+    "niche-signal-discovery": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "ff092f79497b26f6e105f3a163eec3c6f3532b13362b2659d37fa42abf5257a1",
+      "wellKnownDigest": "sha256:a2e047520b33c71bd02aaaffee86e8c5cf91fe9338d855cf4c6223e9d68d6650"
+    },
+    "portfolio-prospecting": {
+      "source": "code.deepline.com",
+      "sourceUrl": "https://code.deepline.com/.well-known/skills/index.json",
+      "sourceType": "well-known",
+      "computedHash": "cc730c45e889f4dd8d6986e6bb1daa4feec9daa4d6bfc0d0bfccf76020428c54",
+      "wellKnownDigest": "sha256:2f41fbd783f5b77ae3cddaaa4f32a9101371a4718163a799ad637d33608fa937"
+    }
+  }
+}
