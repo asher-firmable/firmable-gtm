@@ -60,6 +60,7 @@ HS_PROPERTIES = [
     "company_owner_nz", "company_owner_sea",
     "outreach_engagement_status", "outreach_engagement_statussea",
     "customer_status",
+    "icp_match_anz", "icp_match_sea",
     "notes_last_contacted",
 ]
 
@@ -83,6 +84,8 @@ OUTPUT_COLUMNS = [
     "outreach_engagement_status",
     "outreach_engagement_status_sea",
     "customer_status",
+    "icp_match_anz",
+    "icp_match_sea",
     "open_deal",
     "deal_owner",
     "sales_team_au",
@@ -93,6 +96,10 @@ OUTPUT_COLUMNS = [
     "hq_country",
     "last_contacted",
 ]
+
+# HubSpot enum internal values -> display labels (some internal values differ, e.g. "true" = SMB)
+ICP_MATCH_ANZ_LABELS = {"true": "SMB", "Mid-market": "Mid-market", "Enterprise": "Enterprise", "Partner": "Partner"}
+ICP_MATCH_SEA_LABELS = {"true": "SMB", "false": "Medium", "High": "High", "Very High": "Very High", "Partner": "Partner"}
 
 CUSTOMER_TRIAL_STATUSES = {"Paying Customer", "Trialing Customer"}
 CUTOFF_DAYS = 30
@@ -432,6 +439,8 @@ def build_row(
         "outreach_engagement_status": props.get("outreach_engagement_status") or "",
         "outreach_engagement_status_sea": props.get("outreach_engagement_statussea") or "",
         "customer_status": customer_status,
+        "icp_match_anz": ICP_MATCH_ANZ_LABELS.get(props.get("icp_match_anz") or "", props.get("icp_match_anz") or ""),
+        "icp_match_sea": ICP_MATCH_SEA_LABELS.get(props.get("icp_match_sea") or "", props.get("icp_match_sea") or ""),
         "open_deal": open_deal,
         "deal_owner": deal_owner,
         "sales_team_au": firmable["sales_team_au"],

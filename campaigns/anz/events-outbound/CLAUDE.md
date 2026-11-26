@@ -73,6 +73,8 @@ This is a **single-pass** script — every field below is fetched or computed in
 | outreach_engagement_status | `outreach_engagement_status` |
 | outreach_engagement_status_sea | `outreach_engagement_statussea` |
 | customer_status | `customer_status` |
+| icp_match_anz | `icp_match_anz` (ICP Match (ANZ)), mapped to label: SMB / Mid-market / Enterprise / Partner |
+| icp_match_sea | `icp_match_sea` (ICP Match (SEA)), mapped to label: SMB / Medium / High / Very High / Partner |
 | open_deal | YES / NO — any deal on the company not in a closed stage |
 | deal_owner | Owner(s) of any open deal, comma-joined if more than one (blank if no open deal) |
 | sales_team_au / sales_team_nz / sales_team_sea / sales_team_us | Real-time from Firmable's `get_sales_team_size` (one call returns all four) |

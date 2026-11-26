@@ -46,6 +46,8 @@ COLUMNS = [
     ("Engagement Status (AU)", "outreach_engagement_status", 20),
     ("Engagement Status (SEA)", "outreach_engagement_status_sea", 20),
     ("Customer Status", "customer_status", 16),
+    ("ICP Match (ANZ)", "icp_match_anz", 14),
+    ("ICP Match (SEA)", "icp_match_sea", 14),
     ("Open Deal", "open_deal", 10),
     ("Deal Owner", "deal_owner", 18),
     ("Sales Team AU", "sales_team_au", 12),

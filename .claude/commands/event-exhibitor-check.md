@@ -11,7 +11,7 @@ The output is a `hubspot_check.csv`, a live preview table in chat, a categorized
 - Company Owner, Company Owner (ANZ) — HubSpot `company_owner_nz`, Company Owner (SEA) — HubSpot `company_owner_sea`
 - SDR (AU/NZ/SEA)
 - Outreach Engagement Status (AU + SEA)
-- Customer Status, Open Deal (YES/NO) + Deal Owner (owner of the open deal, may differ from Company Owner)
+- Customer Status, ICP Match (ANZ), ICP Match (SEA) (HubSpot `icp_match_anz` / `icp_match_sea`, enum values mapped to labels), Open Deal (YES/NO) + Deal Owner (owner of the open deal, may differ from Company Owner)
 - Sales Team Size (AU/NZ/SEA/US) — real-time from Firmable, plus a computed ANZ Sales Team Size (AU+NZ summed)
 - HQ Country — Firmable `hq_country` (**not** `country` — see Notes)
 - Last Contacted (DD Mon YYYY)
@@ -152,7 +152,7 @@ PYTHONPATH=. python3 campaigns/anz/events-outbound/build_workbook.py \
 
 Default filename convention is `<event_slug>_exhibitors.xlsx`, one sheet, one row per deduped exhibitor — but if the user gives an explicit name for the file, use that instead (pass it straight through as `--output`).
 
-**Column order** (as implemented in `build_workbook.py`): Company Name, Domain, Tier, Stand, Status, Reason, In HubSpot, In Firmable, Firmable ID, HubSpot Link, Company Owner, Company Owner (ANZ), Company Owner (SEA), SDR AU, SDR NZ, SDR SEA, Engagement Status (AU), Engagement Status (SEA), Customer Status, Open Deal, Deal Owner, Sales Team AU, Sales Team NZ, Sales Team SEA, Sales Team US, Last Contacted, ANZ Sales Team Size, HQ Country. (Company Owner (ANZ)/(SEA) sit immediately after Company Owner, not at the end — confirmed placement. Note: an earlier draft of this doc listed "SEA Sales Team Size" a second time near the end alongside "US Sales Team Size" — that was a duplicate of the "Sales Team SEA" column already listed earlier and has been corrected here; there is only one SEA sales-team-size field in `hubspot_check.csv`.)
+**Column order** (as implemented in `build_workbook.py`): Company Name, Domain, Tier, Stand, Status, Reason, In HubSpot, In Firmable, Firmable ID, HubSpot Link, Company Owner, Company Owner (ANZ), Company Owner (SEA), SDR AU, SDR NZ, SDR SEA, Engagement Status (AU), Engagement Status (SEA), Customer Status, ICP Match (ANZ), ICP Match (SEA), Open Deal, Deal Owner, Sales Team AU, Sales Team NZ, Sales Team SEA, Sales Team US, Last Contacted, ANZ Sales Team Size, HQ Country. (Company Owner (ANZ)/(SEA) sit immediately after Company Owner, not at the end — confirmed placement. Note: an earlier draft of this doc listed "SEA Sales Team Size" a second time near the end alongside "US Sales Team Size" — that was a duplicate of the "Sales Team SEA" column already listed earlier and has been corrected here; there is only one SEA sales-team-size field in `hubspot_check.csv`.)
 
 **Formatting (openpyxl), all handled by the script:**
 - Bold white header row on a dark fill, frozen (`freeze_panes = "A2"`), autofilter over the full range.
